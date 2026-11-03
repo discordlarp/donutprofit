@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import Link from 'next/link';
 import { useGame } from '@/context/GameContext';
 import { 
   MessageSquare, 
@@ -11,7 +12,8 @@ import {
   Sparkles,
   Coins,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Lock
 } from 'lucide-react';
 import { ChatMessage } from '@/types';
 import confetti from 'canvas-confetti';
@@ -78,7 +80,7 @@ function parsePayInput(cmdText: string): { target: string; amount: number } | { 
 }
 
 export default function CommunityChat({ isOpen: propIsOpen, onToggle: propOnToggle }: CommunityChatProps = {}) {
-  const { user, transferCoins, isChatOpen, toggleChat } = useGame();
+  const { user, deposits, transferCoins, isChatOpen, toggleChat } = useGame();
   const isOpen = propIsOpen !== undefined ? propIsOpen : isChatOpen;
   const onToggle = propOnToggle || toggleChat;
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -87,6 +89,32 @@ export default function CommunityChat({ isOpen: propIsOpen, onToggle: propOnTogg
   const [payError, setPayError] = useState<string | null>(null);
   const [paySuccessMsg, setPaySuccessMsg] = useState<string | null>(null);
   const [selectedPlayer, setSelectedPlayer] = useState<string | null>(null);
+
+  // Require at least 10M deposited in-game to chat
+  const isStaff = Boolean(
+    user?.role === 'admin' || 
+    user?.minecraftIgn?.toLowerCase() === 'cartisneakz' || 
+    user?.minecraftIgn?.toLowerCase() === 'xynfnagsss' || 
+    user?.minecraftIgn?.toLowerCase() === 'gangsterjew7'
+  );
+
+  const totalDeposited = (deposits || [])
+    .filter((d) => d.userId === user?.id && d.status === 'approved')
+    .reduce((sum, d) => sum + Math.max(d.amountCoins || 0, d.amountInGame || 0), 0);
+
+  const has10MDeposit = Boolean(
+    user && (
+      isStaff || 
+      totalDeposited >= 10000000 || 
+      (user.balance || 0) >= 10000000 || 
+      (user.totalWagered || 0) >= 10000000 ||
+      (deposits || []).some(
+        (d) => d.userId === user.id && d.status === 'approved' && (d.amountCoins >= 10000000 || d.amountInGame >= 10000000)
+      )
+    )
+  );
+
+  const canChat = Boolean(user && has10MDeposit);
 
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const isNearBottomRef = useRef<boolean>(true);
@@ -188,6 +216,11 @@ export default function CommunityChat({ isOpen: propIsOpen, onToggle: propOnTogg
 
     if (!user) {
       setPayError('Please sign in to chat or transfer cash.');
+      return;
+    }
+
+    if (!canChat) {
+      setPayError('You must have at least 10M deposited in-game to chat.');
       return;
     }
 
@@ -524,24 +557,39 @@ export default function CommunityChat({ isOpen: propIsOpen, onToggle: propOnTogg
 
       {/* Input Field Form */}
       <form onSubmit={handleSend} className="p-3 border-t border-white/5 bg-[#12151e] shrink-0">
-        <div className="relative flex items-center">
-          <input
-            ref={inputRef}
-            type="text"
-            placeholder={user ? "Type a message or /pay @player 10M..." : "Sign in to chat & /pay..."}
-            disabled={!user}
-            value={inputText}
-            onChange={(e) => setInputText(e.target.value)}
-            className="w-full bg-[#0b0c10] border border-white/10 rounded-xl py-2.5 pl-3 pr-10 text-xs text-white placeholder-neutral-500 outline-none focus:border-emerald-500 transition disabled:opacity-50"
-          />
-          <button
-            type="submit"
-            disabled={!user || !inputText.trim() || isSending}
-            className="absolute right-2 text-emerald-400 hover:text-emerald-300 disabled:opacity-30 p-1"
+        {!canChat ? (
+          <Link
+            href="/deposit"
+            title={!user ? "Sign in to chat" : "Deposit at least 10M in-game to unlock chat"}
+            className="relative flex items-center justify-center w-full bg-[#0b0c10] hover:bg-[#0f1118] border border-white/10 hover:border-amber-500/30 rounded-xl py-2.5 px-3 select-none transition group cursor-pointer"
           >
-            <Send className="w-4 h-4" />
-          </button>
-        </div>
+            {/* Lock in the middle of the text box */}
+            <div className="flex items-center justify-center gap-2 text-neutral-400 group-hover:text-neutral-300">
+              <Lock className="w-4 h-4 text-amber-400 group-hover:scale-110 transition-transform shrink-0" />
+              <span className="text-xs font-bold tracking-wide">
+                {!user ? "Sign in to chat" : "10M deposit required to chat"}
+              </span>
+            </div>
+          </Link>
+        ) : (
+          <div className="relative flex items-center">
+            <input
+              ref={inputRef}
+              type="text"
+              placeholder="Type a message or /pay @player 10M..."
+              value={inputText}
+              onChange={(e) => setInputText(e.target.value)}
+              className="w-full bg-[#0b0c10] border border-white/10 rounded-xl py-2.5 pl-3 pr-10 text-xs text-white placeholder-neutral-500 outline-none focus:border-emerald-500 transition"
+            />
+            <button
+              type="submit"
+              disabled={!inputText.trim() || isSending}
+              className="absolute right-2 text-emerald-400 hover:text-emerald-300 disabled:opacity-30 p-1 cursor-pointer"
+            >
+              <Send className="w-4 h-4" />
+            </button>
+          </div>
+        )}
       </form>
 
       {/* User Stats & Tipping Modal */}
