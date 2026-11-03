@@ -19,6 +19,7 @@ import HiloGame from '@/components/games/HiloGame';
 import RecentBetsTable from '@/components/RecentBetsTable';
 import AuthModal from '@/components/AuthModal';
 import GameArtwork from '@/components/GameArtwork';
+import RotatingGameShowcase from '@/components/RotatingGameShowcase';
 import { sound } from '@/lib/sound';
 import { 
   Gamepad2,
@@ -147,67 +148,9 @@ export default function HomePage() {
 
         {/* 1. Custom Hero Spotlight & Telemetry Deck */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-          {/* Main Showcase Hero Card (2 cols) */}
-          <div className="lg:col-span-2 relative rounded-3xl overflow-hidden border border-white/10 bg-gradient-to-br from-[#121624] via-[#0d101a] to-[#080910] p-6 sm:p-8 flex flex-col justify-between shadow-2xl group">
-            {/* Ambient Background Glow */}
-            <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none group-hover:bg-emerald-500/15 transition-all duration-700" />
-            <div className="absolute bottom-0 left-0 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
-
-            <div className="relative z-10">
-              <div className="flex flex-wrap items-center gap-2 mb-3">
-                <span className="text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">
-                  DONUT SMP EXCLUSIVE
-                </span>
-                <span className="text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full bg-white/5 text-neutral-300 border border-white/10 flex items-center gap-1">
-                  <ShieldCheck className="w-3 h-3 text-emerald-400" />
-                  100% PROVABLY FAIR
-                </span>
-              </div>
-
-              <h1 className="text-2xl sm:text-4xl font-black text-white tracking-tight leading-tight mb-2">
-                THE #1 HARDCORE CASINO FOR <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-400">DONUT SMP</span>
-              </h1>
-              <p className="text-xs sm:text-sm text-neutral-400 max-w-xl leading-relaxed mb-6">
-                Wager virtual Cash across 17 custom-built minigames. Instant automated in-game deposits, zero delay payouts, and massive high-roller multipliers.
-              </p>
-            </div>
-
-            {/* Quick Action Dock */}
-            <div className="relative z-10 flex flex-wrap items-center gap-3 pt-2">
-              <a
-                href="#play-arena"
-                className="px-5 py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-black font-black text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/25 transition-all transform active:scale-95 flex items-center gap-2 cursor-pointer"
-              >
-                <Zap className="w-4 h-4 fill-current" />
-                <span>PLAY IN ARENA</span>
-              </a>
-
-              <Link
-                href="/profile?tab=vip"
-                className="px-5 py-3 rounded-2xl bg-gradient-to-r from-amber-500/20 to-yellow-500/20 hover:from-amber-500/30 text-amber-300 border border-amber-400/50 font-black text-xs uppercase tracking-wider transition-all shadow-md flex items-center gap-2 cursor-pointer"
-              >
-                <Crown className="w-4 h-4 text-amber-400" />
-                <span>DONUT STAKE VIP</span>
-              </Link>
-
-              <Link
-                href="/referral"
-                className="px-5 py-3 rounded-2xl bg-[#171b28] hover:bg-[#202538] text-amber-300 border border-amber-400/40 font-black text-xs uppercase tracking-wider transition-all shadow-md flex items-center gap-2 cursor-pointer"
-              >
-                <Gift className="w-4 h-4 text-amber-400" />
-                <span>20M BONUS</span>
-              </Link>
-
-              <a
-                href="https://discord.gg/WMPqShACpW"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-4 py-3 rounded-2xl bg-[#5865F2]/20 hover:bg-[#5865F2]/30 border border-[#5865F2]/40 text-[#858ffc] hover:text-white font-black text-xs uppercase tracking-wider transition-all flex items-center gap-1.5 ml-auto"
-              >
-                <span>💬 DISCORD CODES</span>
-                <ExternalLink className="w-3.5 h-3.5" />
-              </a>
-            </div>
+          {/* Main Rotating Games Showcase (2 cols) */}
+          <div className="lg:col-span-2">
+            <RotatingGameShowcase onSelectGame={(gameId) => setActiveGame(gameId)} />
           </div>
 
           {/* Network Telemetry Pod (1 col) */}
