@@ -3,7 +3,6 @@
 import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useGame } from '@/context/GameContext';
-import { getVipProgress } from '@/lib/vip';
 import { 
   X, 
   Trophy, 
@@ -86,7 +85,6 @@ export default function UserProfileModal({
   const netProfit = totalWon - totalWagered;
   const isProfitable = netProfit >= 0;
   const winRate = totalWagered > 0 ? ((totalWon / totalWagered) * 100).toFixed(1) : '0.0';
-  const vip = useMemo(() => getVipProgress(totalWagered), [totalWagered]);
 
   const handleSendTip = async () => {
     setTipError(null);
@@ -220,8 +218,8 @@ export default function UserProfileModal({
               <h3 className="text-xl font-black text-white font-mono truncate">
                 {cleanTarget}
               </h3>
-              <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full border ${vip.currentTier.borderColor} ${vip.currentTier.textColor}`}>
-                {vip.currentTier.badge} {vip.currentTier.name} VIP
+              <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full border bg-emerald-500/10 border-emerald-500/30 text-emerald-400">
+                CASINO MEMBER
               </span>
 
               {isOwner ? (

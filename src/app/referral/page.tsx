@@ -80,14 +80,14 @@ export default function ReferralPage() {
 
         <div className="inline-flex items-center gap-2 bg-black/40 border border-white/20 px-4 py-1.5 rounded-full text-xs font-black text-amber-300 mb-4 backdrop-blur-sm">
           <Sparkles className="w-4 h-4 text-amber-400" />
-          <span>ZERO START • 20M REFERRAL BONUS</span>
+          <span>AFFILIATES PROGRAM • 20M BONUS</span>
         </div>
 
         <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight max-w-2xl">
-          START FROM <span className="text-amber-300 underline decoration-amber-400">ZERO</span>. SHARE YOUR LINK. GET A 20M BONUS WHEN THEY DEPOSIT 10M+.
+          AFFILIATES: SHARE YOUR LINK. GET A 20M BONUS WHEN THEY DEPOSIT 10M+.
         </h1>
         <p className="text-sm text-emerald-100 max-w-xl mt-3 font-medium">
-          New players begin at 0. When a friend joins through your invite and deposits at least 10M in-game on DonutSMP, both accounts get a $20,000,000 Cash bonus automatically!
+          New players begin at 0. When a friend joins through your invite and deposits at least 10M in-game on DonutSMP, both accounts get a $20M Cash bonus automatically!
         </p>
 
         <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
@@ -117,7 +117,7 @@ export default function ReferralPage() {
           <div className="bg-black/30 backdrop-blur-md border border-white/10 rounded-2xl p-4 flex flex-col items-start">
             <span className="w-7 h-7 rounded-lg bg-yellow-300 text-black font-black text-xs flex items-center justify-center mb-2">3</span>
             <h4 className="text-xs font-black text-white uppercase tracking-wider">Both Get 20M</h4>
-            <p className="text-[11px] text-emerald-100/80 mt-1">Both accounts receive $20,000,000 Cash automatically credited!</p>
+            <p className="text-[11px] text-emerald-100/80 mt-1">Both accounts receive $20M Cash automatically credited!</p>
           </div>
         </div>
       </div>
@@ -133,7 +133,7 @@ export default function ReferralPage() {
               <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">20M PER REFERRAL (10M MIN DEP)</span>
             </div>
 
-            <p className="text-xs text-neutral-400 mb-4 leading-relaxed">Anyone who clicks this link and creates an account is tracked automatically. When they deposit at least 10M in-game, both accounts receive a $20,000,000 Cash referral bonus automatically!</p>
+            <p className="text-xs text-neutral-400 mb-4 leading-relaxed">Anyone who clicks this link and creates an account is tracked automatically. When they deposit at least 10M in-game, both accounts receive a $20M Cash referral bonus automatically!</p>
 
             {user ? (
               <div className="flex flex-col sm:flex-row gap-2.5">
@@ -229,7 +229,7 @@ export default function ReferralPage() {
             {/* Instant 1-Click Event Bonus Claim */}
             <div className="mt-4 pt-4 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-3">
               <span className="text-xs text-neutral-400">
-                20M Referral Event Special:
+                Affiliates Special:
               </span>
               <button
                 type="button"
@@ -242,7 +242,7 @@ export default function ReferralPage() {
                 }`}
               >
                 <Gift className="w-3.5 h-3.5" />
-                <span>{eventBonusClaimed ? 'CLAIMED +20,000,000' : 'CLAIM 20M EVENT BONUS'}</span>
+                <span>{eventBonusClaimed ? 'CLAIMED +$20M' : 'CLAIM AFFILIATE BONUS'}</span>
               </button>
             </div>
           </div>
@@ -267,7 +267,7 @@ export default function ReferralPage() {
             <div className="bg-[#12141a] border border-white/10 rounded-2xl p-5 flex flex-col col-span-2 sm:col-span-1">
               <span className="text-[10px] font-extrabold uppercase text-neutral-400 mb-1 flex items-center gap-1">
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                Event Status
+                Affiliate Status
               </span>
               <span className="text-xs font-black text-emerald-400 mt-2 flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />

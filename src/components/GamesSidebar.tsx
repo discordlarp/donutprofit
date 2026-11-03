@@ -130,30 +130,8 @@ export default function GamesSidebar({ activeGame, onSelectGame }: GamesSidebarP
 
         {/* Scrollable Navigation Body */}
         <div className="flex-1 overflow-y-auto px-2 py-3 flex flex-col gap-4 scrollbar-none">
-          {/* Quick Highlight Links (Donut Stake Profile & VIP) */}
+          {/* Quick Highlight Links (Affiliates) */}
           <div className="flex flex-col gap-1">
-            <Link
-              href="/profile?tab=vip"
-              className={`flex items-center gap-3 px-2.5 py-2 rounded-xl text-xs font-black transition group ${
-                pathname === '/profile'
-                  ? 'bg-gradient-to-r from-amber-500/20 to-yellow-500/10 border border-amber-500/40 text-amber-300'
-                  : 'text-neutral-300 hover:text-amber-300 hover:bg-amber-500/10'
-              }`}
-              title="Donut Stake VIP Club"
-            >
-              <div className="w-7 h-7 rounded-lg bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
-                <Crown className="w-4 h-4" />
-              </div>
-              {!isSidebarCollapsed && (
-                <div className="flex flex-col min-w-0">
-                  <span className="truncate">VIP Club & Perks</span>
-                  <span className="text-[9px] text-amber-400/80 font-mono font-bold leading-none mt-0.5">
-                    Level Up Perks
-                  </span>
-                </div>
-              )}
-            </Link>
-
             <Link
               href="/referral"
               className={`flex items-center gap-3 px-2.5 py-2 rounded-xl text-xs font-black transition group ${
@@ -161,16 +139,16 @@ export default function GamesSidebar({ activeGame, onSelectGame }: GamesSidebarP
                   ? 'bg-gradient-to-r from-emerald-500/20 to-teal-500/10 border border-emerald-500/40 text-emerald-300'
                   : 'text-neutral-300 hover:text-emerald-300 hover:bg-emerald-500/10'
               }`}
-              title="20M Referral Event"
+              title="Affiliates"
             >
               <div className="w-7 h-7 rounded-lg bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
                 <Gift className="w-4 h-4" />
               </div>
               {!isSidebarCollapsed && (
                 <div className="flex flex-col min-w-0">
-                  <span className="truncate">20M Invite Event</span>
+                  <span className="truncate">Affiliates</span>
                   <span className="text-[9px] text-emerald-400/80 font-mono font-bold leading-none mt-0.5">
-                    +$20M Free Cash
+                    Referral Rewards
                   </span>
                 </div>
               )}

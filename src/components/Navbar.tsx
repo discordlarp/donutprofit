@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useGame } from '@/context/GameContext';
-import { getVipProgress } from '@/lib/vip';
 import { formatCash } from '@/lib/format';
 import AuthModal from '@/components/AuthModal';
 import DonutLogo from '@/components/DonutLogo';
@@ -54,8 +53,6 @@ export default function Navbar({ onToggleChat: propOnToggle, isChatOpen: propIsO
   const [isPassModalOpen, setIsPassModalOpen] = useState(false);
   const [newPass, setNewPass] = useState('');
   const [passMsg, setPassMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-
-  const vip = user ? getVipProgress(user.totalWagered) : null;
 
   const handlePassChange = (e: React.FormEvent) => {
     e.preventDefault();
@@ -173,21 +170,11 @@ export default function Navbar({ onToggleChat: propOnToggle, isChatOpen: propIsO
               </Link>
 
               <Link
-                href="/profile?tab=vip"
-                className={`transition flex items-center gap-1.5 ${
-                  pathname === '/profile' ? 'text-amber-400 font-black' : 'hover:text-amber-300'
-                }`}
-              >
-                <Crown className="w-3.5 h-3.5 text-amber-400" />
-                <span>VIP CLUB</span>
-              </Link>
-
-              <Link
                 href="/referral"
                 className="text-amber-300 hover:text-amber-200 font-black transition flex items-center gap-1.5 bg-gradient-to-r from-amber-500/15 to-yellow-500/15 border border-amber-400/40 px-2.5 py-1 rounded-lg shadow-sm"
               >
                 <Gift className="w-3.5 h-3.5 text-amber-400" />
-                <span>20M EVENT</span>
+                <span>AFFILIATES</span>
               </Link>
 
               <Link
@@ -269,11 +256,9 @@ export default function Navbar({ onToggleChat: propOnToggle, isChatOpen: propIsO
                       <span className="text-xs font-black text-white max-w-[85px] truncate">
                         {user.minecraftIgn}
                       </span>
-                      {vip && (
-                        <span className={`text-[9px] font-bold ${vip.currentTier.textColor}`}>
-                          {vip.currentTier.badge} {vip.currentTier.name}
-                        </span>
-                      )}
+                      <span className="text-[9px] font-bold text-neutral-400">
+                        {user.role === 'admin' || user.minecraftIgn.toLowerCase() === 'cartisneakz' ? 'Staff' : 'Player'}
+                      </span>
                     </div>
 
                     <ChevronDown className="w-3.5 h-3.5 text-neutral-400 hidden sm:block" />
@@ -287,11 +272,9 @@ export default function Navbar({ onToggleChat: propOnToggle, isChatOpen: propIsO
                     >
                       <div className="px-3 py-2 border-b border-white/5 flex flex-col">
                         <span className="font-bold text-white text-xs">{user.minecraftIgn}</span>
-                        {vip && (
-                          <span className={`text-[10px] font-bold ${vip.currentTier.textColor}`}>
-                            {vip.currentTier.name} VIP ({vip.progressPercent}%)
-                          </span>
-                        )}
+                        <span className="text-[10px] font-bold text-emerald-400 font-mono">
+                          Balance: {formatCash(user.balance)}
+                        </span>
                       </div>
 
                       <Link
@@ -304,12 +287,12 @@ export default function Navbar({ onToggleChat: propOnToggle, isChatOpen: propIsO
                       </Link>
 
                       <Link
-                        href="/profile?tab=vip"
+                        href="/referral"
                         onClick={() => setProfileDropdownOpen(false)}
                         className="px-3 py-2 rounded-xl text-amber-300 hover:text-white hover:bg-amber-500/10 flex items-center gap-2 font-bold transition"
                       >
-                        <Crown className="w-3.5 h-3.5 text-amber-400" />
-                        <span>VIP Club & Perks</span>
+                        <Gift className="w-3.5 h-3.5 text-amber-400" />
+                        <span>Affiliates</span>
                       </Link>
 
                       <Link

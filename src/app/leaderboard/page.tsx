@@ -67,7 +67,7 @@ export default function LeaderboardPage() {
         <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
           <div className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500/20 via-orange-500/20 to-amber-500/20 border border-amber-500/40 px-4 py-2 rounded-xl text-xs font-bold text-amber-300">
             <Gift className="w-4 h-4 text-amber-400 animate-bounce" />
-            <span>20M referral event active (10M dep min)</span>
+            <span>Affiliates program active (10M dep min)</span>
           </div>
           <div className="inline-flex items-center gap-2 bg-[#12141a] border border-white/10 px-4 py-2 rounded-xl text-xs font-black text-white">
             <ShieldCheck className="w-4 h-4 text-emerald-400" />

@@ -1579,7 +1579,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     return `${origin}/?ref=${encodeURIComponent(currentUser.minecraftIgn || currentUser.username)}`;
   };
 
-  // 1-CLICK INSTANT 20M EVENT BONUS CLAIM
+  // 1-CLICK INSTANT AFFILIATE BONUS CLAIM
   const claimInstant10MEventBonus = () => {
     if (!currentUser) return false;
     const BONUS = 20000000;

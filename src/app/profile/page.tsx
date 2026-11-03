@@ -4,7 +4,6 @@ import React, { useState, useMemo, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useGame } from '@/context/GameContext';
-import { getVipProgress, VIP_TIERS } from '@/lib/vip';
 import { formatCash, formatCompactNumber } from '@/lib/format';
 import AuthModal from '@/components/AuthModal';
 import { sound } from '@/lib/sound';
@@ -42,7 +41,7 @@ function ProfileContent() {
   const searchParams = useSearchParams();
   const targetParamIgn = searchParams.get('ign');
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'bets' | 'transactions' | 'vip' | 'settings'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'bets' | 'transactions' | 'settings'>('overview');
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [copiedIgn, setCopiedIgn] = useState(false);
 
@@ -98,9 +97,6 @@ function ProfileContent() {
     return winningBets.reduce((max, b) => (b.payout > max.payout ? b : max), winningBets[0]);
   }, [userBets]);
 
-  // VIP Progression data
-  const vip = useMemo(() => getVipProgress(totalWagered), [totalWagered]);
-
   const handleCopyIgn = () => {
     if (!activeProfileUser) return;
     navigator.clipboard.writeText(activeProfileUser.minecraftIgn);
@@ -135,7 +131,7 @@ function ProfileContent() {
           </div>
           <h2 className="text-2xl font-black text-white">Player Profile</h2>
           <p className="text-xs text-neutral-400 leading-relaxed">
-            Sign in with your Minecraft IGN to access your Donut Stake VIP progression, wagered statistics, VIP perks, and betting history.
+            Sign in with your Minecraft IGN to access your profile dashboard, wagered statistics, and live betting history.
           </p>
           <button
             onClick={() => setAuthModalOpen(true)}
@@ -171,7 +167,7 @@ function ProfileContent() {
                 }}
               />
               <span className="absolute -bottom-2 -right-2 text-xl filter drop-shadow">
-                {vip.currentTier.badge}
+                🍩
               </span>
             </div>
 
@@ -191,8 +187,8 @@ function ProfileContent() {
 
               {/* Badges Bar */}
               <div className="flex items-center gap-2 flex-wrap">
-                <span className={`text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full border bg-gradient-to-r ${vip.currentTier.bgGradient} ${vip.currentTier.borderColor} ${vip.currentTier.textColor}`}>
-                  {vip.currentTier.badge} {vip.currentTier.name} VIP
+                <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full border bg-emerald-500/10 border-emerald-500/30 text-emerald-400">
+                  CASINO MEMBER
                 </span>
 
                 {isOwner ? (
@@ -242,71 +238,7 @@ function ProfileContent() {
         </div>
       </div>
 
-      {/* 2. Donut Stake VIP Progression Tier Card */}
-      <div className="rounded-3xl border border-white/10 bg-[#0b0e17] p-6 shadow-2xl relative overflow-hidden">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-          <div className="flex items-center gap-2.5">
-            <span className="text-2xl">{vip.currentTier.badge}</span>
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-base sm:text-lg font-black text-white">
-                  DONUT STAKE VIP PROGRESS
-                </h3>
-                <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full border ${vip.currentTier.borderColor} ${vip.currentTier.textColor}`}>
-                  {vip.currentTier.name}
-                </span>
-              </div>
-              <p className="text-xs text-neutral-400">
-                Wager in any game to level up your VIP tier and unlock higher cash bonuses
-              </p>
-            </div>
-          </div>
-
-          {vip.nextTier && (
-            <div className="text-right">
-              <span className="text-xs text-neutral-400">Next Tier:</span>
-              <span className={`ml-1.5 text-xs font-black font-mono ${vip.nextTier.textColor}`}>
-                {vip.nextTier.badge} {vip.nextTier.name} ({formatCash(vip.nextTier.minWager)})
-              </span>
-            </div>
-          )}
-        </div>
-
-        {/* The Animated VIP Progress Bar */}
-        <div className="w-full bg-[#141724] h-5 rounded-full overflow-hidden p-0.5 border border-white/10 relative">
-          <div
-            className="h-full rounded-full bg-gradient-to-r from-emerald-500 via-teal-400 to-amber-400 transition-all duration-700 shadow-md"
-            style={{ width: `${vip.progressPercent}%` }}
-          />
-          <span className="absolute inset-0 flex items-center justify-center text-[10px] font-black font-mono text-white tracking-wider filter drop-shadow">
-            {vip.progressPercent}% ({formatCash(totalWagered)} {vip.nextTier ? `/ ${formatCash(vip.nextTier.minWager)}` : 'MAX'})
-          </span>
-        </div>
-
-        {/* VIP Micro-Metrics */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-4 pt-3 border-t border-white/5 text-xs">
-          <div className="flex flex-col">
-            <span className="text-[10px] font-bold text-neutral-400 uppercase">Current Tier</span>
-            <span className="text-sm font-black text-emerald-400 font-mono">{vip.currentTier.name} VIP</span>
-          </div>
-
-          <div className="flex flex-col">
-            <span className="text-[10px] font-bold text-neutral-400 uppercase">Wagered to Next</span>
-            <span className="text-sm font-black text-amber-400 font-mono">
-              {vip.nextTier ? formatCash(vip.wagerNeeded) : 'MAX TIER'}
-            </span>
-          </div>
-
-          <div className="flex flex-col">
-            <span className="text-[10px] font-bold text-neutral-400 uppercase">Level-Up Bonus</span>
-            <span className="text-sm font-black text-white font-mono">
-              {vip.nextTier ? formatCash(vip.nextTier.levelBonus, { showPlus: true }) : 'Maxed'}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* 3. Navigation Tabs */}
+      {/* 2. Navigation Tabs */}
       <div className="flex items-center gap-2 border-b border-white/10 pb-2 overflow-x-auto scrollbar-none text-xs font-black select-none">
         <button
           onClick={() => setActiveTab('overview')}
@@ -342,18 +274,6 @@ function ProfileContent() {
         >
           <Receipt className="w-4 h-4" />
           <span>Transactions</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('vip')}
-          className={`px-4 py-2.5 rounded-2xl transition flex items-center gap-2 cursor-pointer ${
-            activeTab === 'vip'
-              ? 'bg-emerald-500 text-black shadow-lg shadow-emerald-500/20'
-              : 'text-neutral-400 hover:text-white hover:bg-white/5'
-          }`}
-        >
-          <Award className="w-4 h-4" />
-          <span>VIP Club</span>
         </button>
 
         {!isViewingOther && (
@@ -454,14 +374,14 @@ function ProfileContent() {
 
             <div className="p-4 rounded-2xl bg-[#0c0e18] border border-white/10 flex items-center justify-between">
               <div>
-                <span className="text-[10px] font-bold text-neutral-400 uppercase block">VIP Status</span>
-                <span className="text-base font-black text-sky-400 font-mono">
-                  {vip.currentTier.badge} {vip.currentTier.name}
+                <span className="text-[10px] font-bold text-neutral-400 uppercase block">Account Rank</span>
+                <span className="text-base font-black text-amber-400 font-mono">
+                  {isOwner ? '👑 Owner' : isStaff ? '🛡️ Staff' : '🎮 Player'}
                 </span>
               </div>
-              <Link href="/profile?tab=vip" onClick={() => setActiveTab('vip')} className="text-xs text-amber-400 font-bold hover:underline">
-                View VIP Perks
-              </Link>
+              <span className="text-xs font-mono font-black text-neutral-400 bg-white/5 px-2 py-1 rounded-lg uppercase">
+                {isStaff ? 'Verified Staff' : 'Member'}
+              </span>
             </div>
           </div>
 
@@ -677,108 +597,7 @@ function ProfileContent() {
         </div>
       )}
 
-      {/* TAB 4: VIP CLUB & PERKS */}
-      {activeTab === 'vip' && (
-        <div className="flex flex-col gap-6">
-          {/* VIP Progression Showcase Hero */}
-          <div className="rounded-3xl border border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-[#14120a] to-amber-500/10 p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-2xl">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 text-3xl shrink-0">
-                {vip.currentTier.badge}
-              </div>
-              <div>
-                <h3 className="text-xl font-black text-white">Donut Stake VIP Status</h3>
-                <p className="text-xs text-neutral-300 max-w-md mt-1">
-                  You are currently <strong className="text-amber-400">{vip.currentTier.name} VIP</strong> with <strong className="text-white font-mono">${(totalWagered / 1_000_000).toFixed(2)}M</strong> total wagered. Advance tiers to earn up to <strong className="text-emerald-400">$100,000,000</strong> in level-up bonuses!
-                </p>
-              </div>
-            </div>
-
-            <div className="flex flex-col items-center sm:items-end gap-2 shrink-0 w-full sm:w-auto">
-              <span className="text-xs text-neutral-400 uppercase font-bold">Current Tier Rank:</span>
-              <span className="text-2xl sm:text-3xl font-black text-amber-400 font-mono">
-                {vip.currentTier.name}
-              </span>
-              <Link
-                href="/#play-arena"
-                className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-gradient-to-r from-amber-400 to-yellow-400 hover:from-amber-300 text-black font-black text-xs uppercase tracking-wider shadow-lg shadow-amber-500/20 transition cursor-pointer text-center"
-              >
-                Wager To Level Up
-              </Link>
-            </div>
-          </div>
-
-          {/* All 9 VIP Tiers Catalog */}
-          <div className="rounded-3xl border border-white/10 bg-[#0b0e17] p-6 shadow-2xl">
-            <h3 className="text-base font-black text-white uppercase tracking-wider mb-4">
-              DONUT STAKE VIP TIERS & BENEFITS
-            </h3>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {VIP_TIERS.map((tier) => {
-                const isCurrent = vip.currentTier.id === tier.id;
-                const isPassed = totalWagered >= tier.minWager;
-
-                return (
-                  <div
-                    key={tier.id}
-                    className={`p-4 rounded-2xl border transition flex flex-col justify-between ${
-                      isCurrent
-                        ? `bg-gradient-to-br ${tier.bgGradient} ${tier.borderColor} ring-2 ring-emerald-400/50 shadow-xl`
-                        : isPassed
-                        ? 'bg-[#10131d] border-white/10 opacity-80'
-                        : 'bg-[#080910] border-white/5 opacity-50'
-                    }`}
-                  >
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xl">{tier.badge}</span>
-                          <span className={`font-black text-sm ${tier.textColor}`}>{tier.name}</span>
-                        </div>
-                        {isCurrent ? (
-                          <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-500 text-black">
-                            CURRENT
-                          </span>
-                        ) : isPassed ? (
-                          <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-white/10 text-neutral-300">
-                            COMPLETED
-                          </span>
-                        ) : (
-                          <span className="text-[9px] font-mono font-bold text-neutral-500">
-                            {formatCash(tier.minWager)}
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="text-xs text-neutral-300 mb-3 flex flex-col gap-1">
-                        {tier.levelBonus > 0 ? (
-                          <span className="text-amber-400 font-mono text-[11px] font-bold">
-                            {formatCash(tier.levelBonus, { showPlus: true })} Level Bonus
-                          </span>
-                        ) : (
-                          <span className="text-neutral-500 font-mono text-[11px]">Base Tier</span>
-                        )}
-                      </div>
-                    </div>
-
-                    <ul className="text-[11px] text-neutral-400 space-y-1 border-t border-white/5 pt-2">
-                      {tier.perks.map((p, i) => (
-                        <li key={i} className="flex items-center gap-1.5">
-                          <Check className="w-3 h-3 text-emerald-400 shrink-0" />
-                          <span>{p}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* TAB 5: SECURITY & SETTINGS */}
+      {/* TAB 4: SECURITY & SETTINGS */}
       {activeTab === 'settings' && !isViewingOther && (
         <div className="max-w-xl rounded-3xl border border-white/10 bg-[#0b0e17] p-6 sm:p-8 shadow-2xl flex flex-col gap-6">
           <div className="flex items-center gap-3 pb-4 border-b border-white/5">
