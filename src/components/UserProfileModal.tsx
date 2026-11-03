@@ -1,28 +1,18 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
-import Link from 'next/link';
+import React, { useState } from 'react';
 import { useGame } from '@/context/GameContext';
 import { 
   X, 
-  Trophy, 
-  TrendingUp, 
-  TrendingDown, 
-  Gamepad2, 
-  Flame, 
-  Coins, 
-  HeartHandshake, 
-  AtSign, 
   Check, 
-  AlertCircle,
-  Sparkles,
-  ShieldAlert,
-  Crown,
-  ExternalLink
+  Star, 
+  Hexagon, 
+  Users, 
+  AtSign 
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { sound } from '@/lib/sound';
-import { formatCash, formatCompactNumber } from '@/lib/format';
+import { formatCompactNumber, formatCash } from '@/lib/format';
 
 interface UserProfileModalProps {
   isOpen: boolean;
@@ -31,7 +21,7 @@ interface UserProfileModalProps {
   onMention?: (ign: string) => void;
 }
 
-// Generate realistic deterministic stats if a chat player isn't in local state yet
+// Deterministic fallback stats for any player in chat
 function getFallbackStats(ign: string) {
   let hash = 0;
   for (let i = 0; i < ign.length; i++) {
@@ -39,16 +29,36 @@ function getFallbackStats(ign: string) {
     hash |= 0;
   }
   const abs = Math.abs(hash);
-  const gamesPlayed = 12 + (abs % 88);
-  const wagerBase = (abs % 60 + 10) * 1000000; // 10M to 70M
-  const winMultiplier = 0.75 + ((abs % 45) / 100); // 0.75 to 1.20
-  const totalWon = Math.round(wagerBase * winMultiplier);
+  const gamesPlayed = 15 + (abs % 75);
+  const wagerBase = (abs % 80 + 10) * 1000000;
+  const deposited = Math.round(wagerBase * (0.15 + (abs % 20) / 100));
+  const withdrawn = Math.round(deposited * (0.3 + (abs % 50) / 100));
+  const netProfit = (abs % 2 === 0 ? 1 : -1) * Math.round(deposited * (0.2 + (abs % 60) / 100));
+  const rank = (abs % 800) + 20;
+  const level = Math.min(99, Math.floor(gamesPlayed / 2) + 5);
 
   return {
     totalWagered: wagerBase,
-    totalWon: totalWon,
-    gamesPlayed: gamesPlayed,
+    deposited,
+    withdrawn,
+    netProfit,
+    gamesPlayed,
+    rank,
+    level,
   };
+}
+
+function parseTipAmount(str: string): number {
+  const clean = str.replace(/^\$/, '').replace(/,/g, '').trim().toLowerCase();
+  const match = clean.match(/^([0-9.]+)\s*([kmb])?$/);
+  if (!match) return 0;
+  const num = parseFloat(match[1]);
+  if (!Number.isFinite(num) || num <= 0) return 0;
+  const suffix = match[2];
+  if (suffix === 'k') return Math.round(num * 1e3);
+  if (suffix === 'm') return Math.round(num * 1e6);
+  if (suffix === 'b') return Math.round(num * 1e9);
+  return Math.round(num);
 }
 
 export default function UserProfileModal({
@@ -57,20 +67,19 @@ export default function UserProfileModal({
   targetIgn,
   onMention,
 }: UserProfileModalProps) {
-  const { user, users, transferCoins } = useGame();
-  const [tipAmount, setTipAmount] = useState<number>(5000000); // 5M default
+  const { user, users, deposits, withdrawals, transferCoins } = useGame();
+  const [tipInput, setTipInput] = useState<string>('');
   const [isSending, setIsSending] = useState<boolean>(false);
   const [tipSuccess, setTipSuccess] = useState<string | null>(null);
   const [tipError, setTipError] = useState<string | null>(null);
+  const [isFriend, setIsFriend] = useState<boolean>(false);
 
   if (!isOpen || !targetIgn) return null;
 
   const cleanTarget = targetIgn.replace(/^@/, '').trim();
-  const isMe = user && cleanTarget.toLowerCase() === user.minecraftIgn.toLowerCase();
-  const isOwner = cleanTarget.toLowerCase() === 'cartisneakz';
-  const isStaff = isOwner || cleanTarget.toLowerCase() === 'xynfnagsss' || cleanTarget.toLowerCase() === 'gangsterjew7';
+  const isMe = Boolean(user && cleanTarget.toLowerCase() === user.minecraftIgn.toLowerCase());
 
-  // Find user in store or fallback to consistent stats
+  // Find user in store or generate fallback
   const matchedUser = users.find(
     (u) =>
       u.minecraftIgn.toLowerCase() === cleanTarget.toLowerCase() ||
@@ -80,11 +89,23 @@ export default function UserProfileModal({
 
   const fallback = getFallbackStats(cleanTarget);
   const totalWagered = matchedUser ? matchedUser.totalWagered : fallback.totalWagered;
-  const totalWon = matchedUser ? matchedUser.totalWon : fallback.totalWon;
+  const totalWon = matchedUser ? matchedUser.totalWon : (fallback.totalWagered + fallback.netProfit);
   const gamesPlayed = matchedUser ? matchedUser.gamesPlayed : fallback.gamesPlayed;
   const netProfit = totalWon - totalWagered;
-  const isProfitable = netProfit >= 0;
-  const winRate = totalWagered > 0 ? ((totalWon / totalWagered) * 100).toFixed(1) : '0.0';
+
+  // Deposited & Withdrawn
+  const userDeposited = (deposits || [])
+    .filter(d => (d.userId === matchedUser?.id || d.minecraftIgn?.toLowerCase() === cleanTarget.toLowerCase()) && d.status === 'approved')
+    .reduce((sum, d) => sum + Math.max(d.amountCoins || 0, d.amountInGame || 0), 0);
+  const depositedAmount = userDeposited > 0 ? userDeposited : fallback.deposited;
+
+  const userWithdrawn = (withdrawals || [])
+    .filter(w => (w.userId === matchedUser?.id || w.minecraftIgn?.toLowerCase() === cleanTarget.toLowerCase()) && w.status === 'approved')
+    .reduce((sum, w) => sum + (w.amountCoins || 0), 0);
+  const withdrawnAmount = userWithdrawn > 0 ? userWithdrawn : fallback.withdrawn;
+
+  const playerLevel = fallback.level;
+  const playerRank = fallback.rank;
 
   const handleSendTip = async () => {
     setTipError(null);
@@ -98,18 +119,20 @@ export default function UserProfileModal({
       setTipError('You cannot tip yourself!');
       return;
     }
-    if (tipAmount <= 0) {
-      setTipError('Enter a valid tip amount greater than 0.');
+
+    const finalAmount = parseTipAmount(tipInput);
+    if (finalAmount <= 0) {
+      setTipError('Enter a valid tip amount (e.g. 250k, 1m).');
       return;
     }
-    if (tipAmount > user.balance) {
+    if (finalAmount > user.balance) {
       setTipError(`Insufficient balance! You have ${formatCash(user.balance)} Cash.`);
       return;
     }
 
     setIsSending(true);
 
-    const result = transferCoins(cleanTarget, tipAmount);
+    const result = transferCoins(cleanTarget, finalAmount);
     if (!result.success) {
       setTipError(result.message);
       setIsSending(false);
@@ -118,7 +141,8 @@ export default function UserProfileModal({
 
     sound.playWin();
     confetti({ particleCount: 120, spread: 80 });
-    setTipSuccess(`Successfully tipped ${formatCash(tipAmount)} Cash to @${cleanTarget}!`);
+    setTipSuccess(`Successfully tipped ${formatCash(finalAmount)} Cash to @${cleanTarget}!`);
+    setTipInput('');
 
     // Broadcast live to community chat stream
     try {
@@ -128,13 +152,13 @@ export default function UserProfileModal({
         body: JSON.stringify({
           username: user.username,
           minecraftIgn: user.minecraftIgn,
-          message: `💸 [TIP] @${user.minecraftIgn} tipped ${formatCash(tipAmount)} Cash to @${cleanTarget}!`,
+          message: `💸 [TIP] @${user.minecraftIgn} tipped ${formatCash(finalAmount)} Cash to @${cleanTarget}!`,
           isStaff: user.role === 'admin' || user.minecraftIgn.toLowerCase() === 'cartisneakz',
           isPayment: true,
           paymentDetails: {
             senderIgn: user.minecraftIgn,
             recipientIgn: cleanTarget,
-            amount: tipAmount,
+            amount: finalAmount,
           },
         }),
       });
@@ -148,13 +172,13 @@ export default function UserProfileModal({
             userId: user.minecraftIgn,
             username: user.username,
             minecraftIgn: user.minecraftIgn,
-            message: `💸 [TIP] @${user.minecraftIgn} tipped ${formatCash(tipAmount)} Cash to @${cleanTarget}!`,
+            message: `💸 [TIP] @${user.minecraftIgn} tipped ${formatCash(finalAmount)} Cash to @${cleanTarget}!`,
             isStaff: user.role === 'admin',
             isPayment: true,
             paymentDetails: {
               senderIgn: user.minecraftIgn,
               recipientIgn: cleanTarget,
-              amount: tipAmount,
+              amount: finalAmount,
             },
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           },
@@ -175,263 +199,213 @@ export default function UserProfileModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative w-full max-w-md bg-[#0f1118] border border-white/10 rounded-3xl p-6 shadow-2xl overflow-hidden">
-        {/* Glow Ambient Lights */}
-        <div className="absolute -top-20 -right-20 w-44 h-44 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-20 -left-20 w-44 h-44 bg-amber-500/15 rounded-full blur-3xl pointer-events-none" />
+      <div className="relative w-full max-w-sm sm:max-w-md bg-[#0a0f1d] border border-[#1b2644] rounded-3xl p-6 shadow-2xl overflow-hidden select-none">
+        {/* Emerald Ambient Glow at top center */}
+        <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-64 h-44 bg-emerald-500/25 rounded-full blur-3xl pointer-events-none" />
 
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-neutral-400 hover:text-white p-1.5 rounded-xl hover:bg-white/5 transition"
+          className="absolute top-4 right-4 text-neutral-400 hover:text-white p-1.5 rounded-xl hover:bg-white/5 transition cursor-pointer z-10"
         >
           <X className="w-5 h-5" />
         </button>
 
-        {/* User Header / Hero */}
-        <div className="flex items-center gap-4 mb-6 border-b border-white/5 pb-5">
-          <div className="relative">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={`https://mc-heads.net/avatar/${encodeURIComponent(cleanTarget)}/64`}
-              alt={cleanTarget}
-              className="w-16 h-16 rounded-2xl bg-neutral-800 border-2 border-emerald-500/40 shadow-lg shadow-emerald-500/20 object-cover"
-              onError={(e) => {
-                (e.target as HTMLElement).style.display = 'none';
-              }}
-            />
-            {isOwner ? (
-              <span className="absolute -bottom-1 -right-1 bg-amber-500 text-black p-1 rounded-full shadow">
-                <Crown className="w-3.5 h-3.5" />
-              </span>
-            ) : isStaff ? (
-              <span className="absolute -bottom-1 -right-1 bg-amber-500 text-black p-1 rounded-full shadow">
-                <ShieldAlert className="w-3.5 h-3.5" />
-              </span>
-            ) : (
-              <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-[#0f1118]" />
-            )}
-          </div>
-
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <h3 className="text-xl font-black text-white font-mono truncate">
-                {cleanTarget}
-              </h3>
-              <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full border bg-emerald-500/10 border-emerald-500/30 text-emerald-400">
-                CASINO MEMBER
-              </span>
-
-              {isOwner ? (
-                <span className="text-[10px] font-black uppercase bg-gradient-to-r from-amber-500 to-yellow-500 text-black px-2 py-0.5 rounded-full shadow-md">
-                  👑 OWNER
-                </span>
-              ) : isStaff ? (
-                <span className="text-[10px] font-black uppercase bg-amber-500/20 text-amber-400 border border-amber-500/40 px-2 py-0.5 rounded-full">
-                  🛡️ STAFF
-                </span>
-              ) : (
-                <span className="text-[10px] font-black uppercase bg-white/10 text-neutral-300 px-2 py-0.5 rounded-full">
-                  PLAYER
-                </span>
-              )}
-            </div>
-
-            <p className="text-xs text-neutral-400 mt-1 flex items-center gap-1.5 font-medium">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>DonutSMP Casino Player</span>
-            </p>
-          </div>
+        {/* Circular Avatar */}
+        <div className="relative flex justify-center mt-1">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={`https://mc-heads.net/avatar/${encodeURIComponent(cleanTarget)}/80`}
+            alt={cleanTarget}
+            className="w-20 h-20 rounded-full border-2 border-white/10 shadow-xl object-cover bg-neutral-900"
+            onError={(e) => {
+              (e.target as HTMLElement).style.display = 'none';
+            }}
+          />
         </div>
 
-        {/* Statistics Grid */}
-        <div className="mb-6">
-          <span className="text-[10px] font-black uppercase tracking-wider text-neutral-400 block mb-2">
-            Player Gambling Statistics
+        {/* Username */}
+        <h3 className="text-xl font-black text-white text-center mt-3 tracking-wide">
+          {cleanTarget}
+        </h3>
+
+        {/* Level & Rank Badges */}
+        <div className="flex items-center justify-center gap-1.5 mt-1.5 mb-3">
+          <span className="px-2 py-0.5 rounded-md bg-[#7c1d2e] text-white font-mono font-black text-xs shadow-sm">
+            {playerLevel}
           </span>
-          <div className="grid grid-cols-2 gap-2.5">
-            {/* Total Gambled */}
-            <div className="bg-[#141722] border border-white/5 rounded-2xl p-3 flex flex-col">
-              <span className="text-[10px] font-bold text-neutral-400 uppercase flex items-center gap-1 mb-1">
-                <Flame className="w-3.5 h-3.5 text-amber-400" />
-                Total Gambled
-              </span>
-              <span className="text-base font-black font-mono text-white">
-                {formatCash(totalWagered)}
-              </span>
-            </div>
+          <span className="px-2.5 py-0.5 rounded-md bg-[#132a58] text-[#5b95ff] font-mono font-black text-xs shadow-sm">
+            #{playerRank}
+          </span>
+        </div>
 
-            {/* Total Won */}
-            <div className="bg-[#141722] border border-white/5 rounded-2xl p-3 flex flex-col">
-              <span className="text-[10px] font-bold text-neutral-400 uppercase flex items-center gap-1 mb-1">
-                <Trophy className="w-3.5 h-3.5 text-emerald-400" />
-                Total Won
-              </span>
-              <span className="text-base font-black font-mono text-emerald-400">
-                {formatCash(totalWon)}
-              </span>
-            </div>
-
-            {/* Net Profit / Loss */}
-            <div className="bg-[#141722] border border-white/5 rounded-2xl p-3 flex flex-col">
-              <span className="text-[10px] font-bold text-neutral-400 uppercase flex items-center gap-1 mb-1">
-                {isProfitable ? (
-                  <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
-                ) : (
-                  <TrendingDown className="w-3.5 h-3.5 text-rose-400" />
-                )}
-                Net Profit
-              </span>
-              <span
-                className={`text-base font-black font-mono ${
-                  isProfitable ? 'text-emerald-400' : 'text-rose-400'
-                }`}
-              >
-                {formatCash(netProfit, { showPlus: true })}
-              </span>
-            </div>
-
-            {/* Games Played */}
-            <div className="bg-[#141722] border border-white/5 rounded-2xl p-3 flex flex-col">
-              <span className="text-[10px] font-bold text-neutral-400 uppercase flex items-center gap-1 mb-1">
-                <Gamepad2 className="w-3.5 h-3.5 text-sky-400" />
-                Games Played
-              </span>
-              <span className="text-base font-black font-mono text-white">
-                {formatCompactNumber(gamesPlayed)} rounds
-              </span>
-            </div>
+        {/* Verified / OG / Level 50 Badges Row */}
+        <div className="flex items-center justify-center gap-2 mb-4 flex-wrap">
+          <div className="px-3 py-1 rounded-lg bg-[#11192e] border border-[#1c2a4d] text-xs font-bold text-neutral-300 flex items-center gap-1.5">
+            <Check className="w-3.5 h-3.5 text-blue-400 stroke-[3]" />
+            <span>Verified</span>
           </div>
-
-          {/* Win Return Ratio Bar */}
-          <div className="mt-2.5 bg-[#141722] border border-white/5 rounded-xl p-2.5 flex items-center justify-between text-xs">
-            <span className="text-[11px] text-neutral-400 font-bold">Return Ratio</span>
-            <span className="font-mono font-black text-amber-300">{winRate}% of Wagered</span>
+          <div className="px-3 py-1 rounded-lg bg-[#11192e] border border-[#1c2a4d] text-xs font-bold text-neutral-300 flex items-center gap-1.5">
+            <Star className="w-3.5 h-3.5 text-neutral-300 fill-neutral-300" />
+            <span>OG</span>
+          </div>
+          <div className="px-3 py-1 rounded-lg bg-[#11192e] border border-[#1c2a4d] text-xs font-bold text-neutral-300 flex items-center gap-1.5">
+            <Hexagon className="w-3.5 h-3.5 text-neutral-300" />
+            <span>Level 50</span>
           </div>
         </div>
 
-        {/* Tip Section */}
-        <div className="bg-[#141722] border border-amber-500/20 rounded-2xl p-4 mb-4">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-1.5">
-              <HeartHandshake className="w-4 h-4 text-amber-400" />
-              <span className="text-xs font-black uppercase tracking-wider text-amber-300">
-                Tip @{cleanTarget}
+        {/* Friends & Mention Action Buttons */}
+        <div className="flex items-center justify-center gap-3 mb-5">
+          <button
+            type="button"
+            onClick={() => setIsFriend(!isFriend)}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
+              isFriend
+                ? 'border border-emerald-500 bg-emerald-500/20 text-emerald-300 shadow-sm shadow-emerald-500/20'
+                : 'border border-emerald-500/60 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400'
+            }`}
+          >
+            <Users className="w-4 h-4" />
+            <span>{isFriend ? 'Friends ✓' : 'Friends'}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleMention}
+            className="px-4 py-2 rounded-xl border border-[#1c2a4d] bg-[#11192e] hover:bg-[#182442] text-neutral-300 hover:text-white text-xs font-bold transition flex items-center gap-2 cursor-pointer"
+          >
+            <AtSign className="w-4 h-4 text-neutral-400" />
+            <span>Mention</span>
+          </button>
+        </div>
+
+        {/* 4 Stats Cards Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
+          {/* Card 1: Total played */}
+          <div className="bg-[#10172a] border border-[#1c2949] rounded-2xl p-3 flex flex-col justify-between min-h-[78px]">
+            <span className="text-[11px] font-bold text-neutral-400">Total played</span>
+            <div className="flex items-center gap-1.5 my-1">
+              <span className="text-xs">🪙</span>
+              <span className="font-mono font-black text-white text-sm truncate">
+                {formatCompactNumber(totalWagered).toLowerCase()}
               </span>
             </div>
-            {user && (
-              <span className="text-[10px] text-neutral-400 font-mono">
-                Your Balance: <strong className="text-white">{formatCash(user.balance)}</strong>
-              </span>
-            )}
+            <span className="text-[10px] font-medium text-neutral-500">
+              {gamesPlayed} bets
+            </span>
           </div>
 
-          {/* Quick Preset Buttons */}
-          <div className="flex flex-wrap items-center gap-1.5 mb-3">
-            {[1000000, 5000000, 10000000, 25000000, 50000000].map((amt) => (
+          {/* Card 2: Deposited */}
+          <div className="bg-[#10172a] border border-[#1c2949] rounded-2xl p-3 flex flex-col justify-between min-h-[78px]">
+            <span className="text-[11px] font-bold text-neutral-400">Deposited</span>
+            <div className="flex items-center gap-1.5 my-1">
+              <span className="text-xs">🪙</span>
+              <span className="font-mono font-black text-white text-sm truncate">
+                {formatCompactNumber(depositedAmount).toLowerCase()}
+              </span>
+            </div>
+            <span className="text-[10px] font-medium text-neutral-500 invisible">0</span>
+          </div>
+
+          {/* Card 3: Withdrawn */}
+          <div className="bg-[#10172a] border border-[#1c2949] rounded-2xl p-3 flex flex-col justify-between min-h-[78px]">
+            <span className="text-[11px] font-bold text-neutral-400">Withdrawn</span>
+            <div className="flex items-center gap-1.5 my-1">
+              <span className="text-xs">🪙</span>
+              <span className="font-mono font-black text-white text-sm truncate">
+                {formatCompactNumber(withdrawnAmount).toLowerCase()}
+              </span>
+            </div>
+            <span className="text-[10px] font-medium text-neutral-500 invisible">0</span>
+          </div>
+
+          {/* Card 4: Profit */}
+          <div className="bg-[#10172a] border border-[#1c2949] rounded-2xl p-3 flex flex-col justify-between min-h-[78px]">
+            <span className="text-[11px] font-bold text-neutral-400">Profit</span>
+            <div className="flex items-center gap-1.5 my-1">
+              <span className="text-xs">🪙</span>
+              <span className={`font-mono font-black text-sm truncate ${netProfit >= 0 ? 'text-emerald-400' : 'text-amber-400'}`}>
+                {netProfit < 0 ? '-' : ''}{formatCompactNumber(Math.abs(netProfit)).toLowerCase()}
+              </span>
+            </div>
+            <span className="text-[10px] font-medium text-neutral-500 invisible">0</span>
+          </div>
+        </div>
+
+        {/* Tip Section Card */}
+        <div className="bg-[#10172a] border border-[#1c2949] rounded-2xl p-4 flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <h4 className="text-sm font-black text-white">
+              Tip {cleanTarget}
+            </h4>
+            <div className="flex items-center gap-1.5 text-xs font-bold text-neutral-400">
+              <span>Balance</span>
+              <span className="text-xs">🪙</span>
+              <span className="font-mono text-white font-black">
+                {formatCompactNumber(user?.balance || 0).toLowerCase()}
+              </span>
+            </div>
+          </div>
+
+          {/* Input & Blue TIP Button */}
+          <div className="flex items-center gap-2">
+            <div className="flex-1 bg-[#090d18] border border-[#19243f] rounded-xl px-3 py-2.5 flex items-center gap-2 focus-within:border-blue-500 transition shadow-inner">
+              <span className="text-xs select-none">🪙</span>
+              <input
+                type="text"
+                value={tipInput}
+                onChange={(e) => setTipInput(e.target.value)}
+                placeholder="Amount, e.g. 250k"
+                className="w-full bg-transparent text-xs font-mono font-bold text-white placeholder-neutral-500 outline-none"
+              />
+            </div>
+
+            <button
+              type="button"
+              onClick={handleSendTip}
+              disabled={isSending || !tipInput.trim()}
+              className="px-6 py-2.5 rounded-xl bg-[#2563eb] hover:bg-[#1d4ed8] disabled:opacity-40 disabled:cursor-not-allowed text-white font-black text-xs uppercase tracking-wider transition cursor-pointer shadow-lg shadow-blue-500/25 active:scale-95 shrink-0"
+            >
+              {isSending ? '...' : 'TIP'}
+            </button>
+          </div>
+
+          {/* Preset Buttons */}
+          <div className="grid grid-cols-5 gap-1.5">
+            {['100k', '1m', '10m', '50m', 'Max'].map((preset) => (
               <button
-                key={amt}
+                key={preset}
                 type="button"
-                onClick={() => setTipAmount(amt)}
-                className={`text-[11px] font-mono font-bold px-2.5 py-1 rounded-lg border transition ${
-                  tipAmount === amt
-                    ? 'bg-amber-500/20 text-amber-300 border-amber-500/50'
-                    : 'bg-white/5 text-neutral-400 border-white/5 hover:bg-white/10 hover:text-white'
-                }`}
+                onClick={() => {
+                  if (preset === 'Max') {
+                    setTipInput(formatCompactNumber(user?.balance || 0).toLowerCase());
+                  } else {
+                    setTipInput(preset);
+                  }
+                }}
+                className="py-1.5 px-2 rounded-xl bg-[#090d18] hover:bg-[#131c33] border border-[#19243f] text-xs font-bold text-neutral-300 hover:text-white transition text-center cursor-pointer active:scale-95"
               >
-                {formatCash(amt)}
+                {preset}
               </button>
             ))}
-            {user && (
-              <button
-                type="button"
-                onClick={() => setTipAmount(Math.floor(user.balance))}
-                className="text-[11px] font-mono font-bold px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/20 transition"
-              >
-                MAX
-              </button>
-            )}
-          </div>
-
-          {/* Amount Input */}
-          <div className="relative mb-3">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 font-mono font-bold text-xs">
-              $
-            </span>
-            <input
-              type="number"
-              min={1}
-              value={tipAmount}
-              onChange={(e) => setTipAmount(Number(e.target.value))}
-              placeholder="Amount in Cash..."
-              className="w-full bg-[#0b0c10] border border-white/10 rounded-xl py-2 pl-7 pr-3 text-white font-mono font-bold text-xs outline-none focus:border-amber-400 transition"
-            />
           </div>
 
           {tipError && (
-            <div className="mb-3 p-2 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs rounded-lg flex items-center gap-1.5">
-              <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-              <span>{tipError}</span>
+            <div className="text-rose-400 text-xs font-bold text-center bg-rose-950/40 border border-rose-500/30 rounded-lg py-1 px-2">
+              {tipError}
             </div>
           )}
 
           {tipSuccess && (
-            <div className="mb-3 p-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-lg flex items-center gap-1.5">
-              <Check className="w-3.5 h-3.5 shrink-0" />
-              <span>{tipSuccess}</span>
+            <div className="text-emerald-400 text-xs font-bold text-center bg-emerald-950/40 border border-emerald-500/30 rounded-lg py-1 px-2">
+              {tipSuccess}
             </div>
           )}
 
-          <button
-            type="button"
-            onClick={handleSendTip}
-            disabled={isSending || isMe || !user}
-            className={`w-full py-2.5 rounded-xl font-black text-xs uppercase tracking-wider transition flex items-center justify-center gap-1.5 shadow-md ${
-              isMe
-                ? 'bg-neutral-800 text-neutral-500 cursor-not-allowed'
-                : !user
-                ? 'bg-neutral-800 text-neutral-400 cursor-not-allowed'
-                : 'bg-gradient-to-r from-amber-400 to-yellow-400 hover:from-amber-300 text-black shadow-amber-500/20 active:scale-95'
-            }`}
-          >
-            <Coins className="w-3.5 h-3.5" />
-            <span>
-              {isMe
-                ? 'CANNOT TIP YOURSELF'
-                : !user
-                ? 'SIGN IN TO TIP'
-                : isSending
-                ? 'SENDING TIP...'
-                : `TIP ${formatCash(tipAmount)} CASH`}
-            </span>
-          </button>
-        </div>
-
-        {/* Footer Actions */}
-        <div className="flex flex-col sm:flex-row items-center gap-2">
-          <Link
-            href={`/profile?ign=${encodeURIComponent(cleanTarget)}`}
-            onClick={onClose}
-            className="w-full sm:flex-1 py-2 rounded-xl bg-gradient-to-r from-emerald-500/20 to-teal-500/20 hover:from-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-xs font-bold transition flex items-center justify-center gap-1.5"
-          >
-            <ExternalLink className="w-3.5 h-3.5" />
-            <span>View Stake Profile</span>
-          </Link>
-          <button
-            type="button"
-            onClick={handleMention}
-            className="w-full sm:flex-1 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-neutral-300 hover:text-white text-xs font-bold transition flex items-center justify-center gap-1.5"
-          >
-            <AtSign className="w-3.5 h-3.5 text-emerald-400" />
-            <span>@Mention</span>
-          </button>
-          <button
-            type="button"
-            onClick={onClose}
-            className="w-full sm:w-auto px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-neutral-400 hover:text-white text-xs font-bold transition"
-          >
-            Close
-          </button>
+          <p className="text-[11px] font-medium text-neutral-500 text-center">
+            Tips can&apos;t be undone.
+          </p>
         </div>
       </div>
     </div>

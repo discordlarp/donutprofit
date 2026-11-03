@@ -472,9 +472,9 @@ export default function CommunityChat({ isOpen: propIsOpen, onToggle: propOnTogg
                   <button
                     type="button"
                     onClick={() => setSelectedPlayer(msg.minecraftIgn)}
-                    title={`Click to view stats & tip ${msg.minecraftIgn}`}
-                    className={`font-bold transition truncate text-[11px] hover:underline cursor-pointer text-left ${
-                      isCarti ? 'text-amber-400 font-black' : isMe ? 'text-emerald-400' : 'text-neutral-300'
+                    title={`Click to view profile & tip ${msg.minecraftIgn}`}
+                    className={`font-bold transition truncate text-[11px] hover:underline hover:text-emerald-400 cursor-pointer text-left ${
+                      isCarti ? 'text-amber-400 font-black hover:text-amber-300' : isMe ? 'text-emerald-400' : 'text-neutral-200'
                     }`}
                   >
                     {msg.minecraftIgn}
