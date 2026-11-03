@@ -31,6 +31,7 @@ export interface UserProfile {
   reviewedBy?: string;
   referralCode?: string;
   referredBy?: string;
+  referrerAppliedAt?: number;
   referralCount?: number;
   referralCountThisWeek?: number;
   referralWeekResetAt?: string;

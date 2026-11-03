@@ -931,12 +931,17 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       );
       const referrerTag = referrerUser ? referrerUser.minecraftIgn : currentRef;
 
+      const now = Date.now();
       const updatedFound: UserProfile = {
         ...found,
         balance: Number(found.balance ?? 0) + REFERRAL_BONUS_AMOUNT,
         referredBy: referrerTag,
+        referrerAppliedAt: now,
         totalReferralBonus: (found.totalReferralBonus || 0) + REFERRAL_BONUS_AMOUNT
       };
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(`donutprofit_ref_applied_at_${updatedFound.id}`, now.toString());
+      }
       found = updatedFound;
 
       if (referrerUser) {
@@ -1020,12 +1025,17 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       };
 
       if (currentRef && !found.referredBy) {
+        const now = Date.now();
         updatedFound = {
           ...updatedFound,
           balance: updatedFound.balance + REFERRAL_BONUS_AMOUNT,
           referredBy: currentRef,
+          referrerAppliedAt: now,
           totalReferralBonus: (updatedFound.totalReferralBonus || 0) + REFERRAL_BONUS_AMOUNT
         };
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(`donutprofit_ref_applied_at_${updatedFound.id}`, now.toString());
+        }
       }
 
       const safeFound = updatedFound;
@@ -1696,10 +1706,12 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
     if (hasDeposited10M) {
       // Qualifies immediately!
+      const now = Date.now();
       const updatedUser: UserProfile = {
         ...currentUser,
         balance: (currentUser.balance || 0) + BONUS,
         referredBy: cleanCode,
+        referrerAppliedAt: now,
         totalReferralBonus: (currentUser.totalReferralBonus || 0) + BONUS,
         referralBonusRewarded: true,
       };
@@ -1744,6 +1756,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       setCurrentUser(updatedUser);
       if (typeof window !== 'undefined') {
         localStorage.setItem('donutprofit_user', JSON.stringify(updatedUser));
+        localStorage.setItem(`donutprofit_ref_applied_at_${updatedUser.id}`, now.toString());
         localStorage.removeItem('donutprofit_active_referrer');
       }
       setActiveReferrer(null);
@@ -1754,9 +1767,11 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       };
     } else {
       // Link referral, awaiting 10M deposit
+      const now = Date.now();
       const updatedUser: UserProfile = {
         ...currentUser,
         referredBy: cleanCode,
+        referrerAppliedAt: now,
         referralBonusRewarded: false,
       };
 
@@ -1798,6 +1813,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       setCurrentUser(updatedUser);
       if (typeof window !== 'undefined') {
         localStorage.setItem('donutprofit_user', JSON.stringify(updatedUser));
+        localStorage.setItem(`donutprofit_ref_applied_at_${updatedUser.id}`, now.toString());
         localStorage.removeItem('donutprofit_active_referrer');
       }
       setActiveReferrer(null);
@@ -1835,16 +1851,23 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
   const updateReferrer = (newRef: string | null) => {
     const clean = newRef ? newRef.trim().replace(/^@/, '') : undefined;
+    const now = Date.now();
     if (currentUser) {
       const updated: UserProfile = {
         ...currentUser,
         referredBy: clean,
+        referrerAppliedAt: clean ? (currentUser.referrerAppliedAt || now) : undefined,
       };
       setCurrentUser(updated);
       setUsers(prev => prev.map(u => u.id === updated.id ? updated : u));
       if (typeof window !== 'undefined') {
         localStorage.setItem('donutprofit_user', JSON.stringify(updated));
         localStorage.setItem('donutprofit_current_user', JSON.stringify(updated));
+        if (clean) {
+          localStorage.setItem(`donutprofit_ref_applied_at_${currentUser.id}`, (currentUser.referrerAppliedAt || now).toString());
+        } else {
+          localStorage.removeItem(`donutprofit_ref_applied_at_${currentUser.id}`);
+        }
       }
     }
     if (typeof window !== 'undefined') {

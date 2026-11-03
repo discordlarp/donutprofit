@@ -30,8 +30,11 @@ export default function ReferralPage() {
   // Referrer state
   const [currentReferrer, setCurrentReferrer] = useState<string>('None');
   const [changesLeft, setChangesLeft] = useState<number>(2);
+  const [referrerAppliedAt, setReferrerAppliedAt] = useState<number | null>(null);
   const [newReferrerInput, setNewReferrerInput] = useState<string>('');
   const [referrerMsg, setReferrerMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
   // Load referrer and changes count
   useEffect(() => {
@@ -51,8 +54,34 @@ export default function ReferralPage() {
         const parsed = parseInt(storedChanges, 10);
         if (!isNaN(parsed)) setChangesLeft(parsed);
       }
+
+      const storedTime = localStorage.getItem(`donutprofit_ref_applied_at_${userKey}`);
+      if (storedTime !== null) {
+        const parsedTime = parseInt(storedTime, 10);
+        if (!isNaN(parsedTime) && parsedTime > 0) setReferrerAppliedAt(parsedTime);
+      } else if (user?.referrerAppliedAt) {
+        setReferrerAppliedAt(user.referrerAppliedAt);
+      }
     }
-  }, [user?.id, user?.referredBy]);
+  }, [user?.id, user?.referredBy, user?.referrerAppliedAt]);
+
+  const isLocked = useMemo(() => {
+    if (!currentReferrer || currentReferrer === 'None' || !referrerAppliedAt) return false;
+    return Date.now() < referrerAppliedAt + ONE_WEEK_MS;
+  }, [currentReferrer, referrerAppliedAt, ONE_WEEK_MS]);
+
+  const remainingCooldownStr = useMemo(() => {
+    if (!referrerAppliedAt) return '';
+    const diff = (referrerAppliedAt + ONE_WEEK_MS) - Date.now();
+    if (diff <= 0) return '';
+    const totalHours = Math.floor(diff / (3600 * 1000));
+    const days = Math.floor(totalHours / 24);
+    const hours = totalHours % 24;
+    const mins = Math.floor((diff % (3600 * 1000)) / (60 * 1000));
+    if (days > 0) return `${days}d ${hours}h`;
+    if (hours > 0) return `${hours}h ${mins}m`;
+    return `${Math.max(1, mins)}m`;
+  }, [referrerAppliedAt, ONE_WEEK_MS]);
 
   // Load custom referral code if saved previously
   useEffect(() => {
@@ -127,6 +156,14 @@ export default function ReferralPage() {
       return;
     }
 
+    if (currentReferrer !== 'None' && isLocked) {
+      setReferrerMsg({
+        type: 'error',
+        text: `You cannot change your referrer for another week after applying it (${remainingCooldownStr} remaining).`,
+      });
+      return;
+    }
+
     const clean = newReferrerInput.trim().replace(/^@/, '');
     if (!clean) {
       setReferrerMsg({ type: 'error', text: 'Please enter a valid referral code or username.' });
@@ -144,8 +181,10 @@ export default function ReferralPage() {
     }
 
     const nextChanges = Math.max(0, changesLeft - 1);
+    const now = Date.now();
     setChangesLeft(nextChanges);
     setCurrentReferrer(clean);
+    setReferrerAppliedAt(now);
     setNewReferrerInput('');
     setReferrerMsg({ type: 'success', text: `Referrer updated to ${clean}!` });
 
@@ -153,6 +192,7 @@ export default function ReferralPage() {
       const userKey = user?.id || 'guest';
       localStorage.setItem(`donutprofit_referrer_${userKey}`, clean);
       localStorage.setItem(`donutprofit_ref_changes_${userKey}`, nextChanges.toString());
+      localStorage.setItem(`donutprofit_ref_applied_at_${userKey}`, now.toString());
     }
 
     if (updateReferrer) {
@@ -176,15 +216,25 @@ export default function ReferralPage() {
       return;
     }
 
+    if (isLocked) {
+      setReferrerMsg({
+        type: 'error',
+        text: `You cannot remove your referrer for another week after applying it (${remainingCooldownStr} remaining).`,
+      });
+      return;
+    }
+
     const nextChanges = Math.max(0, changesLeft - 1);
     setChangesLeft(nextChanges);
     setCurrentReferrer('None');
+    setReferrerAppliedAt(null);
     setReferrerMsg({ type: 'success', text: 'Referrer removed.' });
 
     if (typeof window !== 'undefined') {
       const userKey = user?.id || 'guest';
       localStorage.setItem(`donutprofit_referrer_${userKey}`, 'None');
       localStorage.setItem(`donutprofit_ref_changes_${userKey}`, nextChanges.toString());
+      localStorage.removeItem(`donutprofit_ref_applied_at_${userKey}`);
     }
 
     if (updateReferrer) {
@@ -512,15 +562,25 @@ export default function ReferralPage() {
                 {changesLeft} {changesLeft === 1 ? 'change' : 'changes'} left.
               </span>
 
-              {/* Remove my referrer link */}
-              <button
-                type="button"
-                onClick={handleRemoveReferrer}
-                disabled={changesLeft <= 0 || currentReferrer === 'None'}
-                className="text-xs font-bold text-blue-400 hover:text-blue-300 hover:underline disabled:opacity-40 disabled:hover:no-underline disabled:cursor-not-allowed transition cursor-pointer text-left mt-1 w-fit"
-              >
-                Remove my referrer
-              </button>
+              {/* Remove my referrer link & cooldown status */}
+              <div className="flex flex-wrap items-center gap-2 mt-1">
+                <button
+                  type="button"
+                  onClick={handleRemoveReferrer}
+                  disabled={changesLeft <= 0 || currentReferrer === 'None' || isLocked}
+                  className="text-xs font-bold text-blue-400 hover:text-blue-300 hover:underline disabled:opacity-40 disabled:hover:no-underline disabled:cursor-not-allowed transition cursor-pointer text-left w-fit"
+                >
+                  Remove my referrer
+                </button>
+                {isLocked && (
+                  <span className="text-[10px] font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full inline-flex items-center gap-1 shadow-sm">
+                    <svg className="w-2.5 h-2.5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                    Locked for {remainingCooldownStr}
+                  </span>
+                )}
+              </div>
             </div>
 
             {/* Right Column: Input & CHANGE Button */}
@@ -531,12 +591,12 @@ export default function ReferralPage() {
                 onChange={(e) => setNewReferrerInput(e.target.value)}
                 placeholder="New code"
                 maxLength={24}
-                disabled={changesLeft <= 0}
+                disabled={changesLeft <= 0 || (currentReferrer !== 'None' && isLocked)}
                 className="flex-1 sm:w-60 bg-[#070b15] border border-[#1a233c] rounded-xl px-4 py-3 text-xs text-white placeholder-neutral-500 font-mono outline-none focus:border-blue-500 transition shadow-inner disabled:opacity-50"
               />
               <button
                 type="submit"
-                disabled={!newReferrerInput.trim() || changesLeft <= 0}
+                disabled={!newReferrerInput.trim() || changesLeft <= 0 || (currentReferrer !== 'None' && isLocked)}
                 className="px-6 py-3 rounded-xl bg-[#2563eb] hover:bg-[#1d4ed8] disabled:opacity-40 disabled:cursor-not-allowed text-white font-black text-xs uppercase tracking-wider transition cursor-pointer active:scale-95 shadow-md shadow-blue-500/20 shrink-0"
               >
                 CHANGE
