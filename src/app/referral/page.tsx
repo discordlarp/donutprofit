@@ -28,7 +28,7 @@ export default function ReferralPage() {
   const [showTiersModal, setShowTiersModal] = useState(false);
 
   // Referrer state
-  const [currentReferrer, setCurrentReferrer] = useState<string>('.jsjefferyeps');
+  const [currentReferrer, setCurrentReferrer] = useState<string>('None');
   const [changesLeft, setChangesLeft] = useState<number>(2);
   const [newReferrerInput, setNewReferrerInput] = useState<string>('');
   const [referrerMsg, setReferrerMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -38,12 +38,12 @@ export default function ReferralPage() {
     if (typeof window !== 'undefined') {
       const userKey = user?.id || 'guest';
       const storedRef = localStorage.getItem(`donutprofit_referrer_${userKey}`);
-      if (storedRef !== null) {
+      if (storedRef && storedRef !== '.jsjefferyeps' && storedRef !== 'None') {
         setCurrentReferrer(storedRef);
-      } else if (user?.referredBy) {
+      } else if (user?.referredBy && user.referredBy !== '.jsjefferyeps') {
         setCurrentReferrer(user.referredBy);
       } else {
-        setCurrentReferrer('.jsjefferyeps');
+        setCurrentReferrer('None');
       }
 
       const storedChanges = localStorage.getItem(`donutprofit_ref_changes_${userKey}`);
@@ -502,7 +502,7 @@ export default function ReferralPage() {
                     (e.target as HTMLElement).style.opacity = '0';
                   }}
                 />
-                <span className="font-black text-white text-base sm:text-lg font-mono tracking-wide">
+                <span className={`font-mono tracking-wide ${currentReferrer === 'None' ? 'text-neutral-400 font-bold text-base' : 'font-black text-white text-base sm:text-lg'}`}>
                   {currentReferrer}
                 </span>
               </div>
