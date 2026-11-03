@@ -506,12 +506,15 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   // Load from LocalStorage & detect referral URL param
   useEffect(() => {
     try {
+      let pendingReferralCode: string | null = null;
       if (typeof window !== 'undefined') {
         const params = new URLSearchParams(window.location.search);
-        const refParam = params.get('ref');
+        const refParam = params.get('r') || params.get('ref');
         if (refParam) {
-          setActiveReferrer(refParam);
-          localStorage.setItem('donutprofit_active_referrer', refParam);
+          const cleanRef = refParam.trim().toLowerCase().replace(/^@/, '');
+          setActiveReferrer(cleanRef);
+          localStorage.setItem('donutprofit_active_referrer', cleanRef);
+          pendingReferralCode = cleanRef;
         } else {
           const savedRef = localStorage.getItem('donutprofit_active_referrer');
           if (savedRef) setActiveReferrer(savedRef);
@@ -532,6 +535,29 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         currentUsersList = JSON.parse(savedUsers);
       }
 
+      // One-time migration to reset old mock stats so everyone starts fresh at 0
+      const RESET_REF_KEY = 'donutprofit_ref_clean_zero_v4';
+      if (typeof localStorage !== 'undefined' && !localStorage.getItem(RESET_REF_KEY)) {
+        localStorage.setItem(RESET_REF_KEY, 'true');
+        currentUsersList = currentUsersList.map(u => ({
+          ...u,
+          referralCount: 0,
+          referralCountThisWeek: 0,
+          totalReferralBonus: 0,
+        }));
+        localStorage.setItem('donutprofit_users', JSON.stringify(currentUsersList));
+        if (savedCurrentUser) {
+          try {
+            const parsed = JSON.parse(savedCurrentUser);
+            parsed.referralCount = 0;
+            parsed.referralCountThisWeek = 0;
+            parsed.totalReferralBonus = 0;
+            localStorage.setItem('donutprofit_current_user', JSON.stringify(parsed));
+            localStorage.setItem('donutprofit_user', JSON.stringify(parsed));
+          } catch {}
+        }
+      }
+
       const nextReset = getNextReferralReset();
       currentUsersList = currentUsersList.map(u => {
         const isStaffAcc = u.minecraftIgn.toLowerCase() === 'cartisneakz' || 
@@ -549,6 +575,59 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
           referralCount: u.referralCount ?? 0,
         };
       });
+
+      // Track referral link click (once per browser session per code to prevent refresh loops)
+      if (pendingReferralCode) {
+        const sessionClickKey = `donutprofit_ref_click_${pendingReferralCode}`;
+        const alreadyTracked = typeof sessionStorage !== 'undefined' && sessionStorage.getItem(sessionClickKey);
+        if (!alreadyTracked) {
+          if (typeof sessionStorage !== 'undefined') {
+            sessionStorage.setItem(sessionClickKey, 'true');
+          }
+          const targetRef = pendingReferralCode.toLowerCase();
+          const refIdx = currentUsersList.findIndex(u => 
+            u.minecraftIgn.toLowerCase() === targetRef || 
+            u.username.toLowerCase() === targetRef || 
+            (u.referralCode && u.referralCode.toLowerCase() === targetRef) ||
+            (typeof localStorage !== 'undefined' && localStorage.getItem(`donutprofit_ref_code_${u.id}`)?.toLowerCase() === targetRef)
+          );
+
+          if (refIdx !== -1) {
+            currentUsersList[refIdx] = {
+              ...currentUsersList[refIdx],
+              referralCount: (currentUsersList[refIdx].referralCount || 0) + 1,
+              referralCountThisWeek: (currentUsersList[refIdx].referralCountThisWeek || 0) + 1,
+            };
+          } else {
+            const newRefUser: UserProfile = {
+              id: `user-${Date.now()}-ref`,
+              username: pendingReferralCode,
+              minecraftIgn: pendingReferralCode,
+              avatarUrl: `https://mc-heads.net/avatar/${encodeURIComponent(pendingReferralCode)}/64`,
+              authProvider: 'minecraft',
+              balance: 0,
+              role: 'user',
+              isBanned: false,
+              totalWagered: 0,
+              totalWon: 0,
+              gamesPlayed: 0,
+              createdAt: new Date().toISOString(),
+              paymentVerified: true,
+              accountStatus: 'approved',
+              referralCount: 1,
+              referralCountThisWeek: 1,
+              referralWeekResetAt: nextReset,
+              totalReferralBonus: 0,
+              referralCode: pendingReferralCode,
+            };
+            currentUsersList.push(newRefUser);
+          }
+          if (typeof localStorage !== 'undefined') {
+            localStorage.setItem('donutprofit_users', JSON.stringify(currentUsersList));
+          }
+        }
+      }
+
       setUsers(currentUsersList);
 
       if (savedCurrentUser) {
@@ -1547,15 +1626,24 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
           createdAt: new Date().toISOString(),
           paymentVerified: true,
           accountStatus: 'approved',
-          referralCount: 0,
-          referralCountThisWeek: 0,
+          referralCount: 1,
+          referralCountThisWeek: 1,
           referralWeekResetAt: getNextReferralReset(),
           totalReferralBonus: 0,
           referralCode: cleanCode,
         };
         setUsers(prev => [...prev.map(u => u.id === updatedUser.id ? updatedUser : u), newRef]);
       } else {
-        setUsers(prev => prev.map(u => u.id === updatedUser.id ? updatedUser : u));
+        const updatedRef: UserProfile = {
+          ...foundReferrer,
+          referralCount: (foundReferrer.referralCount || 0) + 1,
+          referralCountThisWeek: (foundReferrer.referralCountThisWeek || 0) + 1,
+        };
+        setUsers(prev => prev.map(u => {
+          if (u.id === updatedUser.id) return updatedUser;
+          if (u.id === foundReferrer!.id) return updatedRef;
+          return u;
+        }));
       }
 
       setCurrentUser(updatedUser);

@@ -18,7 +18,7 @@ import confetti from 'canvas-confetti';
 import { sound } from '@/lib/sound';
 
 export default function ReferralPage() {
-  const { user } = useGame();
+  const { user, users } = useGame();
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
@@ -95,7 +95,8 @@ export default function ReferralPage() {
   const currentTier = referralCount >= 50 ? 4 : referralCount >= 20 ? 3 : referralCount >= 5 ? 2 : 1;
   const commissionRate = currentTier === 4 ? '10.0%' : currentTier === 3 ? '7.5%' : currentTier === 2 ? '5.0%' : '2.5%';
   const ticketsCount = Math.floor(referralCount / 5);
-  const neededForNext = 5 - (referralCount % 5);
+  const neededForNext = referralCount % 5 === 0 ? 5 : 5 - (referralCount % 5);
+  const totalTickets = (users || []).reduce((sum, u) => sum + Math.floor((u.referralCount || 0) / 5), 0);
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-6">
@@ -198,7 +199,7 @@ export default function ReferralPage() {
             <div className="flex items-center gap-2.5 mb-2">
               <span className="text-3xl sm:text-4xl">🪙</span>
               <span className="text-3xl sm:text-4xl font-black text-amber-400 font-mono tracking-tight">
-                500M
+                250M
               </span>
             </div>
 
@@ -235,7 +236,7 @@ export default function ReferralPage() {
             {/* Box 3: Tickets in total */}
             <div className="flex-1 sm:flex-initial min-w-[105px] bg-[#080c18] border border-[#1a2542] rounded-xl px-4 py-3.5 text-center shadow-inner">
               <span className="text-2xl font-black text-white font-mono block">
-                {ticketsCount}
+                {totalTickets}
               </span>
               <span className="text-[11px] font-bold text-neutral-400 mt-0.5 block whitespace-nowrap">
                 Tickets in total
@@ -346,13 +347,13 @@ export default function ReferralPage() {
             <div className="w-full h-1.5 bg-[#141c33] rounded-full overflow-hidden mb-2">
               <div
                 className="h-full bg-[#3b82f6] rounded-full transition-all duration-500"
-                style={{ width: `${Math.min(100, Math.max(15, (referralCount % 5) * 20))}%` }}
+                style={{ width: `${Math.min(100, Math.max(0, (referralCount / 5) * 100))}%` }}
               />
             </div>
 
             {/* Tier Description */}
             <span className="text-[11px] text-neutral-400 font-medium">
-              {currentTier === 4 ? 'Max affiliate tier unlocked!' : `${neededForNext} more referrals to Tier ${currentTier + 1}`}
+              {currentTier === 4 ? 'Max affiliate tier unlocked!' : `${Math.max(0, 5 - (referralCount % 5))} more referrals to Tier ${currentTier + 1}`}
             </span>
           </div>
 

@@ -99,6 +99,13 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
       return;
     }
 
+    if (refCodeInput.trim()) {
+      const cleanRef = refCodeInput.trim().replace(/^@/, '');
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('donutprofit_active_referrer', cleanRef);
+      }
+    }
+
     // Check if account already exists and is approved
     const existing = users.find(
       u => u.minecraftIgn.toLowerCase() === cleanIgn.toLowerCase() || 
@@ -237,6 +244,12 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
     if (!discordTag.trim()) {
       setMsg({ type: 'error', text: 'Please enter your Discord tag or username.' });
       return;
+    }
+    if (refCodeInput.trim()) {
+      const cleanRef = refCodeInput.trim().replace(/^@/, '');
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('donutprofit_active_referrer', cleanRef);
+      }
     }
     const res = loginWithDiscord(discordTag.trim(), discordTag.trim(), 'discord-pass');
     if (res.success) {
