@@ -74,7 +74,6 @@ interface GameContextType {
   toggleSidebar: () => void;
   isSidebarCollapsed: boolean;
   toggleSidebarCollapse: () => void;
-  claimRakeback: (amount: number) => { success: boolean; message: string };
 }
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
@@ -1053,23 +1052,6 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     return false;
   };
 
-  const claimRakeback = (amount: number): { success: boolean; message: string } => {
-    if (!currentUser) return { success: false, message: 'Please sign in to claim rakeback.' };
-    if (currentUser.isBanned) return { success: false, message: 'Your account is banned.' };
-    if (amount <= 0) return { success: false, message: 'No rakeback available to claim right now.' };
-
-    const updated: UserProfile = {
-      ...currentUser,
-      balance: currentUser.balance + amount,
-    };
-    setCurrentUser(updated);
-    setUsers(prev => prev.map(u => u.id === updated.id ? updated : u));
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('donutprofit_user', JSON.stringify(updated));
-    }
-    return { success: true, message: `Successfully claimed $${amount.toLocaleString()} VIP rakeback!` };
-  };
-
   const recordBet = (game: GameType, betAmount: number, multiplier: number, won: boolean, details?: any) => {
     if (!currentUser) {
       return { newBalance: 0, payout: 0 };
@@ -1659,8 +1641,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       setIsSidebarOpen,
       toggleSidebar,
       isSidebarCollapsed,
-      toggleSidebarCollapse,
-      claimRakeback
+      toggleSidebarCollapse
     }}>
       {children}
     </GameContext.Provider>

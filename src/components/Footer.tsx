@@ -32,7 +32,7 @@ export default function Footer() {
             <ul className="flex flex-col gap-2 text-xs">
               <li><Link href="/" className="hover:text-emerald-400 transition">Casino Games</Link></li>
               <li><Link href="/profile" className="hover:text-emerald-400 transition">Donut Stake Profile</Link></li>
-              <li><Link href="/profile?tab=vip" className="hover:text-amber-400 transition text-amber-300 font-bold">VIP Club & Rakeback</Link></li>
+              <li><Link href="/profile?tab=vip" className="hover:text-amber-400 transition text-amber-300 font-bold">VIP Club & Perks</Link></li>
               <li><Link href="/referral" className="hover:text-amber-400 transition">20M Referral Bonus</Link></li>
               <li><Link href="/deposit" className="hover:text-emerald-400 transition">Deposit In-Game Currency</Link></li>
               <li><Link href="/withdraw" className="hover:text-amber-400 transition">Withdrawal Requests</Link></li>

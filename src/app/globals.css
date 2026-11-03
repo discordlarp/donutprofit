@@ -131,3 +131,21 @@ button:hover {
 .animate-marquee:hover {
   animation-play-state: paused;
 }
+
+/* Continuous Sliding Game Showcase Reel */
+@keyframes showcaseSlide {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-showcase-slide {
+  display: flex;
+  width: max-content;
+  animation: showcaseSlide 32s linear infinite;
+  will-change: transform;
+}
+
+.animate-showcase-slide:hover,
+.hover\:pause:hover {
+  animation-play-state: paused !important;
+}

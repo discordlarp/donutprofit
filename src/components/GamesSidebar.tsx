@@ -146,7 +146,7 @@ export default function GamesSidebar({ activeGame, onSelectGame }: GamesSidebarP
               </div>
               {!isSidebarCollapsed && (
                 <div className="flex flex-col min-w-0">
-                  <span className="truncate">VIP Club & Rakeback</span>
+                  <span className="truncate">VIP Club & Perks</span>
                   <span className="text-[9px] text-amber-400/80 font-mono font-bold leading-none mt-0.5">
                     Level Up Perks
                   </span>

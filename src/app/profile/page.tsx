@@ -37,14 +37,13 @@ import {
 } from 'lucide-react';
 
 function ProfileContent() {
-  const { user, users, bets, deposits, withdrawals, changePassword, claimRakeback } = useGame();
+  const { user, users, bets, deposits, withdrawals, changePassword } = useGame();
   const searchParams = useSearchParams();
   const targetParamIgn = searchParams.get('ign');
 
   const [activeTab, setActiveTab] = useState<'overview' | 'bets' | 'transactions' | 'vip' | 'settings'>('overview');
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [copiedIgn, setCopiedIgn] = useState(false);
-  const [rakebackSuccess, setRakebackSuccess] = useState<string | null>(null);
 
   // Password change state
   const [newPass, setNewPass] = useState('');
@@ -108,17 +107,6 @@ function ProfileContent() {
     setTimeout(() => setCopiedIgn(false), 2000);
   };
 
-  const handleClaimRakeback = () => {
-    if (vip.claimableRakeback <= 0) return;
-    const res = claimRakeback(vip.claimableRakeback);
-    if (res.success) {
-      sound.playWin();
-      confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
-      setRakebackSuccess(res.message);
-      setTimeout(() => setRakebackSuccess(null), 4000);
-    }
-  };
-
   const handlePassChange = (e: React.FormEvent) => {
     e.preventDefault();
     setPassMsg(null);
@@ -146,7 +134,7 @@ function ProfileContent() {
           </div>
           <h2 className="text-2xl font-black text-white">Player Profile</h2>
           <p className="text-xs text-neutral-400 leading-relaxed">
-            Sign in with your Minecraft IGN to access your Donut Stake VIP progression, wagered statistics, rakeback vault, and betting history.
+            Sign in with your Minecraft IGN to access your Donut Stake VIP progression, wagered statistics, VIP perks, and betting history.
           </p>
           <button
             onClick={() => setAuthModalOpen(true)}
@@ -268,7 +256,7 @@ function ProfileContent() {
                 </span>
               </div>
               <p className="text-xs text-neutral-400">
-                Wager in any game to level up your VIP tier and unlock higher rakeback
+                Wager in any game to level up your VIP tier and unlock higher cash bonuses
               </p>
             </div>
           </div>
@@ -295,10 +283,10 @@ function ProfileContent() {
         </div>
 
         {/* VIP Micro-Metrics */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4 pt-3 border-t border-white/5 text-xs">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-4 pt-3 border-t border-white/5 text-xs">
           <div className="flex flex-col">
-            <span className="text-[10px] font-bold text-neutral-400 uppercase">Current Rakeback</span>
-            <span className="text-sm font-black text-emerald-400 font-mono">{vip.currentTier.rakebackPercent}%</span>
+            <span className="text-[10px] font-bold text-neutral-400 uppercase">Current Tier</span>
+            <span className="text-sm font-black text-emerald-400 font-mono">{vip.currentTier.name} VIP</span>
           </div>
 
           <div className="flex flex-col">
@@ -309,16 +297,9 @@ function ProfileContent() {
           </div>
 
           <div className="flex flex-col">
-            <span className="text-[10px] font-bold text-neutral-400 uppercase">Level-Up Cash</span>
+            <span className="text-[10px] font-bold text-neutral-400 uppercase">Level-Up Bonus</span>
             <span className="text-sm font-black text-white font-mono">
-              {vip.nextTier ? `+$${(vip.nextTier.levelBonus / 1_000_000).toFixed(1)}M` : 'None'}
-            </span>
-          </div>
-
-          <div className="flex flex-col">
-            <span className="text-[10px] font-bold text-neutral-400 uppercase">Claimable Rakeback</span>
-            <span className="text-sm font-black text-emerald-300 font-mono">
-              ${vip.claimableRakeback.toLocaleString()}
+              {vip.nextTier ? `+$${(vip.nextTier.levelBonus / 1_000_000).toFixed(1)}M` : 'Maxed'}
             </span>
           </div>
         </div>
@@ -371,7 +352,7 @@ function ProfileContent() {
           }`}
         >
           <Award className="w-4 h-4" />
-          <span>VIP & Rakeback</span>
+          <span>VIP Club</span>
         </button>
 
         {!isViewingOther && (
@@ -472,13 +453,13 @@ function ProfileContent() {
 
             <div className="p-4 rounded-2xl bg-[#0c0e18] border border-white/10 flex items-center justify-between">
               <div>
-                <span className="text-[10px] font-bold text-neutral-400 uppercase block">Rakeback Tier</span>
+                <span className="text-[10px] font-bold text-neutral-400 uppercase block">VIP Status</span>
                 <span className="text-base font-black text-sky-400 font-mono">
-                  {vip.currentTier.rakebackPercent}% Active
+                  {vip.currentTier.badge} {vip.currentTier.name}
                 </span>
               </div>
-              <Link href="/profile?tab=vip" onClick={() => setActiveTab('vip')} className="text-xs text-emerald-400 font-bold hover:underline">
-                Claim Rakeback
+              <Link href="/profile?tab=vip" onClick={() => setActiveTab('vip')} className="text-xs text-amber-400 font-bold hover:underline">
+                View VIP Perks
               </Link>
             </div>
           </div>
@@ -695,40 +676,34 @@ function ProfileContent() {
         </div>
       )}
 
-      {/* TAB 4: VIP & RAKEBACK */}
+      {/* TAB 4: VIP CLUB & PERKS */}
       {activeTab === 'vip' && (
         <div className="flex flex-col gap-6">
-          {/* Claim Rakeback Vault Hero */}
+          {/* VIP Progression Showcase Hero */}
           <div className="rounded-3xl border border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-[#14120a] to-amber-500/10 p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-2xl">
             <div className="flex items-center gap-4">
               <div className="w-16 h-16 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 text-3xl shrink-0">
-                🎁
+                {vip.currentTier.badge}
               </div>
               <div>
-                <h3 className="text-xl font-black text-white">VIP Rakeback Vault</h3>
+                <h3 className="text-xl font-black text-white">Donut Stake VIP Status</h3>
                 <p className="text-xs text-neutral-300 max-w-md mt-1">
-                  You earn <strong className="text-amber-400 font-mono">{vip.currentTier.rakebackPercent}%</strong> of all wagers back automatically, win or lose!
+                  You are currently <strong className="text-amber-400">{vip.currentTier.name} VIP</strong> with <strong className="text-white font-mono">${(totalWagered / 1_000_000).toFixed(2)}M</strong> total wagered. Advance tiers to earn up to <strong className="text-emerald-400">$100,000,000</strong> in level-up bonuses!
                 </p>
-                {rakebackSuccess && (
-                  <p className="text-xs font-bold text-emerald-400 mt-2 bg-emerald-500/10 p-2 rounded-xl border border-emerald-500/30">
-                    {rakebackSuccess}
-                  </p>
-                )}
               </div>
             </div>
 
             <div className="flex flex-col items-center sm:items-end gap-2 shrink-0 w-full sm:w-auto">
-              <span className="text-xs text-neutral-400 uppercase font-bold">Available Rakeback:</span>
+              <span className="text-xs text-neutral-400 uppercase font-bold">Current Tier Rank:</span>
               <span className="text-2xl sm:text-3xl font-black text-amber-400 font-mono">
-                ${vip.claimableRakeback.toLocaleString()} Cash
+                {vip.currentTier.name}
               </span>
-              <button
-                onClick={handleClaimRakeback}
-                disabled={vip.claimableRakeback <= 0}
-                className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-gradient-to-r from-amber-400 to-yellow-400 hover:from-amber-300 text-black font-black text-xs uppercase tracking-wider shadow-lg shadow-amber-500/20 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer"
+              <Link
+                href="/#play-arena"
+                className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-gradient-to-r from-amber-400 to-yellow-400 hover:from-amber-300 text-black font-black text-xs uppercase tracking-wider shadow-lg shadow-amber-500/20 transition cursor-pointer text-center"
               >
-                Claim Rakeback Into Cash
-              </button>
+                Wager To Level Up
+              </Link>
             </div>
           </div>
 
@@ -776,11 +751,12 @@ function ProfileContent() {
                       </div>
 
                       <div className="text-xs text-neutral-300 mb-3 flex flex-col gap-1">
-                        <span className="font-mono text-emerald-400 font-bold">{tier.rakebackPercent}% Rakeback</span>
-                        {tier.levelBonus > 0 && (
+                        {tier.levelBonus > 0 ? (
                           <span className="text-amber-400 font-mono text-[11px] font-bold">
                             +${(tier.levelBonus / 1_000_000).toFixed(1)}M Level Bonus
                           </span>
+                        ) : (
+                          <span className="text-neutral-500 font-mono text-[11px]">Base Tier</span>
                         )}
                       </div>
                     </div>

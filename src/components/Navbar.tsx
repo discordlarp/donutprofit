@@ -308,7 +308,7 @@ export default function Navbar({ onToggleChat: propOnToggle, isChatOpen: propIsO
                         className="px-3 py-2 rounded-xl text-amber-300 hover:text-white hover:bg-amber-500/10 flex items-center gap-2 font-bold transition"
                       >
                         <Crown className="w-3.5 h-3.5 text-amber-400" />
-                        <span>VIP Club & Rakeback</span>
+                        <span>VIP Club & Perks</span>
                       </Link>
 
                       <Link
