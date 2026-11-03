@@ -25,6 +25,8 @@ import {
 import { formatCash } from '@/lib/format';
 
 interface GameContextType {
+  activeGame: GameType;
+  setActiveGame: (game: GameType) => void;
   user: UserProfile | null;
   users: UserProfile[];
   bets: BetRecord[];
@@ -98,6 +100,7 @@ const getNextReferralReset = () => {
 export function GameProvider({ children }: { children: React.ReactNode }) {
   const [users, setUsers] = useState<UserProfile[]>(MOCK_USERS);
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
+  const [activeGame, setActiveGame] = useState<GameType>('mines');
   const [bets, setBets] = useState<BetRecord[]>(INITIAL_BETS);
   const [deposits, setDeposits] = useState<DepositRequest[]>(INITIAL_DEPOSITS);
   const [withdrawals, setWithdrawals] = useState<WithdrawalRequest[]>(INITIAL_WITHDRAWALS);
@@ -1686,6 +1689,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <GameContext.Provider value={{
+      activeGame,
+      setActiveGame,
       user: currentUser,
       users,
       bets,

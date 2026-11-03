@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useGame } from '@/context/GameContext';
 import { GameType } from '@/types';
+import { sound } from '@/lib/sound';
 import { 
   Flame, 
   Zap, 
@@ -57,23 +58,36 @@ const SIDEBAR_GAMES: SidebarGameItem[] = [
   { id: 'roulette', name: 'Roulette', badge: '14X', category: 'tables', emoji: '🎯' },
 ];
 
-export default function GamesSidebar({ activeGame, onSelectGame }: GamesSidebarProps) {
+export default function GamesSidebar({ activeGame: propActiveGame, onSelectGame }: GamesSidebarProps) {
   const pathname = usePathname();
   const { 
     isSidebarOpen, 
     toggleSidebar, 
     isSidebarCollapsed, 
     toggleSidebarCollapse, 
+    activeGame: contextActiveGame,
+    setActiveGame,
     user 
   } = useGame();
 
+  const activeGame = propActiveGame || contextActiveGame;
+
   const handleGameClick = (id: GameType) => {
+    setActiveGame(id);
     if (onSelectGame) {
       onSelectGame(id);
     }
-    // If on a subpage like /profile, navigate to home with active game
+    sound.playClick();
     if (pathname !== '/') {
       window.location.href = `/#play-arena`;
+    } else {
+      const arena = document.getElementById('play-arena');
+      if (arena) {
+        arena.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+    if (isSidebarOpen) {
+      toggleSidebar();
     }
   };
 

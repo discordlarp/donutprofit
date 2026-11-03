@@ -88,8 +88,7 @@ const QUICK_SWITCH_GAMES: { id: GameType; name: string; emoji: string }[] = [
 ];
 
 export default function HomePage() {
-  const { user, activeReferrer } = useGame();
-  const [activeGame, setActiveGame] = useState<GameType>('mines');
+  const { user, activeReferrer, activeGame, setActiveGame } = useGame();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<'all' | 'originals' | 'pvp' | 'high_multiplier' | 'cards'>('all');
@@ -153,8 +152,8 @@ export default function HomePage() {
 
         {/* 2. The Pro Arena Cabinet (Centerpiece of DonutProfit) */}
         <div id="play-arena" className={`scroll-mt-20 transition-all duration-300 ${isTheaterMode ? 'w-full max-w-none' : ''}`}>
-          {/* Quick-Switch Game Dock directly above Arena */}
-          <div className="mb-3 flex items-center gap-1.5 overflow-x-auto pb-1.5 scrollbar-none select-none">
+          {/* Quick-Switch Game Dock directly above Arena (Sticky so you never need to scroll up to change games) */}
+          <div className="sticky top-16 z-30 bg-[#07080e]/95 backdrop-blur-md py-2 px-2.5 rounded-2xl mb-3 flex items-center gap-1.5 overflow-x-auto scrollbar-none select-none border border-white/10 shadow-xl">
             <span className="text-[10px] font-black uppercase text-neutral-400 px-2 shrink-0">
               QUICK SWITCH:
             </span>
