@@ -254,6 +254,7 @@ export default function CommunityChat({ isOpen: propIsOpen, onToggle: propOnTogg
       confetti({ particleCount: 110, spread: 80 });
       isPayment = true;
       paymentDetails = {
+        transferId: transferResult.transferId,
         senderIgn: user.minecraftIgn,
         recipientIgn: target,
         amount,

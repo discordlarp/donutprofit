@@ -33,7 +33,7 @@ export default function DepositNotificationToast() {
             <div className="flex items-center gap-1.5 mb-1">
               <Sparkles className="w-4 h-4 text-emerald-400" />
               <span className="text-xs font-black uppercase tracking-wider text-emerald-400">
-                Deposit Confirmed!
+                {depositNotification.type === 'tip' ? 'Tip Received!' : 'Deposit Confirmed!'}
               </span>
             </div>
 
@@ -42,7 +42,11 @@ export default function DepositNotificationToast() {
             </h4>
 
             <p className="text-xs text-neutral-300 mt-1 leading-relaxed">
-              Received <strong className="text-emerald-300">{formatCash(depositNotification.amountInGame)}</strong> in-game payment from <code className="bg-black/40 px-1.5 py-0.5 rounded text-white font-mono">{depositNotification.ign}</code> on DonutSMP.
+              {depositNotification.type === 'tip' ? (
+                <>Received a tip of <strong className="text-emerald-300">{formatCash(depositNotification.amountCoins)}</strong> from <code className="bg-black/40 px-1.5 py-0.5 rounded text-white font-mono">@{depositNotification.ign}</code>.</>
+              ) : (
+                <>Received <strong className="text-emerald-300">{formatCash(depositNotification.amountInGame)}</strong> in-game payment from <code className="bg-black/40 px-1.5 py-0.5 rounded text-white font-mono">{depositNotification.ign}</code> on DonutSMP.</>
+              )}
             </p>
 
             <div className="mt-2.5 flex items-center gap-2">

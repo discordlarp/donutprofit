@@ -47,6 +47,7 @@ export interface ChatMessage {
   isStaff?: boolean;
   isPayment?: boolean;
   paymentDetails?: {
+    transferId?: string;
     senderIgn: string;
     recipientIgn: string;
     amount: number;

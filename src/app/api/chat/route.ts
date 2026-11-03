@@ -104,7 +104,8 @@ export async function POST(req: Request) {
     // If this is a /pay or tip transfer, record it on the server so the recipient receives the Cash!
     if (isPayment && paymentDetails && paymentDetails.senderIgn && paymentDetails.recipientIgn && paymentDetails.amount > 0) {
       try {
-        recordUserTransfer(paymentDetails.senderIgn, paymentDetails.recipientIgn, paymentDetails.amount);
+        const tr = recordUserTransfer(paymentDetails.senderIgn, paymentDetails.recipientIgn, paymentDetails.amount, paymentDetails.transferId);
+        paymentDetails.transferId = tr.id;
       } catch (err) {
         console.error('[CHAT POST TRANSFER RECORD ERROR]', err);
       }

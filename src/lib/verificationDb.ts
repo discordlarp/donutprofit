@@ -470,11 +470,16 @@ export function getSignupStatus(rawUsername: string, token: string): { verified:
 /**
  * Record a player-to-player transfer (/pay or tip) on the server
  */
-export function recordUserTransfer(senderIgn: string, recipientIgn: string, amount: number): UserTransferCredit {
+export function recordUserTransfer(senderIgn: string, recipientIgn: string, amount: number, customId?: string): UserTransferCredit {
   const cleanSender = String(senderIgn || '').trim().replace(/^@/, '');
   const cleanRecipient = String(recipientIgn || '').trim().replace(/^@/, '');
   const numAmount = Math.max(1, Math.round(Number(amount)));
-  const transferId = `tr-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`;
+  const transferId = customId || `tr-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`;
+  
+  if (customId && memoryTransfers.has(customId)) {
+    return memoryTransfers.get(customId)!;
+  }
+
   const now = Date.now();
 
   const record: UserTransferCredit = {

@@ -162,6 +162,7 @@ export default function UserProfileModal({
           isStaff: user.role === 'admin' || user.minecraftIgn.toLowerCase() === 'cartisneakz',
           isPayment: true,
           paymentDetails: {
+            transferId: result.transferId,
             senderIgn: user.minecraftIgn,
             recipientIgn: cleanTarget,
             amount: finalAmount,
@@ -182,6 +183,7 @@ export default function UserProfileModal({
             isStaff: user.role === 'admin',
             isPayment: true,
             paymentDetails: {
+              transferId: result.transferId,
               senderIgn: user.minecraftIgn,
               recipientIgn: cleanTarget,
               amount: finalAmount,

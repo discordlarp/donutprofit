@@ -61,12 +61,13 @@ interface GameContextType {
   claimReferralCode: (code: string) => { success: boolean; message: string };
   claimInstant10MEventBonus: () => boolean;
   verifyMinecraftPayment: (ign: string, amount: number, proof?: string) => { success: boolean; message: string };
-  transferCoins: (targetIgn: string, amount: number) => { success: boolean; message: string };
+  transferCoins: (targetIgn: string, amount: number) => { success: boolean; message: string; transferId?: string };
   depositNotification: {
     open: boolean;
     amountInGame: number;
     amountCoins: number;
     ign: string;
+    type?: 'deposit' | 'tip';
   } | null;
   dismissDepositNotification: () => void;
   isChatOpen: boolean;
@@ -97,6 +98,26 @@ const getNextReferralReset = () => {
   return reset.toISOString();
 };
 
+function getAppliedTransfers(): Set<string> {
+  if (typeof window === 'undefined') return new Set();
+  try {
+    const raw = localStorage.getItem('donutprofit_applied_transfers');
+    if (!raw) return new Set();
+    const arr = JSON.parse(raw);
+    return new Set(Array.isArray(arr) ? arr : []);
+  } catch {
+    return new Set();
+  }
+}
+
+function saveAppliedTransfers(set: Set<string>): void {
+  if (typeof window === 'undefined') return;
+  try {
+    const arr = Array.from(set).slice(-500);
+    localStorage.setItem('donutprofit_applied_transfers', JSON.stringify(arr));
+  } catch {}
+}
+
 export function GameProvider({ children }: { children: React.ReactNode }) {
   const [users, setUsers] = useState<UserProfile[]>(MOCK_USERS);
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
@@ -114,6 +135,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     amountInGame: number;
     amountCoins: number;
     ign: string;
+    type?: 'deposit' | 'tip';
   } | null>(null);
 
   const [isChatOpen, setIsChatOpen] = useState(false);
@@ -272,36 +294,47 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
               const claimData = await claimRes.json();
               if (claimData.success && isMounted) {
                 const transferAmount = Number(tr.amount);
-                setCurrentUser(prev => {
-                  if (!prev) return null;
-                  const updated = { ...prev, balance: prev.balance + transferAmount };
-                  if (typeof window !== 'undefined') {
-                    localStorage.setItem('donutprofit_user', JSON.stringify(updated));
-                    localStorage.setItem('donutprofit_current_user', JSON.stringify(updated));
-                  }
-                  return updated;
-                });
+                const applied = getAppliedTransfers();
 
-                setUsers(prev => {
-                  const updatedList = prev.map(u => {
-                    if (u.id === currentUser.id) {
-                      return { ...u, balance: u.balance + transferAmount };
+                // If not already applied to this local session, credit balance
+                if (!applied.has(tr.id)) {
+                  applied.add(tr.id);
+                  saveAppliedTransfers(applied);
+
+                  setCurrentUser(prev => {
+                    if (!prev) return null;
+                    const updated = { ...prev, balance: (prev.balance || 0) + transferAmount };
+                    if (typeof window !== 'undefined') {
+                      localStorage.setItem('donutprofit_user', JSON.stringify(updated));
+                      localStorage.setItem('donutprofit_current_user', JSON.stringify(updated));
                     }
-                    return u;
+                    return updated;
                   });
-                  if (typeof window !== 'undefined') {
-                    localStorage.setItem('donutprofit_users', JSON.stringify(updatedList));
-                  }
-                  return updatedList;
-                });
 
-                playDepositChime();
-                setDepositNotification({
-                  open: true,
-                  amountInGame: transferAmount,
-                  amountCoins: transferAmount,
-                  ign: tr.sender_ign,
-                });
+                  setUsers(prev => {
+                    const myIgn = (currentUser.minecraftIgn || currentUser.username || '').toLowerCase().replace(/^@/, '').replace(/^\./, '');
+                    const updatedList = prev.map(u => {
+                      const uIgn = (u.minecraftIgn || u.username || '').toLowerCase().replace(/^@/, '').replace(/^\./, '');
+                      if (u.id === currentUser.id || uIgn === myIgn) {
+                        return { ...u, balance: (u.balance || 0) + transferAmount };
+                      }
+                      return u;
+                    });
+                    if (typeof window !== 'undefined') {
+                      localStorage.setItem('donutprofit_users', JSON.stringify(updatedList));
+                    }
+                    return updatedList;
+                  });
+
+                  playDepositChime();
+                  setDepositNotification({
+                    open: true,
+                    type: 'tip',
+                    amountInGame: transferAmount,
+                    amountCoins: transferAmount,
+                    ign: tr.sender_ign,
+                  });
+                }
               }
             } catch (err) {
               console.error('[TRANSFER CLAIM ERROR]', err);
@@ -315,7 +348,75 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       isMounted = false;
       clearInterval(interval);
     };
-  }, [currentUser?.id, currentUser?.minecraftIgn]);
+  }, [currentUser?.id, currentUser?.minecraftIgn, currentUser?.username]);
+
+  // Real-time Cross-Tab BroadcastChannel Listener for Instant Tipping/Transfers
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('BroadcastChannel' in window)) return;
+    const bc = new BroadcastChannel('donutprofit_transfers');
+    bc.onmessage = (event) => {
+      const data = event.data;
+      if (data && data.type === 'TRANSFER_SENT') {
+        const { transferId, sender, recipient, amount } = data;
+        if (!currentUser) return;
+        const myIgn = (currentUser.minecraftIgn || currentUser.username || '').trim().toLowerCase().replace(/^@/, '').replace(/^\./, '');
+        const targetClean = String(recipient || '').trim().toLowerCase().replace(/^@/, '').replace(/^\./, '');
+
+        if (myIgn && myIgn === targetClean) {
+          const applied = getAppliedTransfers();
+          if (!applied.has(transferId)) {
+            applied.add(transferId);
+            saveAppliedTransfers(applied);
+
+            const transferAmount = Number(amount);
+            setCurrentUser(prev => {
+              if (!prev) return null;
+              const updated = { ...prev, balance: (prev.balance || 0) + transferAmount };
+              if (typeof window !== 'undefined') {
+                localStorage.setItem('donutprofit_user', JSON.stringify(updated));
+                localStorage.setItem('donutprofit_current_user', JSON.stringify(updated));
+              }
+              return updated;
+            });
+
+            setUsers(prev => {
+              const updatedList = prev.map(u => {
+                const uIgn = (u.minecraftIgn || u.username || '').toLowerCase().replace(/^@/, '').replace(/^\./, '');
+                if (u.id === currentUser.id || uIgn === myIgn) {
+                  return { ...u, balance: (u.balance || 0) + transferAmount };
+                }
+                return u;
+              });
+              if (typeof window !== 'undefined') {
+                localStorage.setItem('donutprofit_users', JSON.stringify(updatedList));
+              }
+              return updatedList;
+            });
+
+            playDepositChime();
+            setDepositNotification({
+              open: true,
+              type: 'tip',
+              amountInGame: transferAmount,
+              amountCoins: transferAmount,
+              ign: sender,
+            });
+
+            // Mark claimed on server
+            fetch('/api/deposit/events', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ transferId, userId: currentUser.id }),
+            }).catch(console.error);
+          }
+        }
+      }
+    };
+
+    return () => {
+      bc.close();
+    };
+  }, [currentUser?.id, currentUser?.minecraftIgn, currentUser?.username]);
 
   const verifyMinecraftPayment = (ign: string, amount: number, proof?: string) => {
     const cleanIgn = ign.trim();
@@ -886,6 +987,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     setCurrentUser(found);
     if (typeof window !== 'undefined') {
       localStorage.setItem('donutprofit_user', JSON.stringify(found));
+      localStorage.setItem('donutprofit_current_user', JSON.stringify(found));
+      localStorage.setItem('donutprofit_current_user_id', found.id);
     }
     return { 
       success: true, 
@@ -1034,6 +1137,11 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       }
 
       setCurrentUser(found);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('donutprofit_user', JSON.stringify(found));
+        localStorage.setItem('donutprofit_current_user', JSON.stringify(found));
+        localStorage.setItem('donutprofit_current_user_id', found.id);
+      }
       return { success: true, message: `Authenticated as ${found.username}!` };
     }
 
@@ -1442,10 +1550,17 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       };
     }
 
+    const transferId = `tr-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`;
+
+    // Mark transfer applied locally on this browser so switching accounts won't double credit
+    const applied = getAppliedTransfers();
+    applied.add(transferId);
+    saveAppliedTransfers(applied);
+
     // Deduct from sender
     const updatedSender: UserProfile = {
       ...currentUser,
-      balance: (currentUser.balance || 0) - numericAmount,
+      balance: Math.max(0, (currentUser.balance || 0) - numericAmount),
     };
     setCurrentUser(updatedSender);
 
@@ -1500,6 +1615,35 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem('donutprofit_users', JSON.stringify(updatedUsersList));
     }
 
+    // Persist to server
+    try {
+      fetch('/api/transfer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          transferId,
+          senderIgn: currentUser.minecraftIgn,
+          recipientIgn: cleanTarget,
+          amount: numericAmount,
+        }),
+      }).catch(console.error);
+    } catch {}
+
+    // Broadcast live across tabs
+    if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+      try {
+        const bc = new BroadcastChannel('donutprofit_transfers');
+        bc.postMessage({
+          type: 'TRANSFER_SENT',
+          transferId,
+          sender: currentUser.minecraftIgn,
+          recipient: cleanTarget,
+          amount: numericAmount,
+        });
+        bc.close();
+      } catch {}
+    }
+
     // Add audit log
     const log: AdminAuditLog = {
       id: `transfer-${Date.now()}`,
@@ -1516,6 +1660,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
     return {
       success: true,
+      transferId,
       message: `Successfully paid ${formatCash(numericAmount)} Cash to @${cleanTarget}!`,
     };
   };
