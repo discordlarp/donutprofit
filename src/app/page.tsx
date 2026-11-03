@@ -146,87 +146,9 @@ export default function HomePage() {
           </div>
         )}
 
-        {/* 1. Custom Hero Spotlight & Telemetry Deck */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-          {/* Main Rotating Games Showcase (2 cols) */}
-          <div className="lg:col-span-2">
-            <RotatingGameShowcase onSelectGame={(gameId) => setActiveGame(gameId)} />
-          </div>
-
-          {/* Network Telemetry Pod (1 col) */}
-          <div className="rounded-3xl border border-white/10 bg-[#0c0e17] p-6 flex flex-col justify-between shadow-2xl relative overflow-hidden">
-            <div className="flex items-center justify-between mb-4 pb-3 border-b border-white/5">
-              <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="text-xs font-black uppercase tracking-wider text-white">NETWORK TELEMETRY</span>
-              </div>
-              <span className="text-[10px] font-mono text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
-                LIVE
-              </span>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3.5">
-              {/* Stat 1: Wagered */}
-              <div className="p-3.5 rounded-2xl bg-[#111420] border border-white/5 flex flex-col">
-                <span className="text-[10px] uppercase font-bold text-neutral-400 mb-1 flex items-center gap-1">
-                  <Coins className="w-3 h-3 text-amber-400" />
-                  TOTAL WAGERED
-                </span>
-                <span className="text-sm sm:text-base font-black text-white font-mono">
-                  $2.84B+
-                </span>
-                <span className="text-[9px] text-emerald-400 font-medium mt-0.5">Donut SMP Cash</span>
-              </div>
-
-              {/* Stat 2: Active Players */}
-              <div className="p-3.5 rounded-2xl bg-[#111420] border border-white/5 flex flex-col">
-                <span className="text-[10px] uppercase font-bold text-neutral-400 mb-1 flex items-center gap-1">
-                  <Users className="w-3 h-3 text-emerald-400" />
-                  GAMBLERS
-                </span>
-                <span className="text-sm sm:text-base font-black text-emerald-400 font-mono">
-                  128 ONLINE
-                </span>
-                <span className="text-[9px] text-neutral-400 font-medium mt-0.5">Active right now</span>
-              </div>
-
-              {/* Stat 3: Payout Speed */}
-              <div className="p-3.5 rounded-2xl bg-[#111420] border border-white/5 flex flex-col">
-                <span className="text-[10px] uppercase font-bold text-neutral-400 mb-1 flex items-center gap-1">
-                  <Clock className="w-3 h-3 text-blue-400" />
-                  PAYOUT SPEED
-                </span>
-                <span className="text-sm sm:text-base font-black text-white font-mono">
-                  &lt; 10 SEC
-                </span>
-                <span className="text-[9px] text-blue-400 font-medium mt-0.5">Automated In-Game</span>
-              </div>
-
-              {/* Stat 4: Fair Hash */}
-              <div className="p-3.5 rounded-2xl bg-[#111420] border border-white/5 flex flex-col">
-                <span className="text-[10px] uppercase font-bold text-neutral-400 mb-1 flex items-center gap-1">
-                  <ShieldCheck className="w-3 h-3 text-emerald-400" />
-                  ALGORITHM
-                </span>
-                <span className="text-sm sm:text-base font-black text-white font-mono">
-                  SHA-256
-                </span>
-                <span className="text-[9px] text-neutral-400 font-medium mt-0.5">Client Verifiable</span>
-              </div>
-            </div>
-
-            {/* Quick In-Game Deposit Helper */}
-            <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-xs">
-              <span className="text-neutral-400 text-[11px]">Deposit in-game:</span>
-              <Link
-                href="/deposit"
-                className="text-emerald-400 hover:text-emerald-300 font-mono font-bold flex items-center gap-1"
-              >
-                <span>/pay cartisneakz</span>
-                <ChevronRight className="w-3.5 h-3.5" />
-              </Link>
-            </div>
-          </div>
+        {/* 1. Full-Width Featured Games Showcase Slider */}
+        <div className="w-full">
+          <RotatingGameShowcase onSelectGame={(gameId) => setActiveGame(gameId)} />
         </div>
 
         {/* 2. The Pro Arena Cabinet (Centerpiece of DonutProfit) */}

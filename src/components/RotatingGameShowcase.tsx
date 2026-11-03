@@ -172,7 +172,7 @@ export default function RotatingGameShowcase({ onSelectGame }: RotatingGameShowc
     <div
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
-      className="relative rounded-3xl overflow-hidden border border-white/10 bg-[#07080f] shadow-2xl h-[330px] sm:h-[360px] md:h-[380px] w-full select-none group"
+      className="relative rounded-3xl overflow-hidden border border-white/10 bg-[#07080f] shadow-2xl h-[340px] sm:h-[380px] md:h-[420px] w-full select-none group"
     >
       {/* Top Floating Controls: Arrows & Badge */}
       <div className="absolute top-4 left-4 right-4 z-30 flex items-center justify-between pointer-events-none">
