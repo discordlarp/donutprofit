@@ -1,315 +1,351 @@
 'use client';
 
-import React, { useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { GameType } from '@/types';
 import { sound } from '@/lib/sound';
 import { 
-  Gamepad2, 
   ChevronLeft, 
   ChevronRight, 
   Play, 
-  Sparkles,
-  Zap
+  Swords, 
+  Zap, 
+  ShieldCheck, 
+  Flame 
 } from 'lucide-react';
 
-interface ShowcaseGame {
+interface GameSlide {
   id: GameType;
   title: string;
-  category: string;
+  highlight: string;
+  description: string;
   badge: string;
   badgeStyle: string;
   multiplier: string;
   players: number;
   image: string;
   glow: string;
+  bgGradient: string;
+  btnGradient: string;
+  btnText: string;
 }
 
-const SHOWCASE_GAMES: ShowcaseGame[] = [
+const FULL_GAME_SLIDES: GameSlide[] = [
   {
     id: 'casebattles',
-    title: 'Case Battles',
-    category: 'PvP Duels',
-    badge: '⚔️ PVP BATTLE',
+    title: 'CASE BATTLES',
+    highlight: 'WINNER TAKES ALL',
+    description: 'High-stakes 1v1 PvP unboxing duels against live Donut SMP players. Open mystery loot crates in real-time — highest total value walks away with the entire pot.',
+    badge: '⚔️ PVP DUELS',
     badgeStyle: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
-    multiplier: 'PVP WIN',
+    multiplier: '100% POT WIN',
     players: 31,
     image: '/images/cards/casebattles.png',
-    glow: 'rgba(245, 158, 11, 0.45)',
+    glow: 'rgba(245, 158, 11, 0.35)',
+    bgGradient: 'from-amber-950/40 via-[#15121c] to-[#080912]',
+    btnGradient: 'bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 text-black shadow-amber-500/25 hover:brightness-110',
+    btnText: 'PLAY CASE BATTLES',
   },
   {
     id: 'mines',
-    title: 'Donut Mines',
-    category: 'Originals',
-    badge: '💣 POPULAR',
+    title: 'DONUT MINES',
+    highlight: 'HIGH STAKES DIG',
+    description: 'Uncover golden glazed gems across the custom 5x5 grid. Set 1 to 24 rotten donut mines and cash out your multiplier at any point before detonating.',
+    badge: '💣 FAN FAVORITE',
     badgeStyle: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
     multiplier: '4.95x MAX',
     players: 28,
     image: '/images/cards/mines.png',
-    glow: 'rgba(16, 185, 129, 0.45)',
+    glow: 'rgba(16, 185, 129, 0.35)',
+    bgGradient: 'from-emerald-950/40 via-[#0e1619] to-[#080912]',
+    btnGradient: 'bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-400 text-black shadow-emerald-500/25 hover:brightness-110',
+    btnText: 'PLAY MINES ARENA',
   },
   {
     id: 'crash',
-    title: 'Crash Rocket',
-    category: 'High Multiplier',
-    badge: '🚀 100X',
+    title: 'DONUT CRASH',
+    highlight: 'TO THE MOON',
+    description: 'Watch the multiplier rocket soar into orbit along the exponential curve. Hit cashout before the unexpected detonation to lock in massive Cash profits.',
+    badge: '🚀 100X MULTIPLIER',
     badgeStyle: 'bg-sky-500/20 text-sky-300 border-sky-500/40',
-    multiplier: '100.00x',
+    multiplier: '100.00x MAX',
     players: 34,
     image: '/images/cards/crash.png',
-    glow: 'rgba(56, 189, 248, 0.45)',
+    glow: 'rgba(56, 189, 248, 0.35)',
+    bgGradient: 'from-sky-950/40 via-[#0f1422] to-[#080912]',
+    btnGradient: 'bg-gradient-to-r from-sky-400 via-cyan-300 to-sky-400 text-black shadow-sky-500/25 hover:brightness-110',
+    btnText: 'LAUNCH CRASH',
   },
   {
     id: 'plinko',
-    title: 'Plinko Physics',
-    category: 'High Multiplier',
-    badge: '🟢 1000X',
+    title: 'PLINKO PHYSICS',
+    highlight: '1,000X JACKPOT PEGS',
+    description: '60FPS fluid physics simulation. Drop custom neon balls down the peg pyramid and target the extreme corner buckets for massive jackpot returns.',
+    badge: '🟢 1000X JACKPOT',
     badgeStyle: 'bg-teal-500/20 text-teal-300 border-teal-500/40',
-    multiplier: '1000x MAX',
+    multiplier: '1,000X PEGS',
     players: 29,
     image: '/images/cards/plinko.png',
-    glow: 'rgba(20, 184, 166, 0.45)',
+    glow: 'rgba(20, 184, 166, 0.35)',
+    bgGradient: 'from-teal-950/40 via-[#0e171b] to-[#080912]',
+    btnGradient: 'bg-gradient-to-r from-teal-400 via-emerald-300 to-teal-400 text-black shadow-teal-500/25 hover:brightness-110',
+    btnText: 'DROP PLINKO PEGS',
   },
   {
     id: 'slots',
-    title: 'SMP Slots',
-    category: 'Originals',
-    badge: '🎰 JACKPOT',
+    title: 'SMP SLOTS',
+    highlight: 'JACKPOT SPINS',
+    description: 'High-voltage 3-reel slots matching Minecraft SMP crowns, glazed donuts, and diamonds with flashing multi-payline jackpot bonuses.',
+    badge: '🎰 HIGH ROLLER',
     badgeStyle: 'bg-purple-500/20 text-purple-300 border-purple-500/40',
-    multiplier: '5.00x',
+    multiplier: '5.00x JACKPOT',
     players: 22,
     image: '/images/cards/slots.png',
-    glow: 'rgba(168, 85, 247, 0.45)',
+    glow: 'rgba(168, 85, 247, 0.35)',
+    bgGradient: 'from-purple-950/40 via-[#160c20] to-[#080912]',
+    btnGradient: 'bg-gradient-to-r from-purple-400 via-pink-400 to-purple-300 text-black shadow-purple-500/25 hover:brightness-110',
+    btnText: 'SPIN SMP SLOTS',
   },
   {
     id: 'coinflip',
-    title: 'Coinflip 1v1',
-    category: 'PvP Duels',
-    badge: '🪙 1V1 DUELS',
+    title: 'DONUT COINFLIP',
+    highlight: '50/50 1V1 DUELS',
+    description: 'Glazed vs Chocolate 3D animated coin flip against live SMP players. Pure 50/50 provably fair mathematical randomness with automated instant payouts.',
+    badge: '🪙 INSTANT 1V1 PVP',
     badgeStyle: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/40',
-    multiplier: '2.00x',
+    multiplier: '2.00x PAYOUT',
     players: 24,
     image: '/images/cards/coinflip.png',
-    glow: 'rgba(234, 179, 8, 0.45)',
-  },
-  {
-    id: 'towers',
-    title: 'Towers',
-    category: 'Originals',
-    badge: '🏰 ORIGINAL',
-    badgeStyle: 'bg-rose-500/20 text-rose-300 border-rose-500/40',
-    multiplier: '4.00x',
-    players: 15,
-    image: '/images/cards/towers.png',
-    glow: 'rgba(244, 63, 94, 0.45)',
-  },
-  {
-    id: 'roulette',
-    title: 'Donut Roulette',
-    category: 'Tables',
-    badge: '🎯 14X GOLD',
-    badgeStyle: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
-    multiplier: '14.00x',
-    players: 18,
-    image: '/images/cards/roulette.png',
-    glow: 'rgba(245, 158, 11, 0.45)',
+    glow: 'rgba(234, 179, 8, 0.35)',
+    bgGradient: 'from-yellow-950/40 via-[#18140c] to-[#080912]',
+    btnGradient: 'bg-gradient-to-r from-amber-400 to-yellow-400 text-black shadow-amber-500/25 hover:brightness-110',
+    btnText: 'ENTER COINFLIP',
   },
   {
     id: 'blackjack',
-    title: 'Blackjack 21',
-    category: 'Tables',
-    badge: '🂡 LIVE DEALER',
+    title: 'BLACKJACK 21',
+    highlight: 'BEAT THE DEALER',
+    description: 'Player vs Dealer with Hit, Stand, Double Down, and soft 17 rules. Test your card strategy and double your virtual SMP Cash stack.',
+    badge: '🂡 LIVE TABLE',
     badgeStyle: 'bg-blue-500/20 text-blue-300 border-blue-500/40',
-    multiplier: '2.50x',
+    multiplier: '2.50x BLACKJACK',
     players: 19,
     image: '/images/cards/blackjack.png',
-    glow: 'rgba(59, 130, 246, 0.45)',
+    glow: 'rgba(59, 130, 246, 0.35)',
+    bgGradient: 'from-blue-950/40 via-[#0c1220] to-[#080912]',
+    btnGradient: 'bg-gradient-to-r from-blue-400 to-sky-300 text-black shadow-blue-500/25 hover:brightness-110',
+    btnText: 'PLAY BLACKJACK',
   },
   {
-    id: 'limbo',
-    title: 'Limbo Fast',
-    category: 'High Multiplier',
-    badge: '📈 1000X',
-    badgeStyle: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
-    multiplier: '1000x',
-    players: 16,
-    image: '/images/cards/limbo.png',
-    glow: 'rgba(16, 185, 129, 0.45)',
-  },
-  {
-    id: 'cases',
-    title: 'Loot Cases',
-    category: 'Originals',
-    badge: '📦 LOOT BOX',
-    badgeStyle: 'bg-orange-500/20 text-orange-300 border-orange-500/40',
-    multiplier: '4.50x',
-    players: 12,
-    image: '/images/cards/cases.png',
-    glow: 'rgba(249, 115, 22, 0.45)',
-  },
-  {
-    id: 'dice',
-    title: 'Custom Dice',
-    category: 'Originals',
-    badge: '🎲 FAIR',
-    badgeStyle: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40',
-    multiplier: '5.00x',
-    players: 14,
-    image: '/images/cards/dice.png',
-    glow: 'rgba(6, 182, 212, 0.45)',
+    id: 'roulette',
+    title: 'DONUT ROULETTE',
+    highlight: '14X GOLDEN DONUT',
+    description: 'Red (2x), Black (2x), and the high-volatility Golden Donut (14x) with horizontal rolling reel and live synchronized round countdowns.',
+    badge: '🎯 14X GOLD',
+    badgeStyle: 'bg-rose-500/20 text-rose-300 border-rose-500/40',
+    multiplier: '14.00x GOLD',
+    players: 18,
+    image: '/images/cards/roulette.png',
+    glow: 'rgba(244, 63, 94, 0.35)',
+    bgGradient: 'from-rose-950/40 via-[#1a0c14] to-[#080912]',
+    btnGradient: 'bg-gradient-to-r from-rose-400 to-amber-300 text-black shadow-rose-500/25 hover:brightness-110',
+    btnText: 'SPIN ROULETTE',
   },
 ];
-
-// Duplicated for an unbroken, infinite sliding loop
-const SLIDING_REEL = [...SHOWCASE_GAMES, ...SHOWCASE_GAMES];
 
 interface RotatingGameShowcaseProps {
   onSelectGame: (gameId: GameType) => void;
 }
 
 export default function RotatingGameShowcase({ onSelectGame }: RotatingGameShowcaseProps) {
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-  const handleSelect = (id: GameType) => {
+  // Auto-slide to the next game every 4.8 seconds
+  useEffect(() => {
+    if (isPaused) return;
+
+    timerRef.current = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % FULL_GAME_SLIDES.length);
+    }, 4800);
+
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [isPaused]);
+
+  const handlePrev = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    sound.playClick();
+    setCurrentIndex((prev) => (prev === 0 ? FULL_GAME_SLIDES.length - 1 : prev - 1));
+  };
+
+  const handleNext = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    sound.playClick();
+    setCurrentIndex((prev) => (prev + 1) % FULL_GAME_SLIDES.length);
+  };
+
+  const handlePlayGame = (gameId: GameType) => {
     sound.playWin();
-    onSelectGame(id);
+    onSelectGame(gameId);
     const arena = document.getElementById('play-arena');
     if (arena) {
       arena.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
-  const handleScrollLeft = () => {
-    sound.playClick();
-    if (scrollRef.current) {
-      scrollRef.current.scrollBy({ left: -320, behavior: 'smooth' });
-    }
-  };
-
-  const handleScrollRight = () => {
-    sound.playClick();
-    if (scrollRef.current) {
-      scrollRef.current.scrollBy({ left: 320, behavior: 'smooth' });
-    }
-  };
-
   return (
-    <div className="relative rounded-3xl overflow-hidden border border-white/10 bg-[#090b14] p-5 sm:p-6 shadow-2xl flex flex-col justify-between select-none">
-      {/* Background Ambient Glows */}
-      <div className="absolute top-0 right-1/4 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 left-1/4 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+    <div
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
+      className="relative rounded-3xl overflow-hidden border border-white/10 bg-[#080912] shadow-2xl min-h-[350px] sm:min-h-[380px] flex flex-col justify-between select-none group"
+    >
+      {/* Top Floating Controls Bar */}
+      <div className="absolute top-4 right-4 z-30 flex items-center gap-1.5">
+        <button
+          onClick={handlePrev}
+          aria-label="Previous Game"
+          title="Previous Game"
+          className="p-2 rounded-xl bg-black/50 hover:bg-black/80 backdrop-blur-md text-neutral-300 hover:text-white border border-white/10 transition cursor-pointer"
+        >
+          <ChevronLeft className="w-4 h-4" />
+        </button>
+        <button
+          onClick={handleNext}
+          aria-label="Next Game"
+          title="Next Game"
+          className="p-2 rounded-xl bg-black/50 hover:bg-black/80 backdrop-blur-md text-neutral-300 hover:text-white border border-white/10 transition cursor-pointer"
+        >
+          <ChevronRight className="w-4 h-4" />
+        </button>
+      </div>
 
-      {/* Top Header of the Showcase */}
-      <div className="relative z-10 flex items-center justify-between gap-4 mb-4 pb-3 border-b border-white/5">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
-            <Gamepad2 className="w-4 h-4" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h2 className="text-sm sm:text-base font-black text-white uppercase tracking-wider">
-                FEATURED GAMES SHOWCASE
-              </h2>
-              <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-mono flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                LIVE REEL
-              </span>
+      {/* The Entire Box Horizontal Sliding Track */}
+      <div className="w-full flex-1 overflow-hidden relative">
+        <div
+          className="flex h-full w-full transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform"
+          style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+        >
+          {FULL_GAME_SLIDES.map((slide) => (
+            <div
+              key={slide.id}
+              className={`w-full shrink-0 h-full p-6 sm:p-8 flex flex-col justify-between relative bg-gradient-to-br ${slide.bgGradient} overflow-hidden`}
+            >
+              {/* Dynamic Radial Ambient Spotlight */}
+              <div
+                className="absolute top-0 right-10 w-96 h-96 rounded-full blur-3xl pointer-events-none opacity-80"
+                style={{ background: slide.glow }}
+              />
+
+              {/* Slide Header: Badges & Players */}
+              <div className="relative z-10 flex items-center gap-2 mb-3">
+                <span className={`text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full border shadow-sm ${slide.badgeStyle}`}>
+                  {slide.badge}
+                </span>
+                <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-black/40 backdrop-blur-md text-neutral-300 border border-white/10 flex items-center gap-1.5 font-mono">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  {slide.players} online
+                </span>
+                <span className="text-[10px] font-black uppercase px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-mono hidden sm:inline-block">
+                  {slide.multiplier}
+                </span>
+              </div>
+
+              {/* Slide Center: Text & Large 3D Artwork */}
+              <div className="relative z-10 grid grid-cols-1 md:grid-cols-12 gap-6 items-center my-auto">
+                {/* Left Text Column */}
+                <div className="md:col-span-8 flex flex-col justify-center">
+                  <h2 className="text-2xl sm:text-4xl font-black text-white tracking-tight leading-tight mb-2">
+                    {slide.title}:{' '}
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-amber-300 to-emerald-400">
+                      {slide.highlight}
+                    </span>
+                  </h2>
+
+                  <p className="text-xs sm:text-sm text-neutral-300 max-w-xl leading-relaxed mb-6 font-medium">
+                    {slide.description}
+                  </p>
+
+                  {/* Play Action Button */}
+                  <div className="flex flex-wrap items-center gap-3">
+                    <button
+                      onClick={() => handlePlayGame(slide.id)}
+                      className={`px-6 py-3.5 rounded-2xl ${slide.btnGradient} font-black text-xs uppercase tracking-wider shadow-xl transition-all transform active:scale-95 flex items-center gap-2 cursor-pointer`}
+                    >
+                      <Play className="w-4 h-4 fill-current" />
+                      <span>{slide.btnText}</span>
+                    </button>
+
+                    <button
+                      onClick={() => handlePlayGame(slide.id)}
+                      className="px-4 py-3.5 rounded-2xl bg-white/5 hover:bg-white/10 text-neutral-300 hover:text-white border border-white/10 font-black text-xs uppercase tracking-wider transition cursor-pointer"
+                    >
+                      <span>LOAD GAME</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Right Floating 3D Artwork */}
+                <div className="hidden md:flex md:col-span-4 items-center justify-center">
+                  <div
+                    onClick={() => handlePlayGame(slide.id)}
+                    className="relative w-48 aspect-[4/5] rounded-3xl overflow-hidden border-2 border-white/20 bg-[#0d101a] shadow-2xl transform group-hover:scale-105 group-hover:-rotate-1 transition-all duration-500 cursor-pointer"
+                    style={{ boxShadow: `0 24px 50px -12px ${slide.glow}` }}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={slide.image}
+                      alt={slide.title}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-transparent flex flex-col justify-end p-3.5">
+                      <span className="text-[10px] font-black uppercase text-amber-300 font-mono">
+                        {slide.multiplier}
+                      </span>
+                      <span className="text-xs font-black text-white truncate">
+                        {slide.title}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Slide Bottom Filler Spacing */}
+              <div className="h-6" />
             </div>
-            <p className="text-[11px] text-neutral-400">
-              Auto-sliding arcade reel • Hover any game to pause and play in Arena
-            </p>
-          </div>
-        </div>
-
-        {/* Manual Glide Buttons */}
-        <div className="flex items-center gap-1.5 shrink-0">
-          <button
-            onClick={handleScrollLeft}
-            title="Scroll Left"
-            className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-neutral-300 hover:text-white border border-white/10 transition cursor-pointer"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-          <button
-            onClick={handleScrollRight}
-            title="Scroll Right"
-            className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-neutral-300 hover:text-white border border-white/10 transition cursor-pointer"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
+          ))}
         </div>
       </div>
 
-      {/* The Actual Continuous Sliding Game Reel Track */}
-      <div className="relative w-full overflow-hidden py-1">
-        {/* Left & Right Gradient Shadows for seamless infinite edges */}
-        <div className="absolute left-0 top-0 bottom-0 w-8 sm:w-14 bg-gradient-to-r from-[#090b14] to-transparent z-10 pointer-events-none" />
-        <div className="absolute right-0 top-0 bottom-0 w-8 sm:w-14 bg-gradient-to-l from-[#090b14] to-transparent z-10 pointer-events-none" />
+      {/* Bottom Horizontal Slide Navigation Indicator Pills */}
+      <div className="relative z-20 px-6 sm:px-8 py-3.5 bg-black/40 backdrop-blur-md border-t border-white/5 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-2">
+          {FULL_GAME_SLIDES.map((slide, idx) => {
+            const isActive = idx === currentIndex;
+            return (
+              <button
+                key={slide.id}
+                onClick={() => {
+                  sound.playClick();
+                  setCurrentIndex(idx);
+                }}
+                className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${
+                  isActive ? 'w-8 bg-emerald-400 shadow-md shadow-emerald-400/50' : 'w-2 bg-white/20 hover:bg-white/40'
+                }`}
+                title={`Slide to ${slide.title}`}
+              />
+            );
+          })}
+        </div>
 
-        {/* Sliding Reel Belt */}
-        <div
-          ref={scrollRef}
-          className="flex items-center gap-4 animate-showcase-slide hover:pause overflow-x-auto scrollbar-none py-2"
-        >
-          {SLIDING_REEL.map((game, idx) => (
-            <div
-              key={`${game.id}-${idx}`}
-              onClick={() => handleSelect(game.id)}
-              className="relative w-44 sm:w-48 shrink-0 rounded-2xl overflow-hidden border border-white/10 bg-[#0d101a] group cursor-pointer transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:border-emerald-400/60"
-              style={{
-                boxShadow: `0 10px 25px -10px ${game.glow}`,
-              }}
-            >
-              {/* 3D Poster Artwork Box */}
-              <div className="relative aspect-[4/3] w-full overflow-hidden bg-neutral-900">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={game.image}
-                  alt={game.title}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                  loading="lazy"
-                />
-
-                {/* Top Corner Badge */}
-                <div className="absolute top-2 left-2 z-10">
-                  <span className={`text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border shadow-md ${game.badgeStyle}`}>
-                    {game.badge}
-                  </span>
-                </div>
-
-                {/* Hover Quick-Play Overlay */}
-                <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center gap-1.5 z-20">
-                  <div className="w-10 h-10 rounded-full bg-emerald-500 text-black flex items-center justify-center shadow-lg shadow-emerald-500/40 transform group-hover:scale-105 transition">
-                    <Play className="w-5 h-5 fill-current ml-0.5" />
-                  </div>
-                  <span className="text-[10px] font-black text-white uppercase tracking-wider">
-                    PLAY IN ARENA
-                  </span>
-                </div>
-              </div>
-
-              {/* Bottom Card Meta Details */}
-              <div className="p-3 bg-[#0d101a] flex flex-col gap-1 border-t border-white/5">
-                <div className="flex items-center justify-between">
-                  <span className="font-black text-xs text-white group-hover:text-emerald-400 transition truncate">
-                    {game.title}
-                  </span>
-                  <span className="text-[10px] font-mono font-black text-amber-400 shrink-0">
-                    {game.multiplier}
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between text-[10px] text-neutral-400">
-                  <span className="font-medium text-[9px] uppercase tracking-wider text-neutral-500">
-                    {game.category}
-                  </span>
-                  <span className="flex items-center gap-1 text-[9px] font-mono font-medium text-emerald-400">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    {game.players} online
-                  </span>
-                </div>
-              </div>
-            </div>
-          ))}
+        <div className="flex items-center gap-2 text-[10px] font-mono text-neutral-400 font-bold">
+          <span className="text-emerald-400">0{currentIndex + 1}</span>
+          <span>/</span>
+          <span>0{FULL_GAME_SLIDES.length}</span>
+          <span className="hidden sm:inline text-neutral-500 font-sans font-medium ml-1">
+            ({FULL_GAME_SLIDES[currentIndex].title})
+          </span>
         </div>
       </div>
     </div>
