@@ -82,7 +82,7 @@ function parsePayInput(cmdText: string): { target: string; amount: number } | { 
 }
 
 export default function CommunityChat({ isOpen: propIsOpen, onToggle: propOnToggle }: CommunityChatProps = {}) {
-  const { user, users, deposits, transferCoins, isChatOpen, toggleChat } = useGame();
+  const { user, users, deposits, transferCoins, isChatOpen, toggleChat, openWallet } = useGame();
   const isOpen = propIsOpen !== undefined ? propIsOpen : isChatOpen;
   const onToggle = propOnToggle || toggleChat;
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -97,7 +97,9 @@ export default function CommunityChat({ isOpen: propIsOpen, onToggle: propOnTogg
 
   const mentionListRef = useRef<HTMLDivElement>(null);
 
-  // Require at least 10M deposited in-game to chat
+  // Require at least 15M deposited in-game to chat
+  const CHAT_MIN_DEPOSIT = 15000000;
+
   const isStaff = Boolean(
     user?.role === 'admin' || 
     user?.minecraftIgn?.toLowerCase() === 'cartisneakz' || 
@@ -109,19 +111,19 @@ export default function CommunityChat({ isOpen: propIsOpen, onToggle: propOnTogg
     .filter((d) => d.userId === user?.id && d.status === 'approved')
     .reduce((sum, d) => sum + Math.max(d.amountCoins || 0, d.amountInGame || 0), 0);
 
-  const has10MDeposit = Boolean(
+  const has15MDeposit = Boolean(
     user && (
       isStaff || 
-      totalDeposited >= 10000000 || 
-      (user.balance || 0) >= 10000000 || 
-      (user.totalWagered || 0) >= 10000000 ||
+      totalDeposited >= CHAT_MIN_DEPOSIT || 
+      (user.balance || 0) >= CHAT_MIN_DEPOSIT || 
+      (user.totalWagered || 0) >= CHAT_MIN_DEPOSIT ||
       (deposits || []).some(
-        (d) => d.userId === user.id && d.status === 'approved' && (d.amountCoins >= 10000000 || d.amountInGame >= 10000000)
+        (d) => d.userId === user.id && d.status === 'approved' && (d.amountCoins >= CHAT_MIN_DEPOSIT || d.amountInGame >= CHAT_MIN_DEPOSIT)
       )
     )
   );
 
-  const canChat = Boolean(user && has10MDeposit);
+  const canChat = Boolean(user && has15MDeposit);
 
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const isNearBottomRef = useRef<boolean>(true);
@@ -399,7 +401,7 @@ export default function CommunityChat({ isOpen: propIsOpen, onToggle: propOnTogg
     }
 
     if (!canChat) {
-      setPayError('You must have at least 10M deposited in-game to chat.');
+      setPayError('Deposit 15m to start chatting.');
       return;
     }
 
@@ -737,24 +739,27 @@ export default function CommunityChat({ isOpen: propIsOpen, onToggle: propOnTogg
         </div>
       )}
 
-      {/* Input Field Form */}
-      <form onSubmit={handleSend} className="p-3 border-t border-white/5 bg-[#12151e] shrink-0">
+      {/* Input Field Form / Chat Box Lock */}
+      <div className="p-3 border-t border-white/5 bg-[#12151e] shrink-0">
         {!canChat ? (
-          <Link
-            href="/deposit"
-            title={!user ? "Sign in to chat" : "Deposit at least 10M in-game to unlock chat"}
-            className="relative flex items-center justify-center w-full bg-[#0b0c10] hover:bg-[#0f1118] border border-white/10 hover:border-amber-500/30 rounded-xl py-2.5 px-3 select-none transition group cursor-pointer"
+          <button
+            type="button"
+            onClick={() => openWallet('deposit')}
+            title="Deposit 15m to start chatting"
+            className="flex flex-col items-center justify-center w-full py-4 px-3 bg-[#0a0d16] hover:bg-[#0f1424] border border-[#1b2644] hover:border-amber-500/40 rounded-2xl select-none transition-all group cursor-pointer shadow-inner"
           >
-            {/* Lock in the middle of the text box */}
-            <div className="flex items-center justify-center gap-2 text-neutral-400 group-hover:text-neutral-300">
-              <Lock className="w-4 h-4 text-amber-400 group-hover:scale-110 transition-transform shrink-0" />
-              <span className="text-xs font-bold tracking-wide">
-                {!user ? "Sign in to chat" : "10M deposit required to chat"}
-              </span>
+            {/* Big Lock in the middle of the chat box */}
+            <div className="w-11 h-11 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 group-hover:scale-110 group-hover:bg-amber-500/25 group-hover:border-amber-400 transition-all shadow-md shadow-amber-500/10 mb-1.5">
+              <Lock className="w-6 h-6 text-amber-400" />
             </div>
-          </Link>
+
+            {/* Below it: "Deposit 15m to start chatting" */}
+            <span className="text-xs sm:text-sm font-black text-white tracking-wide text-center">
+              Deposit 15m to start chatting
+            </span>
+          </button>
         ) : (
-          <div className="relative flex items-center">
+          <form onSubmit={handleSend} className="relative flex items-center">
             {/* Mention Dropdown Autocomplete */}
             {isMentionOpen && (
               <div 
@@ -847,9 +852,9 @@ export default function CommunityChat({ isOpen: propIsOpen, onToggle: propOnTogg
             >
               <Send className="w-4 h-4" />
             </button>
-          </div>
+          </form>
         )}
-      </form>
+      </div>
 
       </aside>
 
