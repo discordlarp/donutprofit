@@ -5,12 +5,20 @@ import { useGame } from '@/context/GameContext';
 import GamesSidebar from '@/components/GamesSidebar';
 import CommunityChat from '@/components/CommunityChat';
 import Footer from '@/components/Footer';
+import WalletModal from '@/components/WalletModal';
 
 export default function AppLayoutShell({ children }: { children: React.ReactNode }) {
-  const { isSidebarCollapsed } = useGame();
+  const { isSidebarCollapsed, isWalletOpen, closeWallet, walletInitialTab } = useGame();
 
   return (
     <div className="flex-1 flex relative w-full min-h-[calc(100vh-4rem)]">
+      {/* Stake Style Wallet Modal */}
+      <WalletModal
+        isOpen={isWalletOpen}
+        onClose={closeWallet}
+        initialTab={walletInitialTab}
+      />
+
       {/* Left Collapsible Casino Sidebar (DonutFortune Style) */}
       <GamesSidebar />
 

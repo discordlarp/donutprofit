@@ -79,6 +79,11 @@ interface GameContextType {
   toggleSidebar: () => void;
   isSidebarCollapsed: boolean;
   toggleSidebarCollapse: () => void;
+  isWalletOpen: boolean;
+  setIsWalletOpen: (open: boolean) => void;
+  openWallet: (tab?: 'deposit' | 'withdraw') => void;
+  closeWallet: () => void;
+  walletInitialTab: 'deposit' | 'withdraw';
 }
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
@@ -147,6 +152,14 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const toggleSidebarCollapse = () => setIsSidebarCollapsed(prev => !prev);
+
+  const [isWalletOpen, setIsWalletOpen] = useState(false);
+  const [walletInitialTab, setWalletInitialTab] = useState<'deposit' | 'withdraw'>('deposit');
+  const openWallet = (tab: 'deposit' | 'withdraw' = 'deposit') => {
+    setWalletInitialTab(tab);
+    setIsWalletOpen(true);
+  };
+  const closeWallet = () => setIsWalletOpen(false);
 
   const dismissDepositNotification = () => {
     setDepositNotification(null);
@@ -1930,7 +1943,12 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       setIsSidebarOpen,
       toggleSidebar,
       isSidebarCollapsed,
-      toggleSidebarCollapse
+      toggleSidebarCollapse,
+      isWalletOpen,
+      setIsWalletOpen,
+      openWallet,
+      closeWallet,
+      walletInitialTab
     }}>
       {children}
     </GameContext.Provider>

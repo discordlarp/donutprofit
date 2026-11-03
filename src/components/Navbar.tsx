@@ -42,7 +42,8 @@ export default function Navbar({ onToggleChat: propOnToggle, isChatOpen: propIsO
     changePassword, 
     isChatOpen, 
     toggleChat,
-    toggleSidebar
+    toggleSidebar,
+    openWallet
   } = useGame();
 
   const chatOpen = propIsOpen !== undefined ? propIsOpen : isChatOpen;
@@ -204,37 +205,36 @@ export default function Navbar({ onToggleChat: propOnToggle, isChatOpen: propIsO
             {user ? (
               /* Logged In State: Wallet + Profile Pill */
               <>
-                {/* DonutFortune Wallet Pill with Quick Deposit/Withdraw */}
-                <div className="flex items-center bg-[#10131d] border border-emerald-500/30 rounded-2xl p-1 pr-1.5 sm:pr-2.5 shadow-sm">
-                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-emerald-500 flex items-center justify-center text-black font-bold mr-1.5 sm:mr-2 shrink-0">
-                    <Coins className="w-4 h-4 text-black" />
-                  </div>
-                  <div className="flex flex-col min-w-0 mr-1 sm:mr-2">
-                    <span className="text-[8px] sm:text-[9px] uppercase font-bold text-neutral-400 leading-none">
-                      Cash
-                    </span>
-                    <span className="text-xs sm:text-sm font-black text-emerald-400 font-mono truncate">
-                      {formatCash(user.balance)}
-                    </span>
-                  </div>
-
-                  {/* Quick Deposit (+) */}
-                  <Link
-                    href="/deposit"
-                    title="Deposit in-game"
-                    className="bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/40 text-xs px-2 py-0.5 rounded-lg font-black transition cursor-pointer"
+                {/* DonutFortune Wallet Pill with Wallet Button */}
+                <div className="flex items-center bg-[#10131d] border border-emerald-500/30 rounded-2xl p-1 pr-1.5 sm:pr-2 shadow-sm">
+                  <button
+                    type="button"
+                    onClick={() => openWallet()}
+                    className="flex items-center text-left hover:opacity-85 transition cursor-pointer"
+                    title="Open Wallet"
                   >
-                    +
-                  </Link>
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-emerald-500 flex items-center justify-center text-black font-bold mr-1.5 sm:mr-2 shrink-0">
+                      <Coins className="w-4 h-4 text-black" />
+                    </div>
+                    <div className="flex flex-col min-w-0 mr-1.5 sm:mr-2.5">
+                      <span className="text-[8px] sm:text-[9px] uppercase font-bold text-neutral-400 leading-none">
+                        Cash
+                      </span>
+                      <span className="text-xs sm:text-sm font-black text-emerald-400 font-mono truncate">
+                        {formatCash(user.balance)}
+                      </span>
+                    </div>
+                  </button>
 
-                  {/* Quick Withdraw (-) */}
-                  <Link
-                    href="/withdraw"
-                    title="Request payout"
-                    className="ml-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 border border-amber-500/40 text-xs px-2 py-0.5 rounded-lg font-black transition cursor-pointer hidden sm:block"
+                  {/* Wallet Button */}
+                  <button
+                    type="button"
+                    onClick={() => openWallet()}
+                    title="Open Wallet"
+                    className="px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-black text-xs uppercase tracking-wider transition cursor-pointer active:scale-95 shadow-md shadow-blue-500/20 shrink-0"
                   >
-                    -
-                  </Link>
+                    Wallet
+                  </button>
                 </div>
 
                 {/* Donut Stake Profile Pill & Dropdown Trigger */}
@@ -276,6 +276,17 @@ export default function Navbar({ onToggleChat: propOnToggle, isChatOpen: propIsO
                           Balance: {formatCash(user.balance)}
                         </span>
                       </div>
+
+                      <button
+                        onClick={() => {
+                          setProfileDropdownOpen(false);
+                          openWallet();
+                        }}
+                        className="px-3 py-2 rounded-xl text-neutral-300 hover:text-white hover:bg-white/5 flex items-center gap-2 font-bold transition w-full text-left cursor-pointer"
+                      >
+                        <Coins className="w-3.5 h-3.5 text-blue-400" />
+                        <span>Wallet</span>
+                      </button>
 
                       <Link
                         href="/profile"
