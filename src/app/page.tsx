@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useGame } from '@/context/GameContext';
 import { GameType } from '@/types';
@@ -18,14 +18,12 @@ import LimboGame from '@/components/games/LimboGame';
 import HiloGame from '@/components/games/HiloGame';
 import RecentBetsTable from '@/components/RecentBetsTable';
 import AuthModal from '@/components/AuthModal';
-import GameArtwork from '@/components/GameArtwork';
 import RotatingGameShowcase from '@/components/RotatingGameShowcase';
 import { sound } from '@/lib/sound';
 import { 
   Gamepad2,
   Sparkles,
   Gift,
-  Search,
   Flame,
   ShieldCheck,
   Zap,
@@ -90,8 +88,6 @@ const QUICK_SWITCH_GAMES: { id: GameType; name: string; emoji: string }[] = [
 export default function HomePage() {
   const { user, activeReferrer, activeGame, setActiveGame } = useGame();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<'all' | 'originals' | 'pvp' | 'high_multiplier' | 'cards'>('all');
   const [isTheaterMode, setIsTheaterMode] = useState(false);
   const [isSoundMuted, setIsSoundMuted] = useState(false);
 
@@ -106,14 +102,6 @@ export default function HomePage() {
     const isNowMuted = sound.toggleSound();
     setIsSoundMuted(isNowMuted);
   };
-
-  const filteredGames = useMemo(() => {
-    return POSTER_GAMES.filter((g) => {
-      const matchesSearch = g.title.toLowerCase().includes(searchQuery.toLowerCase().trim());
-      const matchesCategory = selectedCategory === 'all' || g.category === selectedCategory;
-      return matchesSearch && matchesCategory;
-    });
-  }, [searchQuery, selectedCategory]);
 
   const activeGameMeta = POSTER_GAMES.find((g) => g.id === activeGame) || POSTER_GAMES[0];
 
@@ -251,139 +239,7 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* 3. Arcade Lobby & Game Discovery Grid */}
-        <div className="flex flex-col gap-5">
-          {/* Section Header & Filters */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center text-emerald-400">
-                <Flame className="w-5 h-5 text-emerald-400" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="text-xl font-black text-white tracking-tight">
-                    ARCADE LOBBY
-                  </h3>
-                  <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-white/5 text-neutral-300 border border-white/10 font-mono">
-                    17 GAMES
-                  </span>
-                </div>
-                <p className="text-xs text-neutral-400">Choose any game below to load it into the arena</p>
-              </div>
-            </div>
-
-            {/* Instant Search Bar */}
-            <div className="relative w-full sm:w-72">
-              <Search className="w-4 h-4 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                placeholder="Search games..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-[#0d101a] border border-white/10 rounded-2xl py-2.5 pl-9 pr-3 text-xs text-white placeholder-neutral-500 outline-none focus:border-emerald-500 transition font-medium"
-              />
-            </div>
-          </div>
-
-          {/* Category Tabs */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none text-xs select-none">
-            <button
-              onClick={() => setSelectedCategory('all')}
-              className={`px-4 py-2 rounded-2xl font-black whitespace-nowrap transition flex items-center gap-1.5 cursor-pointer ${
-                selectedCategory === 'all'
-                  ? 'bg-emerald-500 text-black shadow-lg shadow-emerald-500/20'
-                  : 'bg-[#0f111a] text-neutral-400 hover:text-white border border-white/5'
-              }`}
-            >
-              <Flame className="w-3.5 h-3.5" />
-              <span>All Games ({POSTER_GAMES.length})</span>
-            </button>
-            <button
-              onClick={() => setSelectedCategory('originals')}
-              className={`px-4 py-2 rounded-2xl font-black whitespace-nowrap transition flex items-center gap-1.5 cursor-pointer ${
-                selectedCategory === 'originals'
-                  ? 'bg-emerald-500 text-black shadow-lg shadow-emerald-500/20'
-                  : 'bg-[#0f111a] text-neutral-400 hover:text-white border border-white/5'
-              }`}
-            >
-              <Zap className="w-3.5 h-3.5" />
-              <span>Donut Originals</span>
-            </button>
-            <button
-              onClick={() => setSelectedCategory('pvp')}
-              className={`px-4 py-2 rounded-2xl font-black whitespace-nowrap transition flex items-center gap-1.5 cursor-pointer ${
-                selectedCategory === 'pvp'
-                  ? 'bg-amber-400 text-black shadow-lg shadow-amber-400/20'
-                  : 'bg-[#0f111a] text-neutral-400 hover:text-white border border-white/5'
-              }`}
-            >
-              <Swords className="w-3.5 h-3.5" />
-              <span>PvP Battles</span>
-            </button>
-            <button
-              onClick={() => setSelectedCategory('high_multiplier')}
-              className={`px-4 py-2 rounded-2xl font-black whitespace-nowrap transition flex items-center gap-1.5 cursor-pointer ${
-                selectedCategory === 'high_multiplier'
-                  ? 'bg-emerald-500 text-black shadow-lg shadow-emerald-500/20'
-                  : 'bg-[#0f111a] text-neutral-400 hover:text-white border border-white/5'
-              }`}
-            >
-              <TrendingUp className="w-3.5 h-3.5" />
-              <span>High Multiplier</span>
-            </button>
-            <button
-              onClick={() => setSelectedCategory('cards')}
-              className={`px-4 py-2 rounded-2xl font-black whitespace-nowrap transition flex items-center gap-1.5 cursor-pointer ${
-                selectedCategory === 'cards'
-                  ? 'bg-emerald-500 text-black shadow-lg shadow-emerald-500/20'
-                  : 'bg-[#0f111a] text-neutral-400 hover:text-white border border-white/5'
-              }`}
-            >
-              <Layers className="w-3.5 h-3.5" />
-              <span>Cards & PvP</span>
-            </button>
-          </div>
-
-          {/* Custom Neo-Arcade Game Cards Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-            {filteredGames.map((p) => {
-              const isSelected = activeGame === p.id;
-              return (
-                <div
-                  key={p.id}
-                  onClick={() => {
-                    setActiveGame(p.id);
-                    const el = document.getElementById('play-arena');
-                    el?.scrollIntoView({ behavior: 'smooth' });
-                  }}
-                  className={`flex flex-col rounded-3xl p-2 bg-[#0c0e18] border transition-all duration-300 group cursor-pointer hover:-translate-y-1.5 hover:shadow-2xl ${
-                    isSelected
-                      ? 'border-emerald-400 shadow-xl shadow-emerald-500/25 ring-2 ring-emerald-400/50'
-                      : 'border-white/10 hover:border-emerald-400/50 hover:shadow-emerald-500/10'
-                  }`}
-                >
-                  {/* Poster Artwork Box */}
-                  <div className="relative aspect-[4/3] rounded-2xl overflow-hidden">
-                    <GameArtwork type={p.id} className="w-full h-full" />
-                  </div>
-
-                  {/* Card Bottom Meta */}
-                  <div className="flex items-center justify-between px-2 pt-2.5 pb-1">
-                    <span className="font-black text-xs text-white group-hover:text-emerald-400 transition truncate">
-                      {p.title}
-                    </span>
-                    <span className="text-[10px] text-neutral-400 font-medium flex items-center gap-1 shrink-0">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                      {p.players}
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* 4. Live Platform Activity Feed & High Rollers */}
+        {/* 3. Live Platform Activity Feed & High Rollers */}
         <div className="mb-4">
           <RecentBetsTable />
         </div>
