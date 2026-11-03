@@ -16,6 +16,24 @@ export interface MemberLogEntry {
   timeMs: number;
 }
 
+export const REMOVED_ACCOUNTS = new Set([
+  'slitheaven',
+  'jew',
+  'gangsterjew7',
+  'donutking_99',
+  'donutking',
+  'glazed_pvp',
+  'admin-2',
+  'user-1',
+  'user-2',
+]);
+
+export function isAccountRemoved(identifier?: string | null): boolean {
+  if (!identifier) return false;
+  const clean = identifier.trim().toLowerCase().replace(/^@/, '').replace(/^\./, '');
+  return REMOVED_ACCOUNTS.has(clean) || REMOVED_ACCOUNTS.has(identifier.toLowerCase());
+}
+
 // Initial seed chat messages
 const SEED_CHAT_MESSAGES: ChatMessage[] = [
   {
@@ -38,11 +56,11 @@ const SEED_CHAT_MESSAGES: ChatMessage[] = [
   },
   {
     id: 'seed-3',
-    userId: 'gangsterjew7',
-    username: 'gangsterjew7',
-    minecraftIgn: 'gangsterjew7',
+    userId: 'wonderflows',
+    username: 'wonderflows',
+    minecraftIgn: 'wonderflows',
     message: 'Staff online 24/7. Have fun guys!',
-    isStaff: true,
+    isStaff: false,
     timestamp: 'Official',
   }
 ];
@@ -90,10 +108,12 @@ function loadStoreFromDisk() {
   if (isStoreInitialized) return;
   isStoreInitialized = true;
 
-  // Initialize with MOCK_USERS first
+  // Initialize with MOCK_USERS first (filtering out any removed accounts)
   for (const u of MOCK_USERS) {
-    memoryUsers.set(u.id, u);
-    memoryUsers.set(u.minecraftIgn.toLowerCase(), u);
+    if (!isAccountRemoved(u.minecraftIgn) && !isAccountRemoved(u.username) && !isAccountRemoved(u.id) && !isAccountRemoved(u.email)) {
+      memoryUsers.set(u.id, u);
+      memoryUsers.set(u.minecraftIgn.toLowerCase(), u);
+    }
   }
 
   const dir = getDataDir();
@@ -106,8 +126,10 @@ function loadStoreFromDisk() {
       const list: UserProfile[] = JSON.parse(raw);
       if (Array.isArray(list)) {
         for (const u of list) {
-          memoryUsers.set(u.id, u);
-          memoryUsers.set(u.minecraftIgn.toLowerCase(), u);
+          if (!isAccountRemoved(u.minecraftIgn) && !isAccountRemoved(u.username) && !isAccountRemoved(u.id) && !isAccountRemoved(u.email)) {
+            memoryUsers.set(u.id, u);
+            memoryUsers.set(u.minecraftIgn.toLowerCase(), u);
+          }
         }
       }
     }
@@ -136,22 +158,29 @@ function loadStoreFromDisk() {
       const raw = fs.readFileSync(logsFile, 'utf-8');
       const list: MemberLogEntry[] = JSON.parse(raw);
       if (Array.isArray(list)) {
-        memoryMemberLogs = list;
+        memoryMemberLogs = list.filter(
+          l => !isAccountRemoved(l.minecraftIgn) && !isAccountRemoved(l.username) && !isAccountRemoved(l.userId)
+        );
       }
     }
   } catch (err) {
     console.error('[ServerStore] Failed to load member_logs.json:', err);
   }
+
+  // Save cleaned state
+  persistUsersToDisk();
 }
 
 function persistUsersToDisk() {
   try {
     const dir = getDataDir();
     const usersFile = path.join(dir, 'users.json');
-    // Deduplicate users by id
+    // Deduplicate users by id and exclude removed
     const uniqueMap = new Map<string, UserProfile>();
     for (const u of memoryUsers.values()) {
-      uniqueMap.set(u.id, u);
+      if (!isAccountRemoved(u.minecraftIgn) && !isAccountRemoved(u.username) && !isAccountRemoved(u.id) && !isAccountRemoved(u.email)) {
+        uniqueMap.set(u.id, u);
+      }
     }
     fs.writeFileSync(usersFile, JSON.stringify(Array.from(uniqueMap.values()), null, 2), 'utf-8');
   } catch (err) {
@@ -173,7 +202,10 @@ function persistMemberLogsToDisk() {
   try {
     const dir = getDataDir();
     const logsFile = path.join(dir, 'member_logs.json');
-    fs.writeFileSync(logsFile, JSON.stringify(memoryMemberLogs.slice(-200), null, 2), 'utf-8');
+    const filtered = memoryMemberLogs
+      .filter(l => !isAccountRemoved(l.minecraftIgn) && !isAccountRemoved(l.username) && !isAccountRemoved(l.userId))
+      .slice(-200);
+    fs.writeFileSync(logsFile, JSON.stringify(filtered, null, 2), 'utf-8');
   } catch (err) {
     console.error('[ServerStore] Error saving member logs to disk:', err);
   }
@@ -184,13 +216,20 @@ export function getAllUsers(): UserProfile[] {
   loadStoreFromDisk();
   const map = new Map<string, UserProfile>();
   for (const u of memoryUsers.values()) {
-    map.set(u.id, u);
+    if (!isAccountRemoved(u.minecraftIgn) && !isAccountRemoved(u.username) && !isAccountRemoved(u.id) && !isAccountRemoved(u.email)) {
+      map.set(u.id, u);
+    }
   }
   return Array.from(map.values());
 }
 
 export function saveUser(user: UserProfile, activityDetails?: string): UserProfile {
   loadStoreFromDisk();
+
+  if (isAccountRemoved(user.minecraftIgn) || isAccountRemoved(user.username) || isAccountRemoved(user.id) || isAccountRemoved(user.email)) {
+    return user;
+  }
+
   const existing = memoryUsers.get(user.id) || memoryUsers.get(user.minecraftIgn.toLowerCase());
   const merged: UserProfile = {
     ...existing,
@@ -221,6 +260,61 @@ export function saveUser(user: UserProfile, activityDetails?: string): UserProfi
   persistMemberLogsToDisk();
 
   return merged;
+}
+
+export function deleteUser(userIdOrIgn: string): boolean {
+  loadStoreFromDisk();
+  const targetKey = userIdOrIgn.toLowerCase().trim().replace(/^@/, '');
+  REMOVED_ACCOUNTS.add(targetKey);
+
+  // Find user to delete
+  let targetUser: UserProfile | undefined = memoryUsers.get(userIdOrIgn) || memoryUsers.get(targetKey);
+  if (!targetUser) {
+    for (const u of memoryUsers.values()) {
+      if (
+        u.id.toLowerCase() === targetKey ||
+        u.minecraftIgn.toLowerCase() === targetKey ||
+        u.username.toLowerCase() === targetKey ||
+        (u.email && u.email.toLowerCase() === targetKey)
+      ) {
+        targetUser = u;
+        break;
+      }
+    }
+  }
+
+  if (targetUser) {
+    REMOVED_ACCOUNTS.add(targetUser.id.toLowerCase());
+    REMOVED_ACCOUNTS.add(targetUser.minecraftIgn.toLowerCase());
+    REMOVED_ACCOUNTS.add(targetUser.username.toLowerCase());
+    if (targetUser.email) REMOVED_ACCOUNTS.add(targetUser.email.toLowerCase());
+
+    memoryUsers.delete(targetUser.id);
+    memoryUsers.delete(targetUser.minecraftIgn.toLowerCase());
+    memoryUsers.delete(targetUser.username.toLowerCase());
+  }
+
+  // Also purge any matching keys from memoryUsers
+  for (const [k, u] of Array.from(memoryUsers.entries())) {
+    if (
+      isAccountRemoved(k) ||
+      isAccountRemoved(u.minecraftIgn) ||
+      isAccountRemoved(u.username) ||
+      isAccountRemoved(u.id) ||
+      isAccountRemoved(u.email)
+    ) {
+      memoryUsers.delete(k);
+    }
+  }
+
+  // Filter member logs
+  memoryMemberLogs = memoryMemberLogs.filter(
+    (l) => !isAccountRemoved(l.minecraftIgn) && !isAccountRemoved(l.username) && !isAccountRemoved(l.userId)
+  );
+
+  persistUsersToDisk();
+  persistMemberLogsToDisk();
+  return true;
 }
 
 export function updateUser(userIdOrIgn: string, updates: Partial<UserProfile>): UserProfile | null {

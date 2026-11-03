@@ -573,7 +573,6 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                       className="w-full bg-[#0b0c10] border border-white/10 rounded-xl p-2.5 text-xs text-white outline-none focus:border-amber-500 font-mono"
                     >
                       <option value="xynfnagsss@gmail.com">xynfnagsss (Owner / Staff)</option>
-                      <option value="gangsterjew7@gmail.com">gangsterjew7 (Admin / Staff)</option>
                       <option value="cartisneakz@donutprofit.online">cartisneakz (Admin / Staff)</option>
                     </select>
                   </div>

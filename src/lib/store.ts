@@ -38,25 +38,6 @@ export const MOCK_USERS: UserProfile[] = [
     referralWeekResetAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 5).toISOString(),
   },
   {
-    id: 'admin-2',
-    email: 'gangsterjew7@gmail.com',
-    username: 'gangsterjew7',
-    minecraftIgn: 'gangsterjew7',
-    password: 'donutprofitadmin21',
-    authProvider: 'email',
-    balance: 0,
-    role: 'admin',
-    isBanned: false,
-    totalWagered: 15000,
-    totalWon: 18000,
-    gamesPlayed: 65,
-    createdAt: '2026-10-01T00:00:00Z',
-    referralCount: 0,
-    referralCountThisWeek: 0,
-    totalReferralBonus: 0,
-    referralWeekResetAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 4).toISOString(),
-  },
-  {
     id: 'user-cartisneakz',
     email: 'cartisneakz@donutprofit.online',
     username: 'cartisneakz',
@@ -76,42 +57,23 @@ export const MOCK_USERS: UserProfile[] = [
     referralWeekResetAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 3).toISOString(),
   },
   {
-    id: 'user-1',
-    email: 'donutking@gmail.com',
-    username: 'DonutKing',
-    minecraftIgn: 'DonutKing_99',
+    id: 'user-wonderflows',
+    email: 'wonderflows@donutprofit.online',
+    username: 'wonderflows',
+    minecraftIgn: 'wonderflows',
     password: '123',
     authProvider: 'minecraft',
-    balance: 15000000,
+    balance: 500500,
     role: 'user',
     isBanned: false,
-    totalWagered: 124500000,
-    totalWon: 148000000,
-    gamesPlayed: 142,
-    createdAt: '2026-10-15T12:00:00Z',
+    totalWagered: 5000000,
+    totalWon: 5500500,
+    gamesPlayed: 45,
+    createdAt: '2026-10-20T00:00:00Z',
     referralCount: 0,
     referralCountThisWeek: 0,
     totalReferralBonus: 0,
-    referralWeekResetAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 2).toISOString(),
-  },
-  {
-    id: 'user-2',
-    email: 'glazed@gmail.com',
-    username: 'Glazed_PvP',
-    minecraftIgn: 'Glazed_PvP',
-    password: '123',
-    authProvider: 'discord',
-    balance: 42000000,
-    role: 'user',
-    isBanned: false,
-    totalWagered: 350000000,
-    totalWon: 412000000,
-    gamesPlayed: 320,
-    createdAt: '2026-10-18T14:30:00Z',
-    referralCount: 0,
-    referralCountThisWeek: 0,
-    totalReferralBonus: 0,
-    referralWeekResetAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 1).toISOString(),
+    referralWeekResetAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 3).toISOString(),
   }
 ];
 
@@ -160,33 +122,9 @@ export const INITIAL_CHAT: ChatMessage[] = [
 
 export const INITIAL_BETS: BetRecord[] = [];
 
-export const INITIAL_DEPOSITS: DepositRequest[] = [
-  {
-    id: 'dep-1',
-    userId: 'user-1',
-    username: 'DonutKing',
-    minecraftIgn: 'DonutKing_99',
-    amountInGame: 10000000,
-    amountCoins: 10000000,
-    status: 'approved',
-    createdAt: '2026-10-31T12:00:00Z',
-    updatedAt: '2026-10-31T12:05:00Z',
-  }
-];
+export const INITIAL_DEPOSITS: DepositRequest[] = [];
 
-export const INITIAL_WITHDRAWALS: WithdrawalRequest[] = [
-  {
-    id: 'with-1',
-    userId: 'user-2',
-    username: 'Glazed_PvP',
-    minecraftIgn: 'Glazed_PvP',
-    amountCoins: 30000000,
-    amountInGame: 30000000,
-    status: 'pending',
-    createdAt: '2026-11-01T19:00:00Z',
-    updatedAt: '2026-11-01T19:00:00Z',
-  }
-];
+export const INITIAL_WITHDRAWALS: WithdrawalRequest[] = [];
 
 export const INITIAL_AUDIT_LOGS: AdminAuditLog[] = [
   {

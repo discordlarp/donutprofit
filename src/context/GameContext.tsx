@@ -53,6 +53,7 @@ interface GameContextType {
   supplyCoins: (targetUserId: string, amount: number, reason: string) => void;
   banUser: (targetUserId: string, reason: string) => void;
   unbanUser: (targetUserId: string) => void;
+  deleteUser: (targetUserId: string) => void;
   approveAccountRequest: (targetUserId: string, note?: string) => { success: boolean; message: string };
   rejectAccountRequest: (targetUserId: string, note?: string) => { success: boolean; message: string };
   updateSettings: (newSettings: Partial<SystemSettings>) => void;
@@ -102,6 +103,24 @@ const getNextReferralReset = () => {
     reset.setUTCDate(reset.getUTCDate() + 7);
   }
   return reset.toISOString();
+};
+
+const REMOVED_ACCOUNTS = new Set([
+  'slitheaven',
+  'jew',
+  'gangsterjew7',
+  'donutking_99',
+  'donutking',
+  'glazed_pvp',
+  'admin-2',
+  'user-1',
+  'user-2',
+]);
+
+const isAccountRemoved = (str?: string | null): boolean => {
+  if (!str) return false;
+  const clean = str.trim().toLowerCase().replace(/^@/, '').replace(/^\./, '');
+  return REMOVED_ACCOUNTS.has(clean) || REMOVED_ACCOUNTS.has(str.toLowerCase());
 };
 
 function getAppliedTransfers(): Set<string> {
@@ -664,7 +683,40 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
       let currentUsersList = MOCK_USERS;
       if (savedUsers) {
-        currentUsersList = JSON.parse(savedUsers);
+        try {
+          const parsed = JSON.parse(savedUsers);
+          if (Array.isArray(parsed)) {
+            currentUsersList = parsed;
+          }
+        } catch {}
+      }
+
+      // Strictly purge any removed accounts from local storage state
+      currentUsersList = currentUsersList.filter(u => 
+        !isAccountRemoved(u.minecraftIgn) && 
+        !isAccountRemoved(u.username) && 
+        !isAccountRemoved(u.id) && 
+        !isAccountRemoved(u.email)
+      );
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('donutprofit_users', JSON.stringify(currentUsersList));
+      }
+
+      if (savedCurrentUser) {
+        try {
+          const parsed = JSON.parse(savedCurrentUser);
+          if (
+            isAccountRemoved(parsed.minecraftIgn) || 
+            isAccountRemoved(parsed.username) || 
+            isAccountRemoved(parsed.id) || 
+            isAccountRemoved(parsed.email)
+          ) {
+            localStorage.removeItem('donutprofit_user');
+            localStorage.removeItem('donutprofit_current_user');
+            localStorage.removeItem('donutprofit_current_user_id');
+            setCurrentUser(null);
+          }
+        } catch {}
       }
 
       // One-time migration to reset old mock stats so everyone starts fresh at 0
@@ -693,8 +745,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       const nextReset = getNextReferralReset();
       currentUsersList = currentUsersList.map(u => {
         const isStaffAcc = u.minecraftIgn.toLowerCase() === 'cartisneakz' || 
-            u.email === 'xynfnagsss@gmail.com' || 
-            u.email === 'gangsterjew7@gmail.com';
+            u.email === 'xynfnagsss@gmail.com';
         const resetAt = u.referralWeekResetAt ? new Date(u.referralWeekResetAt).getTime() : 0;
         const shouldResetWeek = !u.referralWeekResetAt || resetAt <= Date.now();
         return {
@@ -767,12 +818,12 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
           const parsedUser = JSON.parse(savedCurrentUser) as UserProfile | null;
           if (parsedUser) {
             const restored = currentUsersList.find(u => u.id === parsedUser.id) || parsedUser;
-            const isStaff = restored.role === 'admin' || 
-              restored.minecraftIgn.toLowerCase() === 'cartisneakz' || 
-              restored.minecraftIgn.toLowerCase() === 'xynfnagsss' || 
-              restored.minecraftIgn.toLowerCase() === 'gangsterjew7';
-
-            if (!restored.isBanned) {
+            if (isAccountRemoved(restored.minecraftIgn) || isAccountRemoved(restored.username) || isAccountRemoved(restored.id) || isAccountRemoved(restored.email)) {
+              setCurrentUser(null);
+              localStorage.removeItem('donutprofit_current_user_id');
+              localStorage.removeItem('donutprofit_current_user');
+              localStorage.removeItem('donutprofit_user');
+            } else if (!restored.isBanned) {
               restored.balance = Number(restored.balance ?? 0);
               setCurrentUser(restored);
             } else {
@@ -789,12 +840,12 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       if (!savedCurrentUser && savedUserId && savedUserId !== 'guest') {
         const found = currentUsersList.find(u => u.id === savedUserId);
         if (found) {
-          const isStaff = found.role === 'admin' || 
-            found.minecraftIgn.toLowerCase() === 'cartisneakz' || 
-            found.minecraftIgn.toLowerCase() === 'xynfnagsss' || 
-            found.minecraftIgn.toLowerCase() === 'gangsterjew7';
-
-          if (!found.isBanned) {
+          if (isAccountRemoved(found.minecraftIgn) || isAccountRemoved(found.username) || isAccountRemoved(found.id) || isAccountRemoved(found.email)) {
+            setCurrentUser(null);
+            localStorage.removeItem('donutprofit_current_user_id');
+            localStorage.removeItem('donutprofit_current_user');
+            localStorage.removeItem('donutprofit_user');
+          } else if (!found.isBanned) {
             found.balance = Number(found.balance ?? 0);
             setCurrentUser(found);
           } else {
@@ -867,6 +918,9 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
   // Push user to server for real-time multi-device sync and live member logs
   const pushUserToServer = (userObj: UserProfile, activityDetails?: string) => {
+    if (isAccountRemoved(userObj.minecraftIgn) || isAccountRemoved(userObj.username) || isAccountRemoved(userObj.id) || isAccountRemoved(userObj.email)) {
+      return;
+    }
     try {
       fetch('/api/users', {
         method: 'POST',
@@ -898,8 +952,16 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       if (data.success && Array.isArray(data.users)) {
         setUsers(prev => {
           const map = new Map<string, UserProfile>();
-          for (const u of prev) map.set(u.id, u);
-          for (const u of data.users) map.set(u.id, u);
+          for (const u of prev) {
+            if (!isAccountRemoved(u.minecraftIgn) && !isAccountRemoved(u.username) && !isAccountRemoved(u.id) && !isAccountRemoved(u.email)) {
+              map.set(u.id, u);
+            }
+          }
+          for (const u of data.users) {
+            if (!isAccountRemoved(u.minecraftIgn) && !isAccountRemoved(u.username) && !isAccountRemoved(u.id) && !isAccountRemoved(u.email)) {
+              map.set(u.id, u);
+            }
+          }
           const merged = Array.from(map.values());
           if (typeof window !== 'undefined') {
             localStorage.setItem('donutprofit_users', JSON.stringify(merged));
@@ -923,7 +985,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     if (!cleanIgn) return { success: false, message: 'Please enter your Minecraft in-game name.' };
 
     const cleanLower = cleanIgn.toLowerCase();
-    const isStaff = cleanLower === 'cartisneakz' || cleanLower === 'xynfnagsss' || cleanLower === 'gangsterjew7';
+    const isStaff = cleanLower === 'cartisneakz' || cleanLower === 'xynfnagsss';
 
     let found = users.find(u => u.minecraftIgn.toLowerCase() === cleanLower);
 
@@ -1281,7 +1343,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       return { success: false, message: 'Email already registered.' };
     }
 
-    const isAdmin = cleanEmail === 'xynfnagsss@gmail.com' || cleanEmail === 'gangsterjew7@gmail.com' || cleanIgn.toLowerCase() === 'cartisneakz';
+    const isAdmin = cleanEmail === 'xynfnagsss@gmail.com' || cleanIgn.toLowerCase() === 'cartisneakz';
 
     const newUser: UserProfile = {
       id: `user-${Date.now()}`,
@@ -1624,6 +1686,70 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       targetUserId,
       targetUsername: target?.username,
       reason: 'Ban lifted by administrator',
+      timestamp: new Date().toISOString(),
+    };
+    setAuditLogs(prev => [log, ...prev]);
+  };
+
+  // DELETE USER (PERMANENT REMOVAL)
+  const deleteUser = (targetUserId: string) => {
+    const cleanTargetId = targetUserId.toLowerCase().trim().replace(/^@/, '');
+    const target = users.find(u => 
+      u.id === targetUserId || 
+      u.minecraftIgn.toLowerCase() === cleanTargetId || 
+      u.username.toLowerCase() === cleanTargetId
+    );
+
+    REMOVED_ACCOUNTS.add(cleanTargetId);
+    if (target) {
+      REMOVED_ACCOUNTS.add(target.id.toLowerCase());
+      REMOVED_ACCOUNTS.add(target.minecraftIgn.toLowerCase());
+      REMOVED_ACCOUNTS.add(target.username.toLowerCase());
+      if (target.email) REMOVED_ACCOUNTS.add(target.email.toLowerCase());
+    }
+
+    setUsers(prev => {
+      const filtered = prev.filter(u => 
+        u.id !== targetUserId && 
+        u.id.toLowerCase() !== cleanTargetId &&
+        u.minecraftIgn.toLowerCase() !== cleanTargetId &&
+        u.username.toLowerCase() !== cleanTargetId &&
+        (!target || u.id !== target.id)
+      );
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('donutprofit_users', JSON.stringify(filtered));
+      }
+      return filtered;
+    });
+
+    if (currentUser && (
+      currentUser.id === targetUserId || 
+      currentUser.minecraftIgn.toLowerCase() === cleanTargetId ||
+      currentUser.username.toLowerCase() === cleanTargetId ||
+      (target && currentUser.id === target.id)
+    )) {
+      setCurrentUser(null);
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('donutprofit_user');
+        localStorage.removeItem('donutprofit_current_user');
+        localStorage.removeItem('donutprofit_current_user_id');
+      }
+    }
+
+    try {
+      fetch(`/api/users?userId=${encodeURIComponent(target?.id || targetUserId)}`, {
+        method: 'DELETE',
+      }).catch(() => {});
+    } catch {}
+
+    const log: AdminAuditLog = {
+      id: `log-${Date.now()}`,
+      adminId: currentUser?.id || 'admin',
+      adminName: currentUser?.username || 'Staff',
+      action: 'DELETE_USER',
+      targetUserId: target?.id || targetUserId,
+      targetUsername: target?.username || targetUserId,
+      reason: 'Permanently deleted player account from database',
       timestamp: new Date().toISOString(),
     };
     setAuditLogs(prev => [log, ...prev]);
@@ -2013,6 +2139,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       supplyCoins,
       banUser,
       unbanUser,
+      deleteUser,
       approveAccountRequest,
       rejectAccountRequest,
       transferCoins,

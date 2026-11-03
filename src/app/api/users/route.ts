@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getAllUsers, saveUser, updateUser, getMemberLogs } from '@/lib/serverStore';
+import { getAllUsers, saveUser, updateUser, deleteUser, getMemberLogs } from '@/lib/serverStore';
 import { UserProfile } from '@/types';
 
 export async function GET() {
@@ -65,6 +65,37 @@ export async function PATCH(req: Request) {
       success: true,
       user: updated,
       users: allUsers,
+    });
+  } catch (err: any) {
+    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: Request) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const userId = searchParams.get('userId');
+
+    let targetId = userId;
+    if (!targetId) {
+      try {
+        const body = await req.json();
+        targetId = body.userId;
+      } catch {}
+    }
+
+    if (!targetId) {
+      return NextResponse.json({ success: false, error: 'userId is required' }, { status: 400 });
+    }
+
+    deleteUser(targetId);
+    const allUsers = getAllUsers();
+    const memberLogs = getMemberLogs(100);
+
+    return NextResponse.json({
+      success: true,
+      users: allUsers,
+      memberLogs,
     });
   } catch (err: any) {
     return NextResponse.json({ success: false, error: err.message }, { status: 500 });

@@ -103,8 +103,7 @@ export default function CommunityChat({ isOpen: propIsOpen, onToggle: propOnTogg
   const isStaff = Boolean(
     user?.role === 'admin' || 
     user?.minecraftIgn?.toLowerCase() === 'cartisneakz' || 
-    user?.minecraftIgn?.toLowerCase() === 'xynfnagsss' || 
-    user?.minecraftIgn?.toLowerCase() === 'gangsterjew7'
+    user?.minecraftIgn?.toLowerCase() === 'xynfnagsss'
   );
 
   const totalDeposited = (deposits || [])
@@ -138,9 +137,7 @@ export default function CommunityChat({ isOpen: propIsOpen, onToggle: propOnTogg
     const defaults = [
       { ign: 'cartisneakz', isOwner: true, isStaff: true },
       { ign: 'xynfnagsss', isOwner: false, isStaff: true },
-      { ign: 'gangsterjew7', isOwner: false, isStaff: true },
-      { ign: 'DonutKing_99', isOwner: false, isStaff: false },
-      { ign: 'Glazed_PvP', isOwner: false, isStaff: false },
+      { ign: 'wonderflows', isOwner: false, isStaff: false },
       { ign: 'clckler', isOwner: false, isStaff: false },
       { ign: 'KiNGXZO', isOwner: false, isStaff: false },
       { ign: 'iopros', isOwner: false, isStaff: false },
@@ -153,7 +150,7 @@ export default function CommunityChat({ isOpen: propIsOpen, onToggle: propOnTogg
       const ign = (u.minecraftIgn || u.username || '').trim().replace(/^@/, '');
       if (ign && !map.has(ign.toLowerCase())) {
         const isOwner = ign.toLowerCase() === 'cartisneakz';
-        const isStaffMember = isOwner || u.role === 'admin' || ign.toLowerCase() === 'xynfnagsss' || ign.toLowerCase() === 'gangsterjew7';
+        const isStaffMember = isOwner || u.role === 'admin' || ign.toLowerCase() === 'xynfnagsss';
         map.set(ign.toLowerCase(), { ign, isOwner, isStaff: isStaffMember });
       }
     });
@@ -163,7 +160,7 @@ export default function CommunityChat({ isOpen: propIsOpen, onToggle: propOnTogg
       const ign = (m.minecraftIgn || m.username || '').trim().replace(/^@/, '');
       if (ign && ign !== 'DonutBot' && ign !== 'SYSTEM' && !map.has(ign.toLowerCase())) {
         const isOwner = ign.toLowerCase() === 'cartisneakz';
-        const isStaffMember = isOwner || Boolean(m.isStaff) || ign.toLowerCase() === 'xynfnagsss' || ign.toLowerCase() === 'gangsterjew7';
+        const isStaffMember = isOwner || Boolean(m.isStaff) || ign.toLowerCase() === 'xynfnagsss';
         map.set(ign.toLowerCase(), { ign, isOwner, isStaff: isStaffMember });
       }
     });

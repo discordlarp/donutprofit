@@ -20,7 +20,8 @@ import {
   Activity,
   RefreshCw,
   Users,
-  Wifi
+  Wifi,
+  Trash2
 } from 'lucide-react';
 import { formatCash } from '@/lib/format';
 
@@ -40,6 +41,7 @@ export default function AdminPage() {
     supplyCoins, 
     banUser,
     unbanUser,
+    deleteUser,
     approveAccountRequest,
     rejectAccountRequest,
     updateSettings 
@@ -137,7 +139,6 @@ export default function AdminPage() {
                 className="w-full bg-[#0b0c10] border border-white/10 rounded-xl p-3 text-white font-bold"
               >
                 <option value="xynfnagsss@gmail.com">xynfnagsss@gmail.com (Staff Owner)</option>
-                <option value="gangsterjew7@gmail.com">gangsterjew7@gmail.com (Staff Owner)</option>
                 <option value="cartisneakz@donutprofit.online">cartisneakz (Designated IGN / Staff)</option>
               </select>
             </div>
@@ -509,6 +510,18 @@ export default function AdminPage() {
                         Ban
                       </button>
                     )}
+                    <button
+                      onClick={() => {
+                        if (confirm(`Permanently delete account ${u.minecraftIgn}? This cannot be undone.`)) {
+                          deleteUser(u.id);
+                        }
+                      }}
+                      className="text-xs bg-neutral-800 hover:bg-red-950/80 text-neutral-400 hover:text-red-300 border border-white/5 hover:border-red-500/30 px-2 py-1 rounded font-bold transition flex items-center gap-1 cursor-pointer"
+                      title="Permanently Delete Account"
+                    >
+                      <Trash2 className="w-3 h-3 text-red-400" />
+                      <span>Delete</span>
+                    </button>
                   </div>
                 </div>
               ))}

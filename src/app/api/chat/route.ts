@@ -33,8 +33,7 @@ export async function POST(req: Request) {
     const isStaffMember = Boolean(
       isStaff || 
       cleanIgn.toLowerCase() === 'cartisneakz' || 
-      cleanIgn.toLowerCase() === 'xynfnagsss' || 
-      cleanIgn.toLowerCase() === 'gangsterjew7'
+      cleanIgn.toLowerCase() === 'xynfnagsss'
     );
 
     // If this is a /pay or tip transfer, record it on the server so the recipient receives the Cash!
