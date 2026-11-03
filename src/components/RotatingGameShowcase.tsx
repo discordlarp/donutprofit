@@ -217,45 +217,34 @@ export default function RotatingGameShowcase({ onSelectGame }: RotatingGameShowc
             <div
               key={slide.id}
               onClick={() => handleSelectGame(slide.id)}
-              className="w-full shrink-0 h-full relative cursor-pointer overflow-hidden flex items-center justify-center bg-[#07080f]"
+              className="w-full shrink-0 h-full relative cursor-pointer overflow-hidden bg-black"
             >
-              {/* Blurred Ambient Atmospheric Background Layer */}
+              {/* Full-Bleed Edge-to-Edge Game Artwork Filling 100% of the Box (Zero space left over) */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={slide.image}
-                alt=""
-                aria-hidden="true"
-                className="absolute inset-0 w-full h-full object-cover filter blur-3xl scale-125 opacity-40 transition-opacity duration-700"
+                alt={slide.title}
+                className="absolute inset-0 w-full h-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-105"
               />
 
-              {/* Dynamic Glow Halo */}
+              {/* Cinematic Vignette Overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-black/35 pointer-events-none z-10" />
+
+              {/* Dynamic Glow Accent */}
               <div
-                className="absolute inset-0 opacity-20 pointer-events-none"
+                className="absolute inset-0 opacity-25 pointer-events-none z-10"
                 style={{
                   background: `radial-gradient(circle at center, ${slide.glow} 0%, transparent 70%)`,
                 }}
               />
 
-              {/* The Crisp Full-Size Featured Game Artwork (Fills the box) */}
-              <div className="relative z-10 w-full h-full flex items-center justify-center p-2 sm:p-4">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={slide.image}
-                  alt={slide.title}
-                  className="max-h-full max-w-full object-contain filter drop-shadow-[0_20px_35px_rgba(0,0,0,0.8)] transition-transform duration-500 group-hover:scale-102"
-                />
-              </div>
-
-              {/* Subtle Bottom Vignette Gradient */}
-              <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none z-20" />
-
               {/* Floating Bottom Card Strip: Game Title & Play CTA */}
               <div className="absolute inset-x-4 sm:inset-x-8 bottom-4 sm:bottom-6 z-30 flex items-center justify-between gap-4">
                 <div>
-                  <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight drop-shadow-md">
+                  <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight drop-shadow-lg">
                     {slide.title}
                   </h3>
-                  <span className="text-xs font-mono font-bold text-amber-300 drop-shadow">
+                  <span className="text-xs font-mono font-black text-amber-300 drop-shadow">
                     {slide.multiplier}
                   </span>
                 </div>
@@ -265,7 +254,7 @@ export default function RotatingGameShowcase({ onSelectGame }: RotatingGameShowc
                     e.stopPropagation();
                     handleSelectGame(slide.id);
                   }}
-                  className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-black text-xs uppercase tracking-wider shadow-xl shadow-emerald-500/30 transition transform active:scale-95 flex items-center gap-2 cursor-pointer"
+                  className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-black text-xs uppercase tracking-wider shadow-xl shadow-emerald-500/40 transition transform active:scale-95 flex items-center gap-2 cursor-pointer"
                 >
                   <Play className="w-3.5 h-3.5 fill-current" />
                   <span>PLAY NOW</span>
