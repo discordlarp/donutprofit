@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useGame } from '@/context/GameContext';
 import { 
   X, 
@@ -73,8 +74,13 @@ export default function UserProfileModal({
   const [tipSuccess, setTipSuccess] = useState<string | null>(null);
   const [tipError, setTipError] = useState<string | null>(null);
   const [isFriend, setIsFriend] = useState<boolean>(false);
+  const [mounted, setMounted] = useState<boolean>(false);
 
-  if (!isOpen || !targetIgn) return null;
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!isOpen || !targetIgn || !mounted) return null;
 
   const cleanTarget = targetIgn.replace(/^@/, '').trim();
   const isMe = Boolean(user && cleanTarget.toLowerCase() === user.minecraftIgn.toLowerCase());
@@ -197,9 +203,15 @@ export default function UserProfileModal({
     onClose();
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative w-full max-w-sm sm:max-w-md bg-[#0a0f1d] border border-[#1b2644] rounded-3xl p-6 shadow-2xl overflow-hidden select-none">
+  return createPortal(
+    <div 
+      onClick={onClose}
+      className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-in fade-in duration-200"
+    >
+      <div 
+        onClick={(e) => e.stopPropagation()}
+        className="relative w-full max-w-md bg-[#0a0f1d] border border-[#1b2644] rounded-3xl p-6 shadow-2xl overflow-hidden select-none"
+      >
         {/* Emerald Ambient Glow at top center */}
         <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-64 h-44 bg-emerald-500/25 rounded-full blur-3xl pointer-events-none" />
 
@@ -408,6 +420,7 @@ export default function UserProfileModal({
           </p>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

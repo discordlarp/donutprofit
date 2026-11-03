@@ -592,14 +592,15 @@ export default function CommunityChat({ isOpen: propIsOpen, onToggle: propOnTogg
         )}
       </form>
 
-      {/* User Stats & Tipping Modal */}
+      </aside>
+
+      {/* User Stats & Tipping Modal (Rendered outside drawer in root body portal) */}
       <UserProfileModal
         isOpen={Boolean(selectedPlayer)}
         onClose={() => setSelectedPlayer(null)}
         targetIgn={selectedPlayer}
         onMention={handleMentionUser}
       />
-      </aside>
     </>
   );
 }
