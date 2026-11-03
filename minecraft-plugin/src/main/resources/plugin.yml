@@ -1,0 +1,18 @@
+name: DonutProfitVerification
+version: 1.0.0
+main: com.donutprofit.verification.DonutProfitVerificationPlugin
+api-version: '1.20'
+commands:
+  verifydonut:
+    description: Manually verify a player payment
+    usage: /verifydonut <player> <amount>
+    permission: donutprofit.verify
+  donutverifyreload:
+    description: Reloads the verification config
+    usage: /donutverifyreload
+    permission: donutprofit.admin
+permissions:
+  donutprofit.verify:
+    default: true
+  donutprofit.admin:
+    default: op
