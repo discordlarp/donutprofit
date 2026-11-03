@@ -334,7 +334,7 @@ export function verifyBotPayment(rawUsername: string, amount: number, authHeader
   try {
     const { saveUser } = require('./serverStore');
     saveUser({
-      id: `user-${now}-${normalizedKey}`,
+      id: `user-mc-${normalizedKey}`,
       username: rec.display_name,
       minecraftIgn: rec.display_name,
       avatarUrl: `https://mc-heads.net/avatar/${encodeURIComponent(rec.display_name)}/64`,

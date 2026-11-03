@@ -217,7 +217,31 @@ export default function AdminPage() {
     setTimeout(() => setCfgSaved(false), 2000);
   };
 
-  const filteredUsers = users.filter(u => 
+  // Deduplicate users strictly by Minecraft IGN (case-insensitive) and merge balances
+  const uniqueUsers = React.useMemo(() => {
+    const map = new Map<string, typeof users[0]>();
+    for (const u of users) {
+      const key = (u.minecraftIgn || u.username || '').trim().toLowerCase();
+      if (!key) continue;
+      const existing = map.get(key);
+      if (!existing) {
+        map.set(key, u);
+      } else {
+        map.set(key, {
+          ...existing,
+          ...u,
+          balance: Math.max(Number(existing.balance) || 0, Number(u.balance) || 0),
+          totalWagered: Math.max(Number(existing.totalWagered) || 0, Number(u.totalWagered) || 0),
+          totalWon: Math.max(Number(existing.totalWon) || 0, Number(u.totalWon) || 0),
+          gamesPlayed: Math.max(Number(existing.gamesPlayed) || 0, Number(u.gamesPlayed) || 0),
+          isBanned: existing.isBanned || u.isBanned,
+        });
+      }
+    }
+    return Array.from(map.values());
+  }, [users]);
+
+  const filteredUsers = uniqueUsers.filter(u => 
     u.username.toLowerCase().includes(userSearch.toLowerCase()) || 
     u.minecraftIgn.toLowerCase().includes(userSearch.toLowerCase()) ||
     (u.email && u.email.toLowerCase().includes(userSearch.toLowerCase()))
@@ -274,11 +298,11 @@ export default function AdminPage() {
         </div>
         <div className="bg-[#12141a] border border-white/10 p-4 rounded-xl">
           <span className="text-[10px] uppercase font-bold text-neutral-500 block">Total Players</span>
-          <span className="text-2xl font-black font-mono text-white">{users.length}</span>
+          <span className="text-2xl font-black font-mono text-white">{uniqueUsers.length}</span>
         </div>
         <div className="bg-[#12141a] border border-white/10 p-4 rounded-xl">
           <span className="text-[10px] uppercase font-bold text-neutral-500 block">Banned Players</span>
-          <span className="text-2xl font-black font-mono text-red-500">{users.filter(u => u.isBanned).length}</span>
+          <span className="text-2xl font-black font-mono text-red-500">{uniqueUsers.filter(u => u.isBanned).length}</span>
         </div>
       </div>
 
@@ -304,7 +328,7 @@ export default function AdminPage() {
           }`}
         >
           <UserCog className="w-3.5 h-3.5" />
-          Players, Supply & Bans ({users.length})
+          Players, Supply & Bans ({uniqueUsers.length})
         </button>
         <button
           onClick={() => setActiveTab('member_logs')}
@@ -548,7 +572,7 @@ export default function AdminPage() {
                     className="w-full bg-[#0b0c10] border border-white/10 rounded-xl p-2.5 text-white font-bold"
                   >
                     <option value="">Select player to supply...</option>
-                    {users.map(u => (
+                    {uniqueUsers.map(u => (
                       <option key={u.id} value={u.id}>{u.minecraftIgn} ({formatCash(u.balance)})</option>
                     ))}
                   </select>
@@ -610,7 +634,7 @@ export default function AdminPage() {
                     className="w-full bg-[#0b0c10] border border-white/10 rounded-xl p-2.5 text-white font-bold"
                   >
                     <option value="">Select player to ban...</option>
-                    {users.filter(u => !u.isBanned).map(u => (
+                    {uniqueUsers.filter(u => !u.isBanned).map(u => (
                       <option key={u.id} value={u.id}>{u.minecraftIgn} ({u.email || u.username})</option>
                     ))}
                   </select>
@@ -697,12 +721,12 @@ export default function AdminPage() {
               </div>
               <div className="bg-[#0c0e14] border border-white/5 p-3 rounded-xl">
                 <span className="text-[10px] uppercase font-bold text-neutral-500 block">Registered Players</span>
-                <span className="text-xl font-black font-mono text-emerald-400">{users.length}</span>
+                <span className="text-xl font-black font-mono text-emerald-400">{uniqueUsers.length}</span>
               </div>
               <div className="bg-[#0c0e14] border border-white/5 p-3 rounded-xl">
                 <span className="text-[10px] uppercase font-bold text-neutral-500 block">Active Unique Members</span>
                 <span className="text-xl font-black font-mono text-blue-400">
-                  {new Set(memberLogs.map(l => (l.minecraftIgn || '').toLowerCase())).size || users.length}
+                  {new Set(memberLogs.map(l => (l.minecraftIgn || '').toLowerCase())).size || uniqueUsers.length}
                 </span>
               </div>
               <div className="bg-[#0c0e14] border border-white/5 p-3 rounded-xl">
@@ -796,7 +820,7 @@ export default function AdminPage() {
               <div className="flex items-center justify-between mb-4 pb-3 border-b border-white/5">
                 <h4 className="text-xs font-black uppercase tracking-wider text-white flex items-center gap-2">
                   <Users className="w-4 h-4 text-emerald-400" />
-                  Active Player Records ({users.length})
+                  Active Player Records ({uniqueUsers.length})
                 </h4>
                 <button
                   onClick={() => setActiveTab('users')}
@@ -807,7 +831,7 @@ export default function AdminPage() {
               </div>
 
               <div className="space-y-2 max-h-[550px] overflow-y-auto pr-1">
-                {users.map((u) => (
+                {uniqueUsers.map((u) => (
                   <div
                     key={u.id}
                     className="flex items-center justify-between p-2.5 rounded-xl bg-[#0c0e14] border border-white/5 hover:border-white/10 transition"

@@ -104,6 +104,38 @@ let memoryChat: ChatMessage[] = [...SEED_CHAT_MESSAGES];
 let memoryMemberLogs: MemberLogEntry[] = [];
 let isStoreInitialized = false;
 
+export function getCanonicalUserId(ignOrUsername: string): string {
+  const clean = ignOrUsername.trim().toLowerCase().replace(/^@/, '').replace(/^\./, '');
+  return `user-mc-${clean}`;
+}
+
+export function mergeUserProfiles(existing: UserProfile, incoming: UserProfile): UserProfile {
+  const ign = (incoming.minecraftIgn || existing.minecraftIgn || incoming.username || existing.username).trim();
+  const canonicalId = existing.id.startsWith('admin-') 
+    ? existing.id 
+    : (incoming.id.startsWith('admin-') ? incoming.id : getCanonicalUserId(ign));
+
+  return {
+    ...existing,
+    ...incoming,
+    id: canonicalId,
+    minecraftIgn: ign,
+    username: incoming.username || existing.username || ign,
+    avatarUrl: `https://mc-heads.net/avatar/${encodeURIComponent(ign)}/64`,
+    balance: Math.max(Number(existing.balance) || 0, Number(incoming.balance) || 0),
+    totalWagered: Math.max(Number(existing.totalWagered) || 0, Number(incoming.totalWagered) || 0),
+    totalWon: Math.max(Number(existing.totalWon) || 0, Number(incoming.totalWon) || 0),
+    gamesPlayed: Math.max(Number(existing.gamesPlayed) || 0, Number(incoming.gamesPlayed) || 0),
+    paymentVerified: Boolean(existing.paymentVerified || incoming.paymentVerified),
+    accountStatus: (existing.accountStatus === 'approved' || incoming.accountStatus === 'approved') 
+      ? 'approved' 
+      : (existing.accountStatus || incoming.accountStatus || 'approved'),
+    role: (existing.role === 'admin' || incoming.role === 'admin') ? 'admin' : 'user',
+    isBanned: Boolean(existing.isBanned || incoming.isBanned),
+    banReason: existing.banReason || incoming.banReason,
+  };
+}
+
 function loadStoreFromDisk() {
   if (isStoreInitialized) return;
   isStoreInitialized = true;
@@ -111,8 +143,11 @@ function loadStoreFromDisk() {
   // Initialize with MOCK_USERS first (filtering out any removed accounts)
   for (const u of MOCK_USERS) {
     if (!isAccountRemoved(u.minecraftIgn) && !isAccountRemoved(u.username) && !isAccountRemoved(u.id) && !isAccountRemoved(u.email)) {
-      memoryUsers.set(u.id, u);
-      memoryUsers.set(u.minecraftIgn.toLowerCase(), u);
+      const key = (u.minecraftIgn || u.username).trim().toLowerCase();
+      const existing = memoryUsers.get(key);
+      const merged = existing ? mergeUserProfiles(existing, u) : u;
+      memoryUsers.set(merged.id, merged);
+      memoryUsers.set(key, merged);
     }
   }
 
@@ -127,8 +162,15 @@ function loadStoreFromDisk() {
       if (Array.isArray(list)) {
         for (const u of list) {
           if (!isAccountRemoved(u.minecraftIgn) && !isAccountRemoved(u.username) && !isAccountRemoved(u.id) && !isAccountRemoved(u.email)) {
-            memoryUsers.set(u.id, u);
-            memoryUsers.set(u.minecraftIgn.toLowerCase(), u);
+            const key = (u.minecraftIgn || u.username).trim().toLowerCase();
+            const existing = memoryUsers.get(key);
+            const merged = existing ? mergeUserProfiles(existing, u) : u;
+            // Clean up any stale old ID key
+            if (existing && existing.id !== merged.id) {
+              memoryUsers.delete(existing.id);
+            }
+            memoryUsers.set(merged.id, merged);
+            memoryUsers.set(key, merged);
           }
         }
       }
@@ -175,11 +217,17 @@ function persistUsersToDisk() {
   try {
     const dir = getDataDir();
     const usersFile = path.join(dir, 'users.json');
-    // Deduplicate users by id and exclude removed
+    // Deduplicate users strictly by minecraftIgn/username and exclude removed
     const uniqueMap = new Map<string, UserProfile>();
     for (const u of memoryUsers.values()) {
       if (!isAccountRemoved(u.minecraftIgn) && !isAccountRemoved(u.username) && !isAccountRemoved(u.id) && !isAccountRemoved(u.email)) {
-        uniqueMap.set(u.id, u);
+        const key = (u.minecraftIgn || u.username).trim().toLowerCase();
+        const existing = uniqueMap.get(key);
+        if (!existing) {
+          uniqueMap.set(key, u);
+        } else {
+          uniqueMap.set(key, mergeUserProfiles(existing, u));
+        }
       }
     }
     fs.writeFileSync(usersFile, JSON.stringify(Array.from(uniqueMap.values()), null, 2), 'utf-8');
@@ -217,7 +265,13 @@ export function getAllUsers(): UserProfile[] {
   const map = new Map<string, UserProfile>();
   for (const u of memoryUsers.values()) {
     if (!isAccountRemoved(u.minecraftIgn) && !isAccountRemoved(u.username) && !isAccountRemoved(u.id) && !isAccountRemoved(u.email)) {
-      map.set(u.id, u);
+      const key = (u.minecraftIgn || u.username).trim().toLowerCase();
+      const existing = map.get(key);
+      if (!existing) {
+        map.set(key, u);
+      } else {
+        map.set(key, mergeUserProfiles(existing, u));
+      }
     }
   }
   return Array.from(map.values());
@@ -230,14 +284,25 @@ export function saveUser(user: UserProfile, activityDetails?: string): UserProfi
     return user;
   }
 
-  const existing = memoryUsers.get(user.id) || memoryUsers.get(user.minecraftIgn.toLowerCase());
-  const merged: UserProfile = {
-    ...existing,
-    ...user,
-  };
+  const key = (user.minecraftIgn || user.username).trim().toLowerCase();
+  const canonicalId = user.id.startsWith('admin-') ? user.id : getCanonicalUserId(key);
 
-  memoryUsers.set(merged.id, merged);
-  memoryUsers.set(merged.minecraftIgn.toLowerCase(), merged);
+  const existing = memoryUsers.get(key) || memoryUsers.get(canonicalId) || memoryUsers.get(user.id);
+
+  // If previous record had a different id, clean it up from memory
+  if (existing && existing.id !== canonicalId) {
+    memoryUsers.delete(existing.id);
+  }
+  if (user.id !== canonicalId) {
+    memoryUsers.delete(user.id);
+  }
+
+  const merged = existing 
+    ? mergeUserProfiles(existing, { ...user, id: canonicalId }) 
+    : { ...user, id: canonicalId, minecraftIgn: user.minecraftIgn.trim() };
+
+  memoryUsers.set(canonicalId, merged);
+  memoryUsers.set(key, merged);
   persistUsersToDisk();
 
   // Record member log

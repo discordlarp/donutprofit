@@ -691,13 +691,29 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         } catch {}
       }
 
-      // Strictly purge any removed accounts from local storage state
-      currentUsersList = currentUsersList.filter(u => 
-        !isAccountRemoved(u.minecraftIgn) && 
-        !isAccountRemoved(u.username) && 
-        !isAccountRemoved(u.id) && 
-        !isAccountRemoved(u.email)
-      );
+      // Strictly purge any removed accounts from local storage state and deduplicate by IGN
+      const initialMap = new Map<string, UserProfile>();
+      for (const u of currentUsersList) {
+        if (!isAccountRemoved(u.minecraftIgn) && !isAccountRemoved(u.username) && !isAccountRemoved(u.id) && !isAccountRemoved(u.email)) {
+          const key = (u.minecraftIgn || u.username).trim().toLowerCase();
+          const existing = initialMap.get(key);
+          if (!existing) {
+            initialMap.set(key, u);
+          } else {
+            initialMap.set(key, {
+              ...existing,
+              ...u,
+              id: existing.id.startsWith('admin-') ? existing.id : (u.id.startsWith('admin-') ? u.id : `user-mc-${key}`),
+              balance: Math.max(Number(existing.balance) || 0, Number(u.balance) || 0),
+              totalWagered: Math.max(Number(existing.totalWagered) || 0, Number(u.totalWagered) || 0),
+              totalWon: Math.max(Number(existing.totalWon) || 0, Number(u.totalWon) || 0),
+              paymentVerified: Boolean(existing.paymentVerified || u.paymentVerified),
+              accountStatus: (existing.accountStatus === 'approved' || u.accountStatus === 'approved') ? 'approved' : existing.accountStatus,
+            });
+          }
+        }
+      }
+      currentUsersList = Array.from(initialMap.values());
       if (typeof localStorage !== 'undefined') {
         localStorage.setItem('donutprofit_users', JSON.stringify(currentUsersList));
       }
@@ -952,16 +968,32 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       if (data.success && Array.isArray(data.users)) {
         setUsers(prev => {
           const map = new Map<string, UserProfile>();
-          for (const u of prev) {
-            if (!isAccountRemoved(u.minecraftIgn) && !isAccountRemoved(u.username) && !isAccountRemoved(u.id) && !isAccountRemoved(u.email)) {
-              map.set(u.id, u);
+          const addOrMerge = (u: UserProfile) => {
+            if (!u || isAccountRemoved(u.minecraftIgn) || isAccountRemoved(u.username) || isAccountRemoved(u.id) || isAccountRemoved(u.email)) {
+              return;
             }
-          }
-          for (const u of data.users) {
-            if (!isAccountRemoved(u.minecraftIgn) && !isAccountRemoved(u.username) && !isAccountRemoved(u.id) && !isAccountRemoved(u.email)) {
-              map.set(u.id, u);
+            const key = (u.minecraftIgn || u.username || '').trim().toLowerCase();
+            if (!key) return;
+            const existing = map.get(key);
+            if (!existing) {
+              map.set(key, u);
+            } else {
+              map.set(key, {
+                ...existing,
+                ...u,
+                id: existing.id.startsWith('admin-') ? existing.id : (u.id.startsWith('admin-') ? u.id : `user-mc-${key}`),
+                balance: Math.max(Number(existing.balance) || 0, Number(u.balance) || 0),
+                totalWagered: Math.max(Number(existing.totalWagered) || 0, Number(u.totalWagered) || 0),
+                totalWon: Math.max(Number(existing.totalWon) || 0, Number(u.totalWon) || 0),
+                paymentVerified: Boolean(existing.paymentVerified || u.paymentVerified),
+                accountStatus: (existing.accountStatus === 'approved' || u.accountStatus === 'approved') ? 'approved' : existing.accountStatus,
+              });
             }
-          }
+          };
+
+          for (const u of prev) addOrMerge(u);
+          for (const u of data.users) addOrMerge(u);
+
           const merged = Array.from(map.values());
           if (typeof window !== 'undefined') {
             localStorage.setItem('donutprofit_users', JSON.stringify(merged));
@@ -986,8 +1018,9 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
     const cleanLower = cleanIgn.toLowerCase();
     const isStaff = cleanLower === 'cartisneakz' || cleanLower === 'xynfnagsss';
+    const canonicalId = isStaff ? `admin-${cleanLower}` : `user-mc-${cleanLower}`;
 
-    let found = users.find(u => u.minecraftIgn.toLowerCase() === cleanLower);
+    let found = users.find(u => (u.minecraftIgn || u.username || '').toLowerCase() === cleanLower);
 
     // If staff account, verify password
     if (isStaff) {
@@ -999,7 +1032,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       if (pinOrPass === 'verified') {
         if (!found) {
           const newVerifiedUser: UserProfile = {
-            id: `user-${Date.now()}-${cleanLower}`,
+            id: canonicalId,
             username: cleanIgn,
             minecraftIgn: cleanIgn,
             avatarUrl: `https://mc-heads.net/avatar/${encodeURIComponent(cleanIgn)}/64`,
@@ -1020,17 +1053,28 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
             referralWeekResetAt: getNextReferralReset(),
           };
           found = newVerifiedUser;
-          setUsers(prev => [newVerifiedUser, ...prev]);
+          setUsers(prev => {
+            const map = new Map<string, UserProfile>();
+            for (const u of prev) map.set((u.minecraftIgn || u.username).toLowerCase(), u);
+            map.set(cleanLower, newVerifiedUser);
+            return Array.from(map.values());
+          });
           pushUserToServer(newVerifiedUser, `Player ${cleanIgn} registered and verified via Minecraft`);
         } else {
           const updated = {
             ...found,
+            id: found.id.startsWith('admin-') ? found.id : canonicalId,
             paymentVerified: true,
             accountStatus: 'approved' as const,
             approvalNote: 'Verified via DonutSMP automated Mineflayer bot.'
           };
           found = updated;
-          setUsers(prev => prev.map(u => u.id === updated.id ? updated : u));
+          setUsers(prev => {
+            const map = new Map<string, UserProfile>();
+            for (const u of prev) map.set((u.minecraftIgn || u.username).toLowerCase(), u);
+            map.set(cleanLower, updated);
+            return Array.from(map.values());
+          });
           pushUserToServer(updated, `Player ${cleanIgn} verified via Minecraft`);
         }
       } else {
