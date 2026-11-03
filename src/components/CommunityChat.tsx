@@ -340,26 +340,36 @@ export default function CommunityChat({ isOpen: propIsOpen, onToggle: propOnTogg
       const data = await res.json();
       if (data.success && Array.isArray(data.messages)) {
         setMessages((prev) => {
-          // If message count and last message ID match, return previous state to prevent re-render flicker
+          // Merge server messages with current local state preserving message IDs
+          const map = new Map<string, ChatMessage>();
+          for (const m of prev) {
+            map.set(m.id, m);
+          }
+          for (const m of data.messages) {
+            map.set(m.id, m);
+          }
+          const merged = Array.from(map.values()).slice(-60);
+          // Only update state if IDs or count changed to avoid unnecessary re-renders
           if (
-            prev.length === data.messages.length &&
-            prev.length > 0 &&
-            prev[prev.length - 1].id === data.messages[data.messages.length - 1].id
+            merged.length === prev.length &&
+            merged.every((m, i) => m.id === prev[i]?.id)
           ) {
             return prev;
           }
-          return data.messages;
+          return merged;
         });
       }
-    } catch {}
+    } catch {
+      // silent retry on next interval
+    }
   };
 
   // Initial load + Real-Time Polling & BroadcastChannel
   useEffect(() => {
     fetchLiveMessages();
 
-    // 2.5-second live sync poll
-    const interval = setInterval(fetchLiveMessages, 1800);
+    // 1.5-second live sync poll for true real-time chat
+    const interval = setInterval(fetchLiveMessages, 1500);
 
     // BroadcastChannel for instant 0ms tab synchronization
     if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {

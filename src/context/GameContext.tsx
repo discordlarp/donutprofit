@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { 
   UserProfile, 
   BetRecord, 
@@ -582,6 +582,13 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     };
     setAuditLogs(prev => [log, ...prev]);
 
+    patchUserOnServer(targetUserId, {
+      paymentVerified: true,
+      accountStatus: 'approved',
+      approvalNote: note || 'Approved by admin. User may now log in.',
+      reviewedBy: currentUser?.minecraftIgn || 'staff',
+    });
+
     return { success: true, message: `${target.minecraftIgn} was approved and can now sign in.` };
   };
 
@@ -605,6 +612,13 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       }
       return u;
     }));
+
+    patchUserOnServer(targetUserId, {
+      paymentVerified: false,
+      accountStatus: 'rejected',
+      approvalNote: note || 'Rejected by admin. Payment did not pass staff review.',
+      reviewedBy: currentUser?.minecraftIgn || 'staff',
+    });
 
     const log: AdminAuditLog = {
       id: `log-${Date.now()}`,
@@ -851,6 +865,58 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     }
   }, [users]);
 
+  // Push user to server for real-time multi-device sync and live member logs
+  const pushUserToServer = (userObj: UserProfile, activityDetails?: string) => {
+    try {
+      fetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user: userObj, activityDetails }),
+      }).catch(() => {});
+    } catch {}
+  };
+
+  // Patch user updates on server for real-time multi-device persistence
+  const patchUserOnServer = (userId: string, updates: Partial<UserProfile>) => {
+    try {
+      fetch('/api/users', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, updates }),
+      }).catch(() => {});
+    } catch {}
+  };
+
+  // Sync all users from centralized server in real-time
+  const syncUsersFromServer = useCallback(async () => {
+    try {
+      const res = await fetch('/api/users', {
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-cache, no-store' },
+      });
+      const data = await res.json();
+      if (data.success && Array.isArray(data.users)) {
+        setUsers(prev => {
+          const map = new Map<string, UserProfile>();
+          for (const u of prev) map.set(u.id, u);
+          for (const u of data.users) map.set(u.id, u);
+          const merged = Array.from(map.values());
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('donutprofit_users', JSON.stringify(merged));
+          }
+          return merged;
+        });
+      }
+    } catch {}
+  }, []);
+
+  // Periodic polling for real-time users synchronization across all players & staff
+  useEffect(() => {
+    syncUsersFromServer();
+    const interval = setInterval(syncUsersFromServer, 3000);
+    return () => clearInterval(interval);
+  }, [syncUsersFromServer]);
+
   // Minecraft Login with in-game payment verification or secret PIN
   const loginWithMinecraft = (ign: string, pinOrPass: string = 'verified') => {
     const cleanIgn = ign.trim();
@@ -893,6 +959,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
           };
           found = newVerifiedUser;
           setUsers(prev => [newVerifiedUser, ...prev]);
+          pushUserToServer(newVerifiedUser, `Player ${cleanIgn} registered and verified via Minecraft`);
         } else {
           const updated = {
             ...found,
@@ -902,6 +969,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
           };
           found = updated;
           setUsers(prev => prev.map(u => u.id === updated.id ? updated : u));
+          pushUserToServer(updated, `Player ${cleanIgn} verified via Minecraft`);
         }
       } else {
         // STRICT VERIFICATION REQUIRED BEFORE DIRECT ACCESS
@@ -1004,6 +1072,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     }
 
     setCurrentUser(found);
+    pushUserToServer(found, `Player ${found.minecraftIgn} logged in via Minecraft`);
     if (typeof window !== 'undefined') {
       localStorage.setItem('donutprofit_user', JSON.stringify(found));
       localStorage.setItem('donutprofit_current_user', JSON.stringify(found));
@@ -1054,6 +1123,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       const safeFound = updatedFound;
       setUsers(prev => prev.map(u => u.id === safeFound.id ? safeFound : u));
       setCurrentUser(updatedFound);
+      pushUserToServer(updatedFound, `Player ${updatedFound.username} logged in via Discord`);
       return { success: true, message: `Logged in via Discord (${updatedFound.username})! 10M Coins active.` };
     }
 
@@ -1140,6 +1210,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
     setUsers(prev => [newUser, ...prev]);
     setCurrentUser(newUser);
+    pushUserToServer(newUser, `Player ${cleanTag} (${cleanIgn}) registered via Discord`);
     return { success: true, message: 'Discord account linked! +10,000,000 Coins added!' };
   };
 
@@ -1161,6 +1232,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       }
 
       setCurrentUser(found);
+      pushUserToServer(found, `${found.role === 'admin' ? 'Staff' : 'Player'} ${found.username} logged in via Email`);
       if (typeof window !== 'undefined') {
         localStorage.setItem('donutprofit_user', JSON.stringify(found));
         localStorage.setItem('donutprofit_current_user', JSON.stringify(found));
@@ -1182,8 +1254,10 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       return { success: false, message: 'New password must be at least 4 characters.' };
     }
 
-    setCurrentUser(prev => prev ? { ...prev, password: newPass } : null);
-    setUsers(prev => prev.map(u => u.id === currentUser.id ? { ...u, password: newPass } : u));
+    const updatedUser = { ...currentUser, password: newPass };
+    setCurrentUser(updatedUser);
+    setUsers(prev => prev.map(u => u.id === currentUser.id ? updatedUser : u));
+    pushUserToServer(updatedUser, `Password changed for ${currentUser.username}`);
 
     const log: AdminAuditLog = {
       id: `log-${Date.now()}`,
@@ -1227,6 +1301,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
     setUsers(prev => [newUser, ...prev]);
     setCurrentUser(newUser);
+    pushUserToServer(newUser, `New registration: ${newUser.username} (${cleanIgn || cleanUsername}) via Email`);
     return { success: true, message: 'Account registered successfully!' };
   };
 
@@ -1465,16 +1540,20 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     const target = users.find(u => u.id === targetUserId);
     if (!target) return;
 
+    const newBalance = Math.max(0, target.balance + amount);
+
     setUsers(prev => prev.map(u => {
       if (u.id === targetUserId) {
-        return { ...u, balance: Math.max(0, u.balance + amount) };
+        return { ...u, balance: newBalance };
       }
       return u;
     }));
 
     if (currentUser && currentUser.id === targetUserId) {
-      setCurrentUser(prev => prev ? { ...prev, balance: Math.max(0, prev.balance + amount) } : null);
+      setCurrentUser(prev => prev ? { ...prev, balance: newBalance } : null);
     }
+
+    patchUserOnServer(targetUserId, { balance: newBalance });
 
     const log: AdminAuditLog = {
       id: `log-${Date.now()}`,
@@ -1505,6 +1584,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       setCurrentUser(prev => prev ? { ...prev, isBanned: true, banReason: cleanReason } : null);
     }
 
+    patchUserOnServer(targetUserId, { isBanned: true, banReason: cleanReason });
+
     const target = users.find(u => u.id === targetUserId);
     const log: AdminAuditLog = {
       id: `log-${Date.now()}`,
@@ -1531,6 +1612,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     if (currentUser && currentUser.id === targetUserId) {
       setCurrentUser(prev => prev ? { ...prev, isBanned: false, banReason: undefined } : null);
     }
+
+    patchUserOnServer(targetUserId, { isBanned: false, banReason: undefined });
 
     const target = users.find(u => u.id === targetUserId);
     const log: AdminAuditLog = {

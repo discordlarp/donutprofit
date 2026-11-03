@@ -330,6 +330,29 @@ export function verifyBotPayment(rawUsername: string, amount: number, authHeader
 
   memoryVerified.set(normalizedKey, verifiedUser);
 
+  // Sync to centralized server store for real-time member logs and admin visibility
+  try {
+    const { saveUser } = require('./serverStore');
+    saveUser({
+      id: `user-${now}-${normalizedKey}`,
+      username: rec.display_name,
+      minecraftIgn: rec.display_name,
+      avatarUrl: `https://mc-heads.net/avatar/${encodeURIComponent(rec.display_name)}/64`,
+      authProvider: 'minecraft',
+      balance: Math.max(1, Math.round(Number(amount) || rec.amount || 0)),
+      role: 'user',
+      isBanned: false,
+      totalWagered: 0,
+      totalWon: 0,
+      gamesPlayed: 0,
+      createdAt: new Date().toISOString(),
+      paymentVerified: true,
+      accountStatus: 'approved',
+      approvalNote: 'Verified via DonutSMP bot in-game payment.',
+      referralCode: rec.display_name,
+    }, `Player ${rec.display_name} verified in-game via bot payment ($${Number(amount || rec.amount || 0).toLocaleString()})`);
+  } catch {}
+
   // Create real-time deposit credit record for instant website crediting (1:1 actual coins)
   const numAmount = Number(amount) || 0;
   const coinsCredited = Math.max(1, Math.round(numAmount));

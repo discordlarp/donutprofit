@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useGame } from '@/context/GameContext';
 import { 
   ShieldAlert, 
@@ -16,7 +16,11 @@ import {
   Ban,
   AlertCircle,
   Lock,
-  LogOut
+  LogOut,
+  Activity,
+  RefreshCw,
+  Users,
+  Wifi
 } from 'lucide-react';
 import { formatCash } from '@/lib/format';
 
@@ -41,8 +45,29 @@ export default function AdminPage() {
     updateSettings 
   } = useGame();
 
-  const [activeTab, setActiveTab] = useState<'requests' | 'deposits' | 'withdrawals' | 'users' | 'settings' | 'logs' | 'security'>('requests');
+  const [activeTab, setActiveTab] = useState<'requests' | 'deposits' | 'withdrawals' | 'users' | 'member_logs' | 'settings' | 'logs' | 'security'>('users');
   const [userSearch, setUserSearch] = useState<string>('');
+  const [memberLogs, setMemberLogs] = useState<any[]>([]);
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+
+  const fetchServerLogs = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      const res = await fetch('/api/users', { cache: 'no-store' });
+      const data = await res.json();
+      if (data.success && Array.isArray(data.memberLogs)) {
+        setMemberLogs(data.memberLogs);
+      }
+    } catch {} finally {
+      setIsRefreshing(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchServerLogs();
+    const interval = setInterval(fetchServerLogs, 3000);
+    return () => clearInterval(interval);
+  }, [fetchServerLogs]);
   
   // Staff Auth Gate State
   const [loginEmail, setLoginEmail] = useState<string>('xynfnagsss@gmail.com');
@@ -279,6 +304,17 @@ export default function AdminPage() {
         >
           <UserCog className="w-3.5 h-3.5" />
           Players, Supply & Bans ({users.length})
+        </button>
+        <button
+          onClick={() => setActiveTab('member_logs')}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+            activeTab === 'member_logs'
+              ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+              : 'text-neutral-400 hover:text-white'
+          }`}
+        >
+          <Activity className="w-3.5 h-3.5 text-blue-400" />
+          Member Logs ({memberLogs.length})
         </button>
         <button
           onClick={() => setActiveTab('deposits')}
@@ -593,6 +629,217 @@ export default function AdminPage() {
                   EXECUTE BAN
                 </button>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Tab: Real-Time Member Logs */}
+      {activeTab === 'member_logs' && (
+        <div className="space-y-6">
+          {/* Header & Controls Card */}
+          <div className="bg-[#12141a] border border-blue-500/20 rounded-2xl p-6 shadow-xl">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div>
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 rounded-xl bg-blue-500/10 border border-blue-500/30 text-blue-400">
+                    <Activity className="w-5 h-5 text-blue-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-black uppercase tracking-wider text-white flex items-center gap-2">
+                      Real-Time Member Logs
+                      <span className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 rounded-full font-mono">
+                        <span className="relative flex h-2 w-2">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                        </span>
+                        Live Sync (3s)
+                      </span>
+                    </h3>
+                    <p className="text-xs text-neutral-400 mt-0.5">
+                      Live multi-device player connection activity, authentication events, and verified accounts.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 w-full sm:w-auto">
+                <button
+                  type="button"
+                  onClick={fetchServerLogs}
+                  disabled={isRefreshing}
+                  className="flex items-center justify-center gap-2 px-3.5 py-2 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-300 border border-blue-500/30 text-xs font-bold transition active:scale-95 disabled:opacity-50"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-blue-400' : ''}`} />
+                  <span>{isRefreshing ? 'Syncing...' : 'Refresh Logs'}</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Metric Pills */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-6 border-t border-white/5">
+              <div className="bg-[#0c0e14] border border-white/5 p-3 rounded-xl">
+                <span className="text-[10px] uppercase font-bold text-neutral-500 block">Total Events Logged</span>
+                <span className="text-xl font-black font-mono text-white">{memberLogs.length}</span>
+              </div>
+              <div className="bg-[#0c0e14] border border-white/5 p-3 rounded-xl">
+                <span className="text-[10px] uppercase font-bold text-neutral-500 block">Registered Players</span>
+                <span className="text-xl font-black font-mono text-emerald-400">{users.length}</span>
+              </div>
+              <div className="bg-[#0c0e14] border border-white/5 p-3 rounded-xl">
+                <span className="text-[10px] uppercase font-bold text-neutral-500 block">Active Unique Members</span>
+                <span className="text-xl font-black font-mono text-blue-400">
+                  {new Set(memberLogs.map(l => (l.minecraftIgn || '').toLowerCase())).size || users.length}
+                </span>
+              </div>
+              <div className="bg-[#0c0e14] border border-white/5 p-3 rounded-xl">
+                <span className="text-[10px] uppercase font-bold text-neutral-500 block">Central Server Cache</span>
+                <span className="text-xl font-black font-mono text-amber-400">Synchronized</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Member Activity Stream & Players Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* Real-time Activity Feed */}
+            <div className="lg:col-span-7 bg-[#12141a] border border-white/10 rounded-2xl p-6 shadow-xl">
+              <div className="flex items-center justify-between mb-4 pb-3 border-b border-white/5">
+                <h4 className="text-xs font-black uppercase tracking-wider text-white flex items-center gap-2">
+                  <Activity className="w-4 h-4 text-blue-400" />
+                  Live Activity Feed
+                </h4>
+                <span className="text-[11px] text-neutral-500 font-mono">
+                  Showing latest {memberLogs.length} events
+                </span>
+              </div>
+
+              {memberLogs.length === 0 ? (
+                <div className="py-12 px-4 text-center">
+                  <Users className="w-10 h-10 text-neutral-600 mx-auto mb-3" />
+                  <p className="text-sm font-bold text-neutral-300">No member logs yet</p>
+                  <p className="text-xs text-neutral-500 max-w-sm mx-auto mt-1">
+                    When players log in or register via Minecraft, Discord, or Email, their live events will appear here in real time.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-2.5 max-h-[550px] overflow-y-auto pr-1">
+                  {memberLogs.map((log) => {
+                    const actionBadge = 
+                      log.action === 'login' ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' :
+                      log.action === 'signup' ? 'bg-blue-500/15 text-blue-400 border-blue-500/30' :
+                      log.action === 'deposit' ? 'bg-amber-500/15 text-amber-400 border-amber-500/30' :
+                      'bg-purple-500/15 text-purple-400 border-purple-500/30';
+
+                    const authProviderBadge =
+                      log.authProvider === 'minecraft' ? 'bg-emerald-950/60 text-emerald-300 border-emerald-800/40' :
+                      log.authProvider === 'discord' ? 'bg-indigo-950/60 text-indigo-300 border-indigo-800/40' :
+                      'bg-neutral-800/80 text-neutral-300 border-neutral-700/40';
+
+                    return (
+                      <div
+                        key={log.id}
+                        className="flex items-start gap-3 p-3 rounded-xl bg-[#0c0e14] border border-white/5 hover:border-white/10 transition group"
+                      >
+                        {/* Player Minecraft Head Avatar */}
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={`https://mc-heads.net/avatar/${encodeURIComponent(log.minecraftIgn || 'steve')}/36`}
+                          alt={log.minecraftIgn}
+                          className="w-9 h-9 rounded-xl bg-neutral-900 border border-white/10 shrink-0 mt-0.5"
+                          onError={(e) => {
+                            (e.target as HTMLElement).style.opacity = '0.5';
+                          }}
+                        />
+
+                        {/* Event Content */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-xs font-black text-white group-hover:text-amber-400 transition">
+                              {log.minecraftIgn}
+                            </span>
+                            <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded border ${actionBadge}`}>
+                              {log.action}
+                            </span>
+                            <span className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded border font-mono ${authProviderBadge}`}>
+                              {log.authProvider}
+                            </span>
+                            <span className="text-[10px] font-mono text-neutral-500 ml-auto">
+                              {log.timestamp}
+                            </span>
+                          </div>
+                          <p className="text-xs text-neutral-300 mt-1 break-words">
+                            {log.details}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Synced Members Quick Table */}
+            <div className="lg:col-span-5 bg-[#12141a] border border-white/10 rounded-2xl p-6 shadow-xl">
+              <div className="flex items-center justify-between mb-4 pb-3 border-b border-white/5">
+                <h4 className="text-xs font-black uppercase tracking-wider text-white flex items-center gap-2">
+                  <Users className="w-4 h-4 text-emerald-400" />
+                  Active Player Records ({users.length})
+                </h4>
+                <button
+                  onClick={() => setActiveTab('users')}
+                  className="text-xs font-bold text-orange-400 hover:text-orange-300 transition"
+                >
+                  Manage &rarr;
+                </button>
+              </div>
+
+              <div className="space-y-2 max-h-[550px] overflow-y-auto pr-1">
+                {users.map((u) => (
+                  <div
+                    key={u.id}
+                    className="flex items-center justify-between p-2.5 rounded-xl bg-[#0c0e14] border border-white/5 hover:border-white/10 transition"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={`https://mc-heads.net/avatar/${encodeURIComponent(u.minecraftIgn || 'steve')}/32`}
+                        alt={u.minecraftIgn}
+                        className="w-8 h-8 rounded-lg bg-neutral-900 border border-white/10 shrink-0"
+                        onError={(e) => {
+                          (e.target as HTMLElement).style.opacity = '0.5';
+                        }}
+                      />
+                      <div className="min-w-0">
+                        <p className="text-xs font-black text-white truncate flex items-center gap-1.5">
+                          {u.minecraftIgn}
+                          {u.role === 'admin' && (
+                            <span className="text-[9px] bg-amber-500/20 text-amber-400 px-1 rounded font-bold">
+                              STAFF
+                            </span>
+                          )}
+                          {u.isBanned && (
+                            <span className="text-[9px] bg-red-500/20 text-red-400 px-1 rounded font-bold">
+                              BANNED
+                            </span>
+                          )}
+                        </p>
+                        <p className="text-[10px] text-neutral-400 font-mono">
+                          Balance: <span className="text-emerald-400 font-bold">{formatCash(u.balance)}</span>
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="text-right shrink-0">
+                      <span className="text-[10px] font-mono text-neutral-500 block uppercase">
+                        {u.authProvider || 'minecraft'}
+                      </span>
+                      <span className={`text-[10px] font-bold ${u.accountStatus === 'approved' ? 'text-emerald-400' : 'text-neutral-400'}`}>
+                        {u.accountStatus || 'active'}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>

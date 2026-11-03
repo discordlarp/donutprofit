@@ -1,78 +1,14 @@
 import { NextResponse } from 'next/server';
 import { ChatMessage } from '@/types';
-import fs from 'fs';
-import path from 'path';
+import { getChatMessages, addChatMessage } from '@/lib/serverStore';
 import { recordUserTransfer } from '@/lib/verificationDb';
 
-
-const dataDir = path.join(process.cwd(), 'data');
-const chatFilePath = path.join(dataDir, 'chat.json');
-
-// Initial seed messages
-const SEED_MESSAGES: ChatMessage[] = [
-  {
-    id: 'seed-1',
-    userId: 'cartisneakz',
-    username: 'cartisneakz',
-    minecraftIgn: 'cartisneakz',
-    message: 'Welcome to DonutProfit! Use /pay cartisneakz in-game for instant deposits.',
-    isStaff: true,
-    timestamp: 'Official',
-  },
-  {
-    id: 'seed-2',
-    userId: 'xynfnagsss',
-    username: 'xynfnagsss',
-    minecraftIgn: 'xynfnagsss',
-    message: 'Live chat is active! You can tip or /pay players anytime.',
-    isStaff: true,
-    timestamp: 'Official',
-  },
-  {
-    id: 'seed-3',
-    userId: 'gangsterjew7',
-    username: 'gangsterjew7',
-    minecraftIgn: 'gangsterjew7',
-    message: 'Staff online 24/7. Have fun guys!',
-    isStaff: true,
-    timestamp: 'Official',
-  }
-];
-
-let globalChatHistory: ChatMessage[] = [...SEED_MESSAGES];
-
-// Load persisted chat from disk on server startup
-try {
-  if (!fs.existsSync(dataDir)) {
-    fs.mkdirSync(dataDir, { recursive: true });
-  }
-  if (fs.existsSync(chatFilePath)) {
-    const raw = fs.readFileSync(chatFilePath, 'utf-8');
-    const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed) && parsed.length > 0) {
-      globalChatHistory = parsed;
-    }
-  }
-} catch (e) {
-  // in-memory fallback
-}
-
-function persistChat() {
-  try {
-    if (!fs.existsSync(dataDir)) {
-      fs.mkdirSync(dataDir, { recursive: true });
-    }
-    fs.writeFileSync(chatFilePath, JSON.stringify(globalChatHistory.slice(-100), null, 2), 'utf-8');
-  } catch (e) {
-    // non-fatal
-  }
-}
-
 export async function GET() {
+  const messages = getChatMessages(60);
   return NextResponse.json(
     {
       success: true,
-      messages: globalChatHistory.slice(-60),
+      messages,
     },
     {
       headers: {
@@ -123,11 +59,7 @@ export async function POST(req: Request) {
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
 
-    globalChatHistory.push(newMsg);
-    if (globalChatHistory.length > 100) {
-      globalChatHistory = globalChatHistory.slice(-100);
-    }
-    persistChat();
+    addChatMessage(newMsg);
 
     return NextResponse.json(
       {
