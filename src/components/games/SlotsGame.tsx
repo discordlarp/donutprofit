@@ -5,6 +5,7 @@ import { useGame } from '@/context/GameContext';
 import { Sparkles, Coins, AlertCircle } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { sound } from '@/lib/sound';
+import { formatCash } from '@/lib/format';
 
 interface SymbolInfo {
   icon: string;
@@ -145,7 +146,7 @@ export default function SlotsGame() {
       {lastWin && !isSpinning && (
         <div className="mb-4 text-center py-2.5 bg-emerald-500/10 border border-emerald-500/30 rounded-xl">
           <p className="text-emerald-400 font-black text-sm">
-            🎉 MATCHED! WON +{lastWin.amount.toFixed(1)} CASH ({lastWin.multiplier}x)!
+            🎉 MATCHED! WON {formatCash(lastWin.amount, { showPlus: true })} CASH ({lastWin.multiplier}x)!
           </p>
         </div>
       )}

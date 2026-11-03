@@ -15,6 +15,7 @@ import {
   CheckCircle2
 } from 'lucide-react';
 import AuthModal from '@/components/AuthModal';
+import { formatCash } from '@/lib/format';
 
 export default function DepositPage() {
   const { user, deposits, settings, createDepositRequest, updateUserIgn } = useGame();
@@ -54,7 +55,7 @@ export default function DepositPage() {
       return;
     }
     if (inGameAmount < settings.minDeposit) {
-      setErrorMsg(`Minimum deposit is $${settings.minDeposit.toLocaleString()} in-game currency.`);
+      setErrorMsg(`Minimum deposit is ${formatCash(settings.minDeposit)} in-game currency.`);
       return;
     }
 
@@ -185,13 +186,13 @@ export default function DepositPage() {
             <div className="flex justify-between items-center text-xs py-2 border-b border-white/5">
               <span className="text-neutral-400">Current Exchange Rate:</span>
               <span className="font-mono font-bold text-white">
-                {settings.exchangeRate === 1 ? '1 DonutSMP $ = $1 Cash (1:1 Ratio)' : `$${settings.exchangeRate.toLocaleString()} = $1 Cash`}
+                {settings.exchangeRate === 1 ? '1 DonutSMP $ = $1 Cash (1:1 Ratio)' : `${formatCash(settings.exchangeRate)} = $1 Cash`}
               </span>
             </div>
             <div className="flex justify-between items-center text-xs py-2 border-b border-white/5">
               <span className="text-neutral-400">Minimum Deposit:</span>
               <span className="font-mono font-bold text-amber-400">
-                ${settings.minDeposit.toLocaleString()} DonutSMP $
+                {formatCash(settings.minDeposit)} DonutSMP $
               </span>
             </div>
             <div className="flex justify-between items-center text-xs py-2">
@@ -268,7 +269,7 @@ export default function DepositPage() {
                           : 'bg-white/5 text-neutral-400 border-white/5 hover:bg-white/10 hover:text-white'
                       }`}
                     >
-                      {amt >= 1000000 ? `${amt / 1000000}M` : `${amt.toLocaleString()}`}
+                      {formatCash(amt)}
                     </button>
                   ))}
                 </div>
@@ -279,7 +280,7 @@ export default function DepositPage() {
                 <div>
                   <span className="text-[11px] uppercase font-bold text-neutral-500 block">You will receive</span>
                   <span className="text-2xl font-black font-mono text-emerald-400">
-                    ${calculatedCoins.toLocaleString()} Cash
+                    {formatCash(calculatedCoins)} Cash
                   </span>
                 </div>
                 <Coins className="w-8 h-8 text-emerald-400" />
@@ -340,7 +341,7 @@ export default function DepositPage() {
                       <div>
                         <div className="flex items-center gap-2">
                           <span className="font-mono font-bold text-white">
-                            ${d.amountInGame.toLocaleString()} &rarr; ${d.amountCoins.toLocaleString()} Cash
+                            {formatCash(d.amountInGame)} &rarr; {formatCash(d.amountCoins)} Cash
                           </span>
                           <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase ${
                             d.status === 'approved'
@@ -358,7 +359,7 @@ export default function DepositPage() {
                       </div>
 
                       {d.status === 'approved' && (
-                        <span className="text-emerald-400 font-bold font-mono">+ ${d.amountCoins.toLocaleString()} Cash Added</span>
+                        <span className="text-emerald-400 font-bold font-mono">+ {formatCash(d.amountCoins)} Cash Added</span>
                       )}
                     </div>
                   ))}

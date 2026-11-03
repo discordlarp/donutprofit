@@ -5,6 +5,7 @@ import { useGame } from '@/context/GameContext';
 import { Dices, Coins, AlertCircle } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { sound } from '@/lib/sound';
+import { formatCash } from '@/lib/format';
 
 export default function DiceGame() {
   const { user, recordBet } = useGame();
@@ -110,7 +111,7 @@ export default function DiceGame() {
               <p className={`text-xs uppercase font-extrabold tracking-widest mt-2 ${
                 lastWin ? 'text-emerald-400' : 'text-neutral-500'
               }`}>
-                {lastWin ? `WON +${(betAmount * multiplier).toFixed(1)} CASH!` : 'ROLLED OUT OF RANGE'}
+                {lastWin ? `WON ${formatCash(betAmount * multiplier, { showPlus: true })} CASH!` : 'ROLLED OUT OF RANGE'}
               </p>
             </div>
           ) : (

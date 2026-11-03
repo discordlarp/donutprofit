@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useGame } from '@/context/GameContext';
+import { formatCash } from '@/lib/format';
 import UserProfileModal from '@/components/UserProfileModal';
 import { Activity, Flame, User, Sparkles } from 'lucide-react';
 
@@ -137,7 +138,7 @@ export default function RecentBetsTable() {
                         </button>
                       </td>
                       <td className="py-3 px-3 text-center font-bold text-neutral-300">
-                        <span>${b.betAmount.toLocaleString()}</span>
+                        <span>{formatCash(b.betAmount)}</span>
                       </td>
                       <td className="py-3 px-3 text-center">
                         <span
@@ -151,11 +152,11 @@ export default function RecentBetsTable() {
                       <td className="py-3 px-3 text-right">
                         {isWin ? (
                           <span className="text-amber-400 font-black">
-                            +${b.payout.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                            {formatCash(b.payout, { showPlus: true })}
                           </span>
                         ) : (
                           <span className="text-neutral-500 font-medium">
-                            -${b.betAmount.toLocaleString()}
+                            {formatCash(-b.betAmount)}
                           </span>
                         )}
                       </td>

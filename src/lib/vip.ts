@@ -34,7 +34,7 @@ export const VIP_TIERS: VipTier[] = [
     borderColor: 'border-sky-500/40',
     textColor: 'text-sky-400',
     levelBonus: 250_000,
-    perks: ['$250,000 Level-Up Cash', 'Glazed Chat Flair', 'SMP High-Roller Feed'],
+    perks: ['$250K Level-Up Cash', 'Glazed Chat Flair', 'SMP High-Roller Feed'],
   },
   {
     id: 'baker',
@@ -46,7 +46,7 @@ export const VIP_TIERS: VipTier[] = [
     borderColor: 'border-emerald-500/40',
     textColor: 'text-emerald-400',
     levelBonus: 1_000_000,
-    perks: ['$1,000,000 Level-Up Cash', 'Priority In-Game Withdrawals', 'Baker Chat Badge'],
+    perks: ['$1M Level-Up Cash', 'Priority In-Game Withdrawals', 'Baker Chat Badge'],
   },
   {
     id: 'sprinkled',
@@ -58,7 +58,7 @@ export const VIP_TIERS: VipTier[] = [
     borderColor: 'border-fuchsia-500/40',
     textColor: 'text-fuchsia-400',
     levelBonus: 2_500_000,
-    perks: ['$2,500,000 Level-Up Cash', 'Weekly Reload Boosts', 'Sprinkled Custom Sound FX'],
+    perks: ['$2.5M Level-Up Cash', 'Weekly Reload Boosts', 'Sprinkled Custom Sound FX'],
   },
   {
     id: 'golden',
@@ -70,7 +70,7 @@ export const VIP_TIERS: VipTier[] = [
     borderColor: 'border-amber-400/50',
     textColor: 'text-amber-400',
     levelBonus: 5_000_000,
-    perks: ['$5,000,000 Level-Up Cash', 'Golden Chat Flair & Sound FX', 'Exclusive Bet Limits'],
+    perks: ['$5M Level-Up Cash', 'Golden Chat Flair & Sound FX', 'Exclusive Bet Limits'],
   },
   {
     id: 'whale',
@@ -82,7 +82,7 @@ export const VIP_TIERS: VipTier[] = [
     borderColor: 'border-indigo-500/50',
     textColor: 'text-indigo-400',
     levelBonus: 10_000_000,
-    perks: ['$10,000,000 Level-Up Cash', 'Dedicated High-Roller Feed', 'Whale Profile Emblem'],
+    perks: ['$10M Level-Up Cash', 'Dedicated High-Roller Feed', 'Whale Profile Emblem'],
   },
   {
     id: 'highroller',
@@ -94,7 +94,7 @@ export const VIP_TIERS: VipTier[] = [
     borderColor: 'border-rose-500/50',
     textColor: 'text-rose-400',
     levelBonus: 25_000_000,
-    perks: ['$25,000,000 Level-Up Cash', 'Custom Max Bet Limits', 'High Roller VIP Lounge'],
+    perks: ['$25M Level-Up Cash', 'Custom Max Bet Limits', 'High Roller VIP Lounge'],
   },
   {
     id: 'legend',
@@ -106,7 +106,7 @@ export const VIP_TIERS: VipTier[] = [
     borderColor: 'border-purple-400/60',
     textColor: 'text-purple-300',
     levelBonus: 50_000_000,
-    perks: ['$50,000,000 Level-Up Cash', 'VIP Concierge Telegram/Discord', 'Legend Gold Crown'],
+    perks: ['$50M Level-Up Cash', 'VIP Concierge Telegram/Discord', 'Legend Gold Crown'],
   },
   {
     id: 'mythic',
@@ -118,7 +118,7 @@ export const VIP_TIERS: VipTier[] = [
     borderColor: 'border-emerald-400',
     textColor: 'text-emerald-300',
     levelBonus: 100_000_000,
-    perks: ['$100,000,000 Mythic Bounty', 'Zero Fee Instant Payouts', 'Personal VIP Host'],
+    perks: ['$100M Mythic Bounty', 'Zero Fee Instant Payouts', 'Personal VIP Host'],
   },
 ];
 

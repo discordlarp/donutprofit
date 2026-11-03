@@ -5,6 +5,7 @@ import { useGame } from '@/context/GameContext';
 import { CircleDot, Coins, AlertCircle, Sparkles, RefreshCw, Flame } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { sound } from '@/lib/sound';
+import { formatCash } from '@/lib/format';
 
 type RiskLevel = 'low' | 'medium' | 'high';
 
@@ -457,7 +458,7 @@ export default function PlinkoGame() {
               </label>
               {user && (
                 <span className="text-[10px] text-neutral-500 font-mono">
-                  Balance: ${(user.balance || 0).toLocaleString()}
+                  Balance: {formatCash(user.balance || 0)}
                 </span>
               )}
             </div>
@@ -501,7 +502,7 @@ export default function PlinkoGame() {
                       : 'bg-white/5 text-neutral-400 border-white/5 hover:bg-white/10 hover:text-white'
                   }`}
                 >
-                  ${amt / 1000000}M
+                  {formatCash(amt)}
                 </button>
               ))}
               {user && (
@@ -524,7 +525,7 @@ export default function PlinkoGame() {
             className="w-full py-4 rounded-2xl font-black text-sm tracking-wider uppercase bg-gradient-to-r from-purple-500 via-indigo-500 to-purple-600 hover:from-purple-600 hover:to-indigo-600 text-white shadow-xl shadow-purple-500/30 transition transform active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
           >
             <CircleDot className="w-4 h-4" />
-            <span>DROP BALL (${(betAmount >= 1000000 ? `${(betAmount / 1000000).toFixed(0)}M` : betAmount.toLocaleString())})</span>
+            <span>DROP BALL ({formatCash(betAmount)})</span>
             {activeBallsCount > 0 && (
               <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded-full font-mono">
                 {activeBallsCount} active

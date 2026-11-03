@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useGame } from '@/context/GameContext';
+import { formatCash } from '@/lib/format';
 import { Sparkles, TrendingUp } from 'lucide-react';
 
 const FALLBACK_WINS = [
@@ -58,7 +59,7 @@ export default function LiveBetsMarquee() {
                   {bet.multiplier.toFixed(2)}x
                 </span>
                 <span className="text-amber-400 font-mono font-black text-[11px] flex items-center">
-                  +${bet.payout.toLocaleString()}
+                  {formatCash(bet.payout, { showPlus: true })}
                 </span>
               </div>
             ))}

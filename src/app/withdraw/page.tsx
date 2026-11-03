@@ -12,6 +12,7 @@ import {
   LogIn 
 } from 'lucide-react';
 import AuthModal from '@/components/AuthModal';
+import { formatCash } from '@/lib/format';
 
 export default function WithdrawPage() {
   const { user, withdrawals, settings, createWithdrawalRequest, updateUserIgn } = useGame();
@@ -36,7 +37,7 @@ export default function WithdrawPage() {
       return;
     }
     if (amountCoins < settings.minWithdrawal) {
-      setStatusMsg({ type: 'error', text: `Minimum withdrawal is $${settings.minWithdrawal.toLocaleString()} Cash.` });
+      setStatusMsg({ type: 'error', text: `Minimum withdrawal is ${formatCash(settings.minWithdrawal)} Cash.` });
       return;
     }
     if (amountCoins > user.balance) {
@@ -88,10 +89,10 @@ export default function WithdrawPage() {
               <Coins className="w-8 h-8 text-amber-400" />
               <div>
                 <span className="text-2xl font-black font-mono text-white">
-                  ${(user?.balance ?? 0).toLocaleString()} Cash
+                  {formatCash(user?.balance ?? 0)} Cash
                 </span>
                 <span className="text-xs text-neutral-400 block">
-                  &asymp; ${((user?.balance ?? 0) * settings.exchangeRate).toLocaleString()} DonutSMP $
+                  &asymp; {formatCash((user?.balance ?? 0) * settings.exchangeRate)} DonutSMP $
                 </span>
               </div>
             </div>
@@ -99,11 +100,11 @@ export default function WithdrawPage() {
             <div className="border-t border-white/5 pt-4 flex flex-col gap-2 text-xs text-neutral-300">
               <div className="flex justify-between">
                 <span className="text-neutral-500">Rate:</span>
-                <span className="font-mono font-bold text-white">{settings.exchangeRate === 1 ? '$1 Cash = 1 SMP $ (1:1)' : `$1 Cash = $${settings.exchangeRate.toLocaleString()} SMP`}</span>
+                <span className="font-mono font-bold text-white">{settings.exchangeRate === 1 ? '$1 Cash = 1 SMP $ (1:1)' : `$1 Cash = ${formatCash(settings.exchangeRate)} SMP`}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-neutral-500">Minimum:</span>
-                <span className="font-mono font-bold text-amber-400">${settings.minWithdrawal.toLocaleString()} Cash</span>
+                <span className="font-mono font-bold text-amber-400">{formatCash(settings.minWithdrawal)} Cash</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-neutral-500">Fee:</span>
@@ -195,7 +196,7 @@ export default function WithdrawPage() {
                           : 'bg-white/5 text-neutral-400 border-white/5 hover:bg-white/10 hover:text-white'
                       }`}
                     >
-                      {amt >= 1000000 ? `${amt / 1000000}M` : `${amt.toLocaleString()}`}
+                      {formatCash(amt)}
                     </button>
                   ))}
                 </div>
@@ -206,7 +207,7 @@ export default function WithdrawPage() {
                 <div>
                   <span className="text-[11px] uppercase font-bold text-neutral-500 block">In-Game Payout</span>
                   <span className="text-2xl font-black font-mono text-emerald-400">
-                    ${calculatedInGame.toLocaleString()} SMP
+                    {formatCash(calculatedInGame)} SMP
                   </span>
                 </div>
                 <Clock className="w-6 h-6 text-neutral-500" />
@@ -253,7 +254,7 @@ export default function WithdrawPage() {
                       <div>
                         <div className="flex items-center gap-2">
                           <span className="font-mono font-bold text-white">
-                            ${w.amountCoins.toLocaleString()} Cash &rarr; ${w.amountInGame.toLocaleString()} SMP
+                            {formatCash(w.amountCoins)} Cash &rarr; {formatCash(w.amountInGame)} SMP
                           </span>
                           <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase ${
                             w.status === 'approved'

@@ -5,6 +5,7 @@ import { useGame } from '@/context/GameContext';
 import { Coins, Sparkles, AlertCircle, RotateCcw } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { sound } from '@/lib/sound';
+import { formatCash } from '@/lib/format';
 
 export default function CoinflipGame() {
   const { user, recordBet } = useGame();
@@ -191,7 +192,7 @@ export default function CoinflipGame() {
             disabled={isFlipping || !user || user.balance <= 0}
             className="w-full py-4 rounded-xl font-black text-sm tracking-wider uppercase bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-black shadow-lg shadow-orange-500/25 transform active:scale-[0.98] transition disabled:opacity-50"
           >
-            {isFlipping ? 'FLIPPING COIN...' : `FLIP FOR ${(betAmount * 1.96).toFixed(1)} COINS`}
+            {isFlipping ? 'FLIPPING COIN...' : `FLIP FOR ${formatCash(betAmount * 1.96)} COINS`}
           </button>
         </div>
 
@@ -247,7 +248,7 @@ export default function CoinflipGame() {
               <div className="animate-fadeIn">
                 {lastResult === chosenSide ? (
                   <p className="text-emerald-400 font-black text-sm uppercase tracking-wider">
-                    🎉 YOU WON +{(betAmount * 1.96).toFixed(1)} COINS! (Landed on {lastResult.toUpperCase()})
+                    🎉 YOU WON {formatCash(betAmount * 1.96, { showPlus: true })} COINS! (Landed on {lastResult.toUpperCase()})
                   </p>
                 ) : (
                   <p className="text-red-400 font-black text-sm uppercase tracking-wider">

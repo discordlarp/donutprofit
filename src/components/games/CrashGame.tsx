@@ -5,6 +5,7 @@ import { useGame } from '@/context/GameContext';
 import { TrendingUp, Coins, Flame, AlertCircle, Rocket } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { sound } from '@/lib/sound';
+import { formatCash } from '@/lib/format';
 
 export default function CrashGame() {
   const { user, recordBet } = useGame();
@@ -213,7 +214,7 @@ export default function CrashGame() {
               onClick={() => handleCashout()}
               className="w-full py-4 rounded-xl font-black text-base tracking-wider uppercase bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-600 hover:to-teal-500 text-black shadow-lg shadow-emerald-500/30 transform active:scale-[0.98] transition flex items-center justify-center gap-2 animate-pulse"
             >
-              CASHOUT ${(betAmount * multiplier).toFixed(1)} ({multiplier.toFixed(2)}x)
+              CASHOUT {formatCash(betAmount * multiplier)} ({multiplier.toFixed(2)}x)
             </button>
           ) : (
             <button
@@ -309,7 +310,7 @@ export default function CrashGame() {
                   {cashedMultiplier.toFixed(2)}x
                 </span>
                 <p className="text-emerald-400 font-black uppercase tracking-widest text-sm mt-2">
-                  🎉 CASHOUT! +{(betAmount * cashedMultiplier).toFixed(1)} CASH
+                  🎉 CASHOUT! {formatCash(betAmount * cashedMultiplier, { showPlus: true })} CASH
                 </p>
               </div>
             ) : (
@@ -325,7 +326,7 @@ export default function CrashGame() {
                   {gameState === 'running' ? (
                     <>
                       <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
-                      <span className="text-emerald-400 font-black">FLYING (LIVE PROFIT: +{(betAmount * (multiplier - 1)).toFixed(1)} 🍩)</span>
+                      <span className="text-emerald-400 font-black">FLYING (LIVE PROFIT: {formatCash(betAmount * (multiplier - 1), { showPlus: true })} 🍩)</span>
                     </>
                   ) : (
                     <span>READY FOR LAUNCH</span>

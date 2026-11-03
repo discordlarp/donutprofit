@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { sound } from '@/lib/sound';
+import { formatCash, formatCompactNumber } from '@/lib/format';
 
 interface UserProfileModalProps {
   isOpen: boolean;
@@ -104,7 +105,7 @@ export default function UserProfileModal({
       return;
     }
     if (tipAmount > user.balance) {
-      setTipError(`Insufficient balance! You have $${user.balance.toLocaleString()} Cash.`);
+      setTipError(`Insufficient balance! You have ${formatCash(user.balance)} Cash.`);
       return;
     }
 
@@ -119,7 +120,7 @@ export default function UserProfileModal({
 
     sound.playWin();
     confetti({ particleCount: 120, spread: 80 });
-    setTipSuccess(`Successfully tipped $${tipAmount.toLocaleString()} Cash to @${cleanTarget}!`);
+    setTipSuccess(`Successfully tipped ${formatCash(tipAmount)} Cash to @${cleanTarget}!`);
 
     // Broadcast live to community chat stream
     try {
@@ -129,7 +130,7 @@ export default function UserProfileModal({
         body: JSON.stringify({
           username: user.username,
           minecraftIgn: user.minecraftIgn,
-          message: `💸 [TIP] @${user.minecraftIgn} tipped $${tipAmount.toLocaleString()} Cash to @${cleanTarget}!`,
+          message: `💸 [TIP] @${user.minecraftIgn} tipped ${formatCash(tipAmount)} Cash to @${cleanTarget}!`,
           isStaff: user.role === 'admin' || user.minecraftIgn.toLowerCase() === 'cartisneakz',
           isPayment: true,
           paymentDetails: {
@@ -149,7 +150,7 @@ export default function UserProfileModal({
             userId: user.minecraftIgn,
             username: user.username,
             minecraftIgn: user.minecraftIgn,
-            message: `💸 [TIP] @${user.minecraftIgn} tipped $${tipAmount.toLocaleString()} Cash to @${cleanTarget}!`,
+            message: `💸 [TIP] @${user.minecraftIgn} tipped ${formatCash(tipAmount)} Cash to @${cleanTarget}!`,
             isStaff: user.role === 'admin',
             isPayment: true,
             paymentDetails: {
@@ -258,7 +259,7 @@ export default function UserProfileModal({
                 Total Gambled
               </span>
               <span className="text-base font-black font-mono text-white">
-                ${totalWagered.toLocaleString()}
+                {formatCash(totalWagered)}
               </span>
             </div>
 
@@ -269,7 +270,7 @@ export default function UserProfileModal({
                 Total Won
               </span>
               <span className="text-base font-black font-mono text-emerald-400">
-                ${totalWon.toLocaleString()}
+                {formatCash(totalWon)}
               </span>
             </div>
 
@@ -288,7 +289,7 @@ export default function UserProfileModal({
                   isProfitable ? 'text-emerald-400' : 'text-rose-400'
                 }`}
               >
-                {isProfitable ? `+$${netProfit.toLocaleString()}` : `-$${Math.abs(netProfit).toLocaleString()}`}
+                {formatCash(netProfit, { showPlus: true })}
               </span>
             </div>
 
@@ -299,7 +300,7 @@ export default function UserProfileModal({
                 Games Played
               </span>
               <span className="text-base font-black font-mono text-white">
-                {gamesPlayed.toLocaleString()} rounds
+                {formatCompactNumber(gamesPlayed)} rounds
               </span>
             </div>
           </div>
@@ -322,7 +323,7 @@ export default function UserProfileModal({
             </div>
             {user && (
               <span className="text-[10px] text-neutral-400 font-mono">
-                Your Balance: <strong className="text-white">${user.balance.toLocaleString()}</strong>
+                Your Balance: <strong className="text-white">{formatCash(user.balance)}</strong>
               </span>
             )}
           </div>
@@ -340,7 +341,7 @@ export default function UserProfileModal({
                     : 'bg-white/5 text-neutral-400 border-white/5 hover:bg-white/10 hover:text-white'
                 }`}
               >
-                ${amt >= 1000000 ? `${amt / 1000000}M` : amt.toLocaleString()}
+                {formatCash(amt)}
               </button>
             ))}
             {user && (
@@ -403,7 +404,7 @@ export default function UserProfileModal({
                 ? 'SIGN IN TO TIP'
                 : isSending
                 ? 'SENDING TIP...'
-                : `TIP $${tipAmount.toLocaleString()} CASH`}
+                : `TIP ${formatCash(tipAmount)} CASH`}
             </span>
           </button>
         </div>

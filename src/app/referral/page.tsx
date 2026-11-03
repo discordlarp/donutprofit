@@ -17,6 +17,7 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { formatCash } from '@/lib/format';
 
 export default function ReferralPage() {
   const { user, getReferralLink, claimReferralCode, claimInstant10MEventBonus } = useGame();
@@ -260,7 +261,7 @@ export default function ReferralPage() {
                 <Coins className="w-3.5 h-3.5 text-amber-400" />
                 Bonus Earned
               </span>
-              <span className="text-2xl font-black font-mono text-emerald-400">${(((user?.referralCount || 0) * 20000000) || 0).toLocaleString()} Cash</span>
+              <span className="text-2xl font-black font-mono text-emerald-400">{formatCash(((user?.referralCount || 0) * 20000000) || 0)} Cash</span>
             </div>
 
             <div className="bg-[#12141a] border border-white/10 rounded-2xl p-5 flex flex-col col-span-2 sm:col-span-1">

@@ -5,6 +5,7 @@ import { useGame } from '@/context/GameContext';
 import { Flame, Coins, AlertCircle } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { sound } from '@/lib/sound';
+import { formatCash } from '@/lib/format';
 
 export default function LimboGame() {
   const { user, recordBet } = useGame();
@@ -157,7 +158,7 @@ export default function LimboGame() {
         disabled={isRolling}
         className="w-full py-3.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 text-black font-black text-xs uppercase tracking-wider rounded-xl shadow-lg transition"
       >
-        {isRolling ? 'ROLLING...' : `ROLL FOR $${(targetMult * betAmount).toFixed(0)}`}
+        {isRolling ? 'ROLLING...' : `ROLL FOR ${formatCash(targetMult * betAmount)}`}
       </button>
     </div>
   );

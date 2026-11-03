@@ -22,6 +22,7 @@ import {
   INITIAL_AUDIT_LOGS,
   INITIAL_CHAT 
 } from '@/lib/store';
+import { formatCash } from '@/lib/format';
 
 interface GameContextType {
   user: UserProfile | null;
@@ -235,7 +236,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
                 userId: 'system',
                 username: 'SYSTEM',
                 minecraftIgn: 'cartisneakz',
-                message: '[INSTANT DEPOSIT] ' + ign + ' paid $' + dep.amount_in_game.toLocaleString() + ' on DonutSMP and was credited $' + coinsToAdd.toLocaleString() + ' Cash!',
+                message: '[INSTANT DEPOSIT] ' + ign + ' paid ' + formatCash(dep.amount_in_game) + ' on DonutSMP and was credited ' + formatCash(coinsToAdd) + ' Cash!',
                 timestamp: new Date().toISOString(),
                 isStaff: true,
               };
@@ -1127,7 +1128,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     if (!currentUser) return { success: false, message: 'Please sign in first.' };
     if (currentUser.isBanned) return { success: false, message: 'Banned accounts cannot withdraw.' };
     if (amountCoins > currentUser.balance) return { success: false, message: 'Insufficient Cash balance' };
-    if (amountCoins < settings.minWithdrawal) return { success: false, message: `Minimum withdrawal is $${settings.minWithdrawal.toLocaleString()} Cash` };
+    if (amountCoins < settings.minWithdrawal) return { success: false, message: `Minimum withdrawal is ${formatCash(settings.minWithdrawal)} Cash` };
 
     setCurrentUser(prev => prev ? { ...prev, balance: prev.balance - amountCoins } : null);
     setUsers(prev => prev.map(u => u.id === currentUser.id ? { ...u, balance: u.balance - amountCoins } : u));
@@ -1355,7 +1356,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     if ((currentUser.balance || 0) < numericAmount) {
       return { 
         success: false, 
-        message: `Insufficient balance! You have ${(currentUser.balance || 0).toLocaleString()} Cash, but attempted to send ${numericAmount.toLocaleString()}.` 
+        message: `Insufficient balance! You have ${formatCash(currentUser.balance || 0)} Cash, but attempted to send ${formatCash(numericAmount)}.` 
       };
     }
 
@@ -1433,7 +1434,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
     return {
       success: true,
-      message: `Successfully paid ${numericAmount.toLocaleString()} Cash to @${cleanTarget}!`,
+      message: `Successfully paid ${formatCash(numericAmount)} Cash to @${cleanTarget}!`,
     };
   };
 

@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useGame } from '@/context/GameContext';
+import { formatCash } from '@/lib/format';
 import { Trophy, Crown, Medal, Gift, Sparkles, ShieldCheck, Users } from 'lucide-react';
 
 const getNextReferralReset = (currentTime = Date.now()) => {
@@ -91,7 +92,7 @@ export default function LeaderboardPage() {
             </span>
             <h3 className="font-extrabold text-white text-base mt-0.5">{activeTopThree[1].minecraftIgn}</h3>
             <span className="text-xs font-mono font-black text-orange-400 mt-1">
-              {tab === 'highest_wager' && `$${activeTopThree[1].totalWagered.toLocaleString()}`}
+              {tab === 'highest_wager' && formatCash(activeTopThree[1].totalWagered)}
               {tab === 'referrals' && `${activeTopThree[1].referralCountThisWeek ?? activeTopThree[1].referralCount ?? 0} refs`}
             </span>
           </div>
@@ -114,7 +115,7 @@ export default function LeaderboardPage() {
             </span>
             <h3 className="font-black text-white text-xl">{activeTopThree[0].minecraftIgn}</h3>
             <span className="text-base font-mono font-black text-amber-300 mt-1">
-              {tab === 'highest_wager' && `$${activeTopThree[0].totalWagered.toLocaleString()}`}
+              {tab === 'highest_wager' && formatCash(activeTopThree[0].totalWagered)}
               {tab === 'referrals' && `${activeTopThree[0].referralCountThisWeek ?? activeTopThree[0].referralCount ?? 0} refs`}
             </span>
             <span className="text-[10px] font-bold text-neutral-400 mt-1">
@@ -137,7 +138,7 @@ export default function LeaderboardPage() {
             </span>
             <h3 className="font-extrabold text-white text-base mt-0.5">{activeTopThree[2].minecraftIgn}</h3>
             <span className="text-xs font-mono font-black text-orange-400 mt-1">
-              {tab === 'highest_wager' && `$${activeTopThree[2].totalWagered.toLocaleString()}`}
+              {tab === 'highest_wager' && formatCash(activeTopThree[2].totalWagered)}
               {tab === 'referrals' && `${activeTopThree[2].referralCountThisWeek ?? activeTopThree[2].referralCount ?? 0} refs`}
             </span>
           </div>
@@ -253,7 +254,7 @@ export default function LeaderboardPage() {
                     </td>
                     <td className="py-3.5 px-4 font-sans">{u.role === 'admin' ? <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30">OWNER / ADMIN</span> : u.totalWagered >= 10000000 ? <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-purple-500/20 text-purple-400 border border-purple-500/30">WHALE</span> : u.totalWagered >= 500000 ? <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-sky-500/20 text-sky-400 border border-sky-500/30">HIGH ROLLER</span> : <span className="text-[10px] font-bold text-neutral-500">PLAYER</span>}</td>
                     <td className="py-3.5 px-4 text-neutral-400">{u.gamesPlayed}</td>
-                    <td className="py-3.5 px-4 text-right font-black text-orange-400 text-sm">${u.totalWagered.toLocaleString()}</td>
+                    <td className="py-3.5 px-4 text-right font-black text-orange-400 text-sm">{formatCash(u.totalWagered)}</td>
                   </tr>
                 );
               })}

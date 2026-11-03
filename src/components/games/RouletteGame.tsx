@@ -5,6 +5,7 @@ import { useGame } from '@/context/GameContext';
 import { Disc, Coins, AlertCircle } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { sound } from '@/lib/sound';
+import { formatCash } from '@/lib/format';
 
 type BetOption = 'red' | 'black' | 'gold';
 
@@ -278,7 +279,7 @@ export default function RouletteGame() {
           <span className="font-bold text-white uppercase">{lastWin.color} ({lastWin.num})</span>
           {lastWin.color === selectedBet ? (
             <span className="text-emerald-400 font-bold ml-2">
-              🎉 YOU WON +{(betAmount * (selectedBet === 'gold' ? 5 : 2)).toFixed(0)} CASH!
+              🎉 YOU WON {formatCash(betAmount * (selectedBet === 'gold' ? 5 : 2), { showPlus: true })} CASH!
             </span>
           ) : (
             <span className="text-neutral-500 ml-2">No win this round</span>

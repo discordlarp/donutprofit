@@ -5,6 +5,7 @@ import { useGame } from '@/context/GameContext';
 import { Layers, AlertCircle } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { sound } from '@/lib/sound';
+import { formatCash } from '@/lib/format';
 
 const FLOOR_MULTIPLIERS = [1.25, 1.65, 2.15, 2.80, 3.40, 4.00];
 
@@ -233,7 +234,7 @@ export default function TowersGame() {
               onClick={cashOut}
               className="flex-1 sm:flex-none px-6 py-3.5 bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-500 text-black font-black text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-amber-500/25 transition animate-pulse"
             >
-              CASHOUT ${(FLOOR_MULTIPLIERS[currentFloor - 1] * betAmount).toFixed(0)} ({FLOOR_MULTIPLIERS[currentFloor - 1]}x)
+              CASHOUT {formatCash(FLOOR_MULTIPLIERS[currentFloor - 1] * betAmount)} ({FLOOR_MULTIPLIERS[currentFloor - 1]}x)
             </button>
           )}
 

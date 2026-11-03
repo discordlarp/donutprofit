@@ -3,6 +3,7 @@
 import React, { useEffect } from 'react';
 import { useGame } from '@/context/GameContext';
 import { CheckCircle2, Coins, X, Sparkles } from 'lucide-react';
+import { formatCash } from '@/lib/format';
 
 export default function DepositNotificationToast() {
   const { depositNotification, dismissDepositNotification } = useGame();
@@ -37,11 +38,11 @@ export default function DepositNotificationToast() {
             </div>
 
             <h4 className="text-sm font-black text-white">
-              +${depositNotification.amountCoins.toLocaleString()} Cash Added!
+              {formatCash(depositNotification.amountCoins, { showPlus: true })} Cash Added!
             </h4>
 
             <p className="text-xs text-neutral-300 mt-1 leading-relaxed">
-              Received <strong className="text-emerald-300">${depositNotification.amountInGame.toLocaleString()}</strong> in-game payment from <code className="bg-black/40 px-1.5 py-0.5 rounded text-white font-mono">{depositNotification.ign}</code> on DonutSMP.
+              Received <strong className="text-emerald-300">{formatCash(depositNotification.amountInGame)}</strong> in-game payment from <code className="bg-black/40 px-1.5 py-0.5 rounded text-white font-mono">{depositNotification.ign}</code> on DonutSMP.
             </p>
 
             <div className="mt-2.5 flex items-center gap-2">

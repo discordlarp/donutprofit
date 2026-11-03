@@ -16,6 +16,7 @@ import {
 import { ChatMessage } from '@/types';
 import confetti from 'canvas-confetti';
 import { sound } from '@/lib/sound';
+import { formatCash } from '@/lib/format';
 import UserProfileModal from '@/components/UserProfileModal';
 
 interface CommunityChatProps {
@@ -224,8 +225,8 @@ export default function CommunityChat({ isOpen: propIsOpen, onToggle: propOnTogg
         recipientIgn: target,
         amount,
       };
-      finalMessage = `💸 [TRANSFER] @${user.minecraftIgn} paid $${amount.toLocaleString()} Cash to @${target}!`;
-      setPaySuccessMsg(`Paid $${amount.toLocaleString()} Cash to @${target}!`);
+      finalMessage = `💸 [TRANSFER] @${user.minecraftIgn} paid ${formatCash(amount)} Cash to @${target}!`;
+      setPaySuccessMsg(`Paid ${formatCash(amount)} Cash to @${target}!`);
       setTimeout(() => setPaySuccessMsg(null), 4000);
     }
 
@@ -406,7 +407,7 @@ export default function CommunityChat({ isOpen: propIsOpen, onToggle: propOnTogg
                   </button>
                   <span className="text-neutral-400">sent</span>
                   <span className="font-mono font-black text-emerald-400">
-                    ${msg.paymentDetails.amount.toLocaleString()}
+                    {formatCash(msg.paymentDetails.amount)}
                   </span>
                   <span className="text-neutral-400">to</span>
                   <button
@@ -472,7 +473,7 @@ export default function CommunityChat({ isOpen: propIsOpen, onToggle: propOnTogg
         <div className="px-3 py-2 bg-[#090b10] border-t border-emerald-500/20 text-[10px] text-emerald-400 font-mono flex flex-col gap-1.5 shrink-0">
           <div className="flex items-center justify-between">
             <span className="font-bold">Format: <code>/pay @username &lt;amount&gt;</code></span>
-            <span className="text-neutral-400">Balance: ${(user?.balance || 0).toLocaleString()}</span>
+            <span className="text-neutral-400">Balance: {formatCash(user?.balance || 0)}</span>
           </div>
           <div className="flex items-center gap-1 flex-wrap">
             <span className="text-neutral-500 font-sans text-[9px] uppercase font-bold mr-1">Quick Select:</span>

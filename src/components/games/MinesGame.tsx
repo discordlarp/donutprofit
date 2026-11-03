@@ -5,6 +5,7 @@ import { useGame } from '@/context/GameContext';
 import { Bomb, Gem, Coins, AlertCircle } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { sound } from '@/lib/sound';
+import { formatCash } from '@/lib/format';
 
 interface TileState {
   revealed: boolean;
@@ -168,7 +169,7 @@ export default function MinesGame() {
           <div className="flex items-center gap-3 bg-[#0b0c10] border border-orange-500/30 px-3 py-1.5 rounded-xl">
             <span className="text-xs font-bold text-neutral-400">Current Payout:</span>
             <span className="text-amber-400 font-extrabold font-mono text-sm">
-              ${(betAmount * currentMultiplier).toFixed(1)} ({currentMultiplier}x)
+              {formatCash(betAmount * currentMultiplier)} ({currentMultiplier}x)
             </span>
           </div>
         )}
@@ -255,7 +256,7 @@ export default function MinesGame() {
                   : 'bg-neutral-800 text-neutral-500 cursor-not-allowed'
               }`}
             >
-              {revealedCount > 0 ? `CASHOUT ${(betAmount * currentMultiplier).toFixed(1)} CASH` : 'PICK A TILE FIRST'}
+              {revealedCount > 0 ? `CASHOUT ${formatCash(betAmount * currentMultiplier)} CASH` : 'PICK A TILE FIRST'}
             </button>
           ) : (
             <button
@@ -322,7 +323,7 @@ export default function MinesGame() {
             <div className="mt-4 text-center">
               {isWin ? (
                 <p className="text-emerald-400 font-extrabold text-sm">
-                  🎉 CASHOUT SUCCESSFUL! +{(betAmount * currentMultiplier).toFixed(1)} CASH
+                  🎉 CASHOUT SUCCESSFUL! {formatCash(betAmount * currentMultiplier, { showPlus: true })} CASH
                 </p>
               ) : (
                 <p className="text-red-400 font-extrabold text-sm">

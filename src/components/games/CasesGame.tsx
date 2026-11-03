@@ -5,6 +5,7 @@ import { useGame } from '@/context/GameContext';
 import { Box, Coins, AlertCircle, Sparkles } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { sound } from '@/lib/sound';
+import { formatCash } from '@/lib/format';
 
 interface LootItem {
   id: string;
@@ -314,7 +315,7 @@ export default function CasesGame() {
           <div className="text-right">
             <span className="text-xs text-neutral-400 font-bold block">PAYOUT</span>
             <span className={`text-base font-black font-mono ${unboxedItem.mult >= 1.0 ? 'text-emerald-400' : 'text-red-400'}`}>
-              {unboxedItem.mult >= 1.0 ? `+$${(unboxedItem.mult * betAmount).toFixed(1)} (${unboxedItem.mult}x)` : '0.00x'}
+              {unboxedItem.mult >= 1.0 ? `${formatCash(unboxedItem.mult * betAmount, { showPlus: true })} (${unboxedItem.mult}x)` : '0.00x'}
             </span>
           </div>
         </div>

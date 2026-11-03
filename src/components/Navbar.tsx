@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useGame } from '@/context/GameContext';
 import { getVipProgress } from '@/lib/vip';
+import { formatCash } from '@/lib/format';
 import AuthModal from '@/components/AuthModal';
 import DonutLogo from '@/components/DonutLogo';
 import { 
@@ -226,7 +227,7 @@ export default function Navbar({ onToggleChat: propOnToggle, isChatOpen: propIsO
                       Cash
                     </span>
                     <span className="text-xs sm:text-sm font-black text-emerald-400 font-mono truncate">
-                      ${user.balance.toLocaleString()}
+                      {formatCash(user.balance)}
                     </span>
                   </div>
 

@@ -18,6 +18,7 @@ import {
   Lock,
   LogOut
 } from 'lucide-react';
+import { formatCash } from '@/lib/format';
 
 export default function AdminPage() {
   const { 
@@ -450,7 +451,7 @@ export default function AdminPage() {
                   </div>
 
                   <div className="flex items-center gap-2 shrink-0">
-                    <span className="font-mono font-bold text-amber-400 mr-1">${u.balance.toLocaleString()}</span>
+                    <span className="font-mono font-bold text-amber-400 mr-1">{formatCash(u.balance)}</span>
                     <button
                       onClick={() => { setSupplyTargetId(u.id); }}
                       className="text-xs bg-orange-500/20 hover:bg-orange-500/30 text-orange-300 px-2 py-1 rounded font-bold transition"
@@ -499,7 +500,7 @@ export default function AdminPage() {
                   >
                     <option value="">Select player to supply...</option>
                     {users.map(u => (
-                      <option key={u.id} value={u.id}>{u.minecraftIgn} (${u.balance.toLocaleString()})</option>
+                      <option key={u.id} value={u.id}>{u.minecraftIgn} ({formatCash(u.balance)})</option>
                     ))}
                   </select>
                 </div>
@@ -633,10 +634,10 @@ export default function AdminPage() {
                         <span>{d.minecraftIgn}</span>
                       </td>
                       <td className="py-3 px-3 text-emerald-400 font-bold">
-                        ${d.amountInGame.toLocaleString()}
+                        {formatCash(d.amountInGame)}
                       </td>
                       <td className="py-3 px-3 text-amber-400 font-bold">
-                        +${d.amountCoins.toLocaleString()}
+                        {formatCash(d.amountCoins, { showPlus: true })}
                       </td>
                       <td className="py-3 px-3 font-sans text-neutral-400 text-[11px] max-w-[200px] truncate">
                         {d.transactionProof || 'Standard in-game /pay'}
@@ -712,7 +713,7 @@ export default function AdminPage() {
                         />
                         <span>{w.minecraftIgn}</span>
                       </td>
-                      <td className="py-3 px-3 text-amber-400 font-bold">${w.amountCoins.toLocaleString()}</td>
+                      <td className="py-3 px-3 text-amber-400 font-bold">{formatCash(w.amountCoins)}</td>
                       <td className="py-3 px-3 text-emerald-400 font-bold">
                         /pay {w.minecraftIgn} {w.amountInGame.toLocaleString()}
                       </td>

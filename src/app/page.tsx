@@ -133,7 +133,7 @@ export default function HomePage() {
                   Invited by <span className="text-amber-400 font-mono font-black">{activeReferrer}</span>!
                 </h4>
                 <p className="text-xs text-neutral-300">
-                  Deposit at least $10,000,000 in-game on Donut SMP to unlock a bonus <strong className="text-amber-300">$20,000,000 Cash</strong> for both of you!
+                  Deposit at least $10M in-game on Donut SMP to unlock a bonus <strong className="text-amber-300">$20M Cash</strong> for both of you!
                 </p>
               </div>
             </div>
@@ -141,7 +141,7 @@ export default function HomePage() {
               onClick={() => setIsModalOpen(true)}
               className="shrink-0 px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-400 text-black font-black text-xs uppercase tracking-wider shadow-lg hover:scale-105 transition cursor-pointer"
             >
-              CLAIM $20,000,000 BONUS
+              CLAIM $20M BONUS
             </button>
           </div>
         )}
