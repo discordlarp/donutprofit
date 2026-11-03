@@ -59,6 +59,7 @@ interface GameContextType {
   activeReferrer: string | null;
   getReferralLink: () => string;
   claimReferralCode: (code: string) => { success: boolean; message: string };
+  updateReferrer: (referrer: string | null) => boolean;
   claimInstant10MEventBonus: () => boolean;
   verifyMinecraftPayment: (ign: string, amount: number, proof?: string) => { success: boolean; message: string };
   transferCoins: (targetIgn: string, amount: number) => { success: boolean; message: string; transferId?: string };
@@ -1832,6 +1833,31 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     return true;
   };
 
+  const updateReferrer = (newRef: string | null) => {
+    const clean = newRef ? newRef.trim().replace(/^@/, '') : undefined;
+    if (currentUser) {
+      const updated: UserProfile = {
+        ...currentUser,
+        referredBy: clean,
+      };
+      setCurrentUser(updated);
+      setUsers(prev => prev.map(u => u.id === updated.id ? updated : u));
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('donutprofit_user', JSON.stringify(updated));
+        localStorage.setItem('donutprofit_current_user', JSON.stringify(updated));
+      }
+    }
+    if (typeof window !== 'undefined') {
+      if (clean) {
+        localStorage.setItem('donutprofit_active_referrer', clean);
+      } else {
+        localStorage.removeItem('donutprofit_active_referrer');
+      }
+    }
+    setActiveReferrer(clean || null);
+    return true;
+  };
+
   return (
     <GameContext.Provider value={{
       activeGame,
@@ -1847,6 +1873,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       activeReferrer,
       getReferralLink,
       claimReferralCode,
+      updateReferrer,
       claimInstant10MEventBonus,
       verifyMinecraftPayment,
       loginWithMinecraft,

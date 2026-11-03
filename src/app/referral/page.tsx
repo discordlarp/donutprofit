@@ -18,7 +18,7 @@ import confetti from 'canvas-confetti';
 import { sound } from '@/lib/sound';
 
 export default function ReferralPage() {
-  const { user, users } = useGame();
+  const { user, users, updateReferrer } = useGame();
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
@@ -26,6 +26,33 @@ export default function ReferralPage() {
   const [savedCustomCode, setSavedCustomCode] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [showTiersModal, setShowTiersModal] = useState(false);
+
+  // Referrer state
+  const [currentReferrer, setCurrentReferrer] = useState<string>('.jsjefferyeps');
+  const [changesLeft, setChangesLeft] = useState<number>(2);
+  const [newReferrerInput, setNewReferrerInput] = useState<string>('');
+  const [referrerMsg, setReferrerMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  // Load referrer and changes count
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const userKey = user?.id || 'guest';
+      const storedRef = localStorage.getItem(`donutprofit_referrer_${userKey}`);
+      if (storedRef !== null) {
+        setCurrentReferrer(storedRef);
+      } else if (user?.referredBy) {
+        setCurrentReferrer(user.referredBy);
+      } else {
+        setCurrentReferrer('.jsjefferyeps');
+      }
+
+      const storedChanges = localStorage.getItem(`donutprofit_ref_changes_${userKey}`);
+      if (storedChanges !== null) {
+        const parsed = parseInt(storedChanges, 10);
+        if (!isNaN(parsed)) setChangesLeft(parsed);
+      }
+    }
+  }, [user?.id, user?.referredBy]);
 
   // Load custom referral code if saved previously
   useEffect(() => {
@@ -89,6 +116,82 @@ export default function ReferralPage() {
     setSaveSuccess(true);
     sound.playWin();
     setTimeout(() => setSaveSuccess(false), 3000);
+  };
+
+  const handleChangeReferrer = (e: React.FormEvent) => {
+    e.preventDefault();
+    setReferrerMsg(null);
+
+    if (changesLeft <= 0) {
+      setReferrerMsg({ type: 'error', text: 'No changes left. Staff can change it through a ticket.' });
+      return;
+    }
+
+    const clean = newReferrerInput.trim().replace(/^@/, '');
+    if (!clean) {
+      setReferrerMsg({ type: 'error', text: 'Please enter a valid referral code or username.' });
+      return;
+    }
+
+    if (clean.toLowerCase() === currentReferrer.toLowerCase()) {
+      setReferrerMsg({ type: 'error', text: 'You are already linked to this referrer.' });
+      return;
+    }
+
+    if (user && (clean.toLowerCase() === user.minecraftIgn.toLowerCase() || clean.toLowerCase() === user.username.toLowerCase())) {
+      setReferrerMsg({ type: 'error', text: 'You cannot refer yourself!' });
+      return;
+    }
+
+    const nextChanges = Math.max(0, changesLeft - 1);
+    setChangesLeft(nextChanges);
+    setCurrentReferrer(clean);
+    setNewReferrerInput('');
+    setReferrerMsg({ type: 'success', text: `Referrer updated to ${clean}!` });
+
+    if (typeof window !== 'undefined') {
+      const userKey = user?.id || 'guest';
+      localStorage.setItem(`donutprofit_referrer_${userKey}`, clean);
+      localStorage.setItem(`donutprofit_ref_changes_${userKey}`, nextChanges.toString());
+    }
+
+    if (updateReferrer) {
+      updateReferrer(clean);
+    }
+
+    sound.playWin();
+    confetti({ particleCount: 70, spread: 60 });
+    setTimeout(() => setReferrerMsg(null), 4000);
+  };
+
+  const handleRemoveReferrer = () => {
+    setReferrerMsg(null);
+    if (changesLeft <= 0) {
+      setReferrerMsg({ type: 'error', text: 'No changes left. Staff can change it through a ticket.' });
+      return;
+    }
+
+    if (!currentReferrer || currentReferrer === 'None') {
+      setReferrerMsg({ type: 'error', text: 'You currently have no referrer linked.' });
+      return;
+    }
+
+    const nextChanges = Math.max(0, changesLeft - 1);
+    setChangesLeft(nextChanges);
+    setCurrentReferrer('None');
+    setReferrerMsg({ type: 'success', text: 'Referrer removed.' });
+
+    if (typeof window !== 'undefined') {
+      const userKey = user?.id || 'guest';
+      localStorage.setItem(`donutprofit_referrer_${userKey}`, 'None');
+      localStorage.setItem(`donutprofit_ref_changes_${userKey}`, nextChanges.toString());
+    }
+
+    if (updateReferrer) {
+      updateReferrer(null);
+    }
+
+    setTimeout(() => setReferrerMsg(null), 4000);
   };
 
   const referralCount = user?.referralCount || 0;
@@ -365,6 +468,96 @@ export default function ReferralPage() {
           >
             VIEW TIERS
           </button>
+        </div>
+      </div>
+
+      {/* 4. YOUR REFERRER SECTION */}
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center gap-2">
+          <h3 className="text-sm font-black text-white uppercase tracking-wider font-mono">
+            YOUR REFERRER
+          </h3>
+          <span className="text-xs font-medium text-neutral-400">
+            The code you joined with.
+          </span>
+        </div>
+
+        <div className="rounded-2xl border border-[#1b2644] bg-[#0c1222] p-6 sm:p-7 shadow-xl">
+          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-6">
+            {/* Left Column: REFERRED BY & Status */}
+            <div className="flex flex-col">
+              <span className="text-[10px] font-black uppercase tracking-wider text-neutral-400 font-mono mb-2 block">
+                REFERRED BY
+              </span>
+
+              {/* Referrer Avatar & Name */}
+              <div className="flex items-center gap-2.5">
+                {/* Minecraft Avatar Head */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={`https://mc-heads.net/avatar/${encodeURIComponent(currentReferrer !== 'None' ? currentReferrer : 'steve')}/32`}
+                  alt={currentReferrer}
+                  className="w-6 h-6 rounded-md bg-neutral-900 border border-white/10 shrink-0 object-cover"
+                  onError={(e) => {
+                    (e.target as HTMLElement).style.opacity = '0';
+                  }}
+                />
+                <span className="font-black text-white text-base sm:text-lg font-mono tracking-wide">
+                  {currentReferrer}
+                </span>
+              </div>
+
+              {/* Changes Left */}
+              <span className="text-xs text-neutral-400 font-medium mt-2 block">
+                {changesLeft} {changesLeft === 1 ? 'change' : 'changes'} left.
+              </span>
+
+              {/* Remove my referrer link */}
+              <button
+                type="button"
+                onClick={handleRemoveReferrer}
+                disabled={changesLeft <= 0 || currentReferrer === 'None'}
+                className="text-xs font-bold text-blue-400 hover:text-blue-300 hover:underline disabled:opacity-40 disabled:hover:no-underline disabled:cursor-not-allowed transition cursor-pointer text-left mt-1 w-fit"
+              >
+                Remove my referrer
+              </button>
+            </div>
+
+            {/* Right Column: Input & CHANGE Button */}
+            <form onSubmit={handleChangeReferrer} className="flex items-center gap-2 w-full sm:w-auto">
+              <input
+                type="text"
+                value={newReferrerInput}
+                onChange={(e) => setNewReferrerInput(e.target.value)}
+                placeholder="New code"
+                maxLength={24}
+                disabled={changesLeft <= 0}
+                className="flex-1 sm:w-60 bg-[#070b15] border border-[#1a233c] rounded-xl px-4 py-3 text-xs text-white placeholder-neutral-500 font-mono outline-none focus:border-blue-500 transition shadow-inner disabled:opacity-50"
+              />
+              <button
+                type="submit"
+                disabled={!newReferrerInput.trim() || changesLeft <= 0}
+                className="px-6 py-3 rounded-xl bg-[#2563eb] hover:bg-[#1d4ed8] disabled:opacity-40 disabled:cursor-not-allowed text-white font-black text-xs uppercase tracking-wider transition cursor-pointer active:scale-95 shadow-md shadow-blue-500/20 shrink-0"
+              >
+                CHANGE
+              </button>
+            </form>
+          </div>
+
+          {referrerMsg && (
+            <div className={`mt-4 px-3 py-2 rounded-xl text-xs font-bold ${
+              referrerMsg.type === 'success' 
+                ? 'bg-emerald-950/60 border border-emerald-500/30 text-emerald-300' 
+                : 'bg-rose-950/60 border border-rose-500/30 text-rose-300'
+            }`}>
+              {referrerMsg.text}
+            </div>
+          )}
+
+          {/* Bottom Information Text */}
+          <p className="text-xs text-neutral-400 font-medium leading-relaxed mt-6 max-w-3xl">
+            You can change or remove your referrer twice: the first time a week after you apply a code, the second time two weeks after that. After that, staff can change it through a ticket.
+          </p>
         </div>
       </div>
 
