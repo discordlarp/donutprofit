@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { useGame } from '@/context/GameContext';
 import { 
@@ -13,7 +13,9 @@ import {
   Coins,
   CheckCircle2,
   AlertCircle,
-  Lock
+  Lock,
+  AtSign,
+  Users
 } from 'lucide-react';
 import { ChatMessage } from '@/types';
 import confetti from 'canvas-confetti';
@@ -80,15 +82,20 @@ function parsePayInput(cmdText: string): { target: string; amount: number } | { 
 }
 
 export default function CommunityChat({ isOpen: propIsOpen, onToggle: propOnToggle }: CommunityChatProps = {}) {
-  const { user, deposits, transferCoins, isChatOpen, toggleChat } = useGame();
+  const { user, users, deposits, transferCoins, isChatOpen, toggleChat } = useGame();
   const isOpen = propIsOpen !== undefined ? propIsOpen : isChatOpen;
   const onToggle = propOnToggle || toggleChat;
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputText, setInputText] = useState('');
+  const [cursorPos, setCursorPos] = useState<number>(0);
   const [isSending, setIsSending] = useState(false);
   const [payError, setPayError] = useState<string | null>(null);
   const [paySuccessMsg, setPaySuccessMsg] = useState<string | null>(null);
   const [selectedPlayer, setSelectedPlayer] = useState<string | null>(null);
+  const [selectedMentionIndex, setSelectedMentionIndex] = useState<number>(0);
+  const [isMentionDismissed, setIsMentionDismissed] = useState<boolean>(false);
+
+  const mentionListRef = useRef<HTMLDivElement>(null);
 
   // Require at least 10M deposited in-game to chat
   const isStaff = Boolean(
@@ -121,6 +128,176 @@ export default function CommunityChat({ isOpen: propIsOpen, onToggle: propOnTogg
   const inputRef = useRef<HTMLInputElement>(null);
   const broadcastRef = useRef<BroadcastChannel | null>(null);
 
+  // Compile list of unique players across the website
+  const allKnownPlayers = useMemo(() => {
+    const map = new Map<string, { ign: string; isOwner: boolean; isStaff: boolean }>();
+
+    // 1. Default core community players
+    const defaults = [
+      { ign: 'cartisneakz', isOwner: true, isStaff: true },
+      { ign: 'xynfnagsss', isOwner: false, isStaff: true },
+      { ign: 'gangsterjew7', isOwner: false, isStaff: true },
+      { ign: 'DonutKing_99', isOwner: false, isStaff: false },
+      { ign: 'Glazed_PvP', isOwner: false, isStaff: false },
+      { ign: 'clckler', isOwner: false, isStaff: false },
+      { ign: 'KiNGXZO', isOwner: false, isStaff: false },
+      { ign: 'iopros', isOwner: false, isStaff: false },
+      { ign: 'Wamp', isOwner: false, isStaff: false },
+    ];
+    defaults.forEach((p) => map.set(p.ign.toLowerCase(), p));
+
+    // 2. Known registered users
+    (users || []).forEach((u) => {
+      const ign = (u.minecraftIgn || u.username || '').trim().replace(/^@/, '');
+      if (ign && !map.has(ign.toLowerCase())) {
+        const isOwner = ign.toLowerCase() === 'cartisneakz';
+        const isStaffMember = isOwner || u.role === 'admin' || ign.toLowerCase() === 'xynfnagsss' || ign.toLowerCase() === 'gangsterjew7';
+        map.set(ign.toLowerCase(), { ign, isOwner, isStaff: isStaffMember });
+      }
+    });
+
+    // 3. Players who sent messages in the live chat
+    (messages || []).forEach((m) => {
+      const ign = (m.minecraftIgn || m.username || '').trim().replace(/^@/, '');
+      if (ign && ign !== 'DonutBot' && ign !== 'SYSTEM' && !map.has(ign.toLowerCase())) {
+        const isOwner = ign.toLowerCase() === 'cartisneakz';
+        const isStaffMember = isOwner || Boolean(m.isStaff) || ign.toLowerCase() === 'xynfnagsss' || ign.toLowerCase() === 'gangsterjew7';
+        map.set(ign.toLowerCase(), { ign, isOwner, isStaff: isStaffMember });
+      }
+    });
+
+    return Array.from(map.values());
+  }, [users, messages]);
+
+  // Match current @query before the cursor
+  const mentionMatch = useMemo(() => {
+    const textBefore = inputText.slice(0, cursorPos);
+    const match = textBefore.match(/(?:^|\s)@([a-zA-Z0-9_.]*)$/);
+    if (!match) return null;
+    return {
+      query: match[1],
+      atIndex: textBefore.lastIndexOf('@'),
+    };
+  }, [inputText, cursorPos]);
+
+  // Filter players according to query
+  const filteredPlayers = useMemo(() => {
+    if (!mentionMatch) return [];
+    const q = mentionMatch.query.toLowerCase();
+    return allKnownPlayers
+      .filter((p) => {
+        if (!q) return true;
+        return p.ign.toLowerCase().includes(q);
+      })
+      .sort((a, b) => {
+        const aStarts = a.ign.toLowerCase().startsWith(q);
+        const bStarts = b.ign.toLowerCase().startsWith(q);
+        if (aStarts && !bStarts) return -1;
+        if (!aStarts && bStarts) return 1;
+        if (a.isOwner && !b.isOwner) return -1;
+        if (!a.isOwner && b.isOwner) return 1;
+        if (a.isStaff && !b.isStaff) return -1;
+        if (!a.isStaff && b.isStaff) return 1;
+        return a.ign.localeCompare(b.ign);
+      })
+      .slice(0, 8);
+  }, [mentionMatch, allKnownPlayers]);
+
+  const isMentionOpen = Boolean(!isMentionDismissed && mentionMatch && filteredPlayers.length > 0);
+  const activeIndex = Math.min(selectedMentionIndex, Math.max(0, filteredPlayers.length - 1));
+
+  // Auto-scroll mention list when navigating with arrow keys
+  useEffect(() => {
+    if (isMentionOpen && mentionListRef.current) {
+      const items = mentionListRef.current.children;
+      if (items[activeIndex]) {
+        (items[activeIndex] as HTMLElement).scrollIntoView({
+          block: 'nearest',
+        });
+      }
+    }
+  }, [activeIndex, isMentionOpen]);
+
+  // Dismiss mention list on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        inputRef.current && 
+        !inputRef.current.contains(e.target as Node) &&
+        mentionListRef.current &&
+        !mentionListRef.current.contains(e.target as Node)
+      ) {
+        setIsMentionDismissed(true);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const updateCursorPos = () => {
+    if (inputRef.current) {
+      setCursorPos(inputRef.current.selectionStart ?? inputText.length);
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setInputText(val);
+    setCursorPos(e.target.selectionStart ?? val.length);
+    setIsMentionDismissed(false);
+    setSelectedMentionIndex(0);
+  };
+
+  const insertMention = (selectedIgn: string) => {
+    const textBefore = inputText.slice(0, cursorPos);
+    const afterCursor = inputText.slice(cursorPos);
+    const atIndex = textBefore.lastIndexOf('@');
+
+    if (atIndex !== -1) {
+      const textBeforeAt = inputText.slice(0, atIndex);
+      const newText = `${textBeforeAt}@${selectedIgn} ${afterCursor}`;
+      setInputText(newText);
+
+      const newCursorPos = atIndex + selectedIgn.length + 2;
+      setCursorPos(newCursorPos);
+      setTimeout(() => {
+        if (inputRef.current) {
+          inputRef.current.focus();
+          inputRef.current.setSelectionRange(newCursorPos, newCursorPos);
+        }
+      }, 0);
+    }
+    setIsMentionDismissed(true);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (isMentionOpen && filteredPlayers.length > 0) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setSelectedMentionIndex((prev) => (prev + 1) % filteredPlayers.length);
+        return;
+      }
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setSelectedMentionIndex((prev) => (prev - 1 + filteredPlayers.length) % filteredPlayers.length);
+        return;
+      }
+      if (e.key === 'Enter' || e.key === 'Tab') {
+        e.preventDefault();
+        const chosen = filteredPlayers[activeIndex];
+        if (chosen) {
+          insertMention(chosen.ign);
+        }
+        return;
+      }
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setIsMentionDismissed(true);
+        return;
+      }
+    }
+  };
+
   // Monitor user scroll position: if user scrolls up, do NOT yank them down!
   const handleScroll = () => {
     const el = chatContainerRef.current;
@@ -143,6 +320,8 @@ export default function CommunityChat({ isOpen: propIsOpen, onToggle: propOnTogg
       const trimmed = prev.trim();
       return trimmed ? `${trimmed} @${clean} ` : `@${clean} `;
     });
+    setCursorPos((prev) => prev + clean.length + 3);
+    setIsMentionDismissed(true);
     inputRef.current?.focus();
   };
 
@@ -265,6 +444,8 @@ export default function CommunityChat({ isOpen: propIsOpen, onToggle: propOnTogg
     }
 
     setInputText('');
+    setCursorPos(0);
+    setIsMentionDismissed(true);
 
     try {
       const res = await fetch('/api/chat', {
@@ -574,12 +755,89 @@ export default function CommunityChat({ isOpen: propIsOpen, onToggle: propOnTogg
           </Link>
         ) : (
           <div className="relative flex items-center">
+            {/* Mention Dropdown Autocomplete */}
+            {isMentionOpen && (
+              <div 
+                className="absolute bottom-full left-0 right-0 mb-2 z-50 bg-[#0d101a] border border-[#1e2638] rounded-2xl shadow-2xl shadow-black/90 overflow-hidden backdrop-blur-xl animate-in fade-in slide-in-from-bottom-2 duration-150"
+              >
+                <div className="px-3 py-2 bg-[#121624] border-b border-white/5 flex items-center justify-between text-[10px] font-bold text-neutral-400">
+                  <div className="flex items-center gap-1.5 text-emerald-400">
+                    <AtSign className="w-3.5 h-3.5" />
+                    <span className="uppercase tracking-wider font-black">Mention Player</span>
+                  </div>
+                  <span className="text-neutral-500 text-[10px] font-mono">
+                    ↑↓ navigate • ↵ or Tab to select
+                  </span>
+                </div>
+
+                <div 
+                  ref={mentionListRef}
+                  className="max-h-56 overflow-y-auto p-1.5 space-y-1 divide-y divide-white/[0.02]"
+                >
+                  {filteredPlayers.map((player, idx) => {
+                    const isSelected = idx === activeIndex;
+                    return (
+                      <button
+                        key={player.ign}
+                        type="button"
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          insertMention(player.ign);
+                        }}
+                        onMouseEnter={() => setSelectedMentionIndex(idx)}
+                        className={`w-full px-2.5 py-2 rounded-xl flex items-center justify-between transition cursor-pointer text-left ${
+                          isSelected 
+                            ? 'bg-emerald-500/20 text-white border border-emerald-500/30 shadow-sm' 
+                            : 'hover:bg-white/5 text-neutral-300 border border-transparent'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={`https://mc-heads.net/avatar/${encodeURIComponent(player.ign)}/32`}
+                            alt={player.ign}
+                            className="w-6 h-6 rounded-lg bg-neutral-900 border border-white/10 shrink-0 object-cover"
+                            onError={(e) => {
+                              (e.target as HTMLElement).style.opacity = '0';
+                            }}
+                          />
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <span className="font-bold text-xs truncate text-white">
+                              {player.ign}
+                            </span>
+                            {player.isOwner && (
+                              <span className="px-1.5 py-0.2 rounded text-[8px] font-black uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                                OWNER
+                              </span>
+                            )}
+                            {!player.isOwner && player.isStaff && (
+                              <span className="px-1.5 py-0.2 rounded text-[8px] font-black uppercase tracking-wider bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                                STAFF
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        <span className="text-[11px] font-mono font-bold text-emerald-400 shrink-0 ml-2">
+                          @{player.ign}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             <input
               ref={inputRef}
               type="text"
               placeholder="Type a message or /pay @player 10M..."
               value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
+              onChange={handleInputChange}
+              onKeyDown={handleKeyDown}
+              onClick={updateCursorPos}
+              onKeyUp={updateCursorPos}
+              onSelect={updateCursorPos}
               className="w-full bg-[#0b0c10] border border-white/10 rounded-xl py-2.5 pl-3 pr-10 text-xs text-white placeholder-neutral-500 outline-none focus:border-emerald-500 transition"
             />
             <button
