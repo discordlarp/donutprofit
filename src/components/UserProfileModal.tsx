@@ -206,11 +206,31 @@ export default function UserProfileModal({
   return createPortal(
     <div 
       onClick={onClose}
-      className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-in fade-in duration-200"
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        width: '100vw',
+        height: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 99999,
+        backgroundColor: 'rgba(0, 0, 0, 0.75)',
+        backdropFilter: 'blur(8px)',
+      }}
+      className="p-4 animate-in fade-in duration-200"
     >
       <div 
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-md bg-[#0a0f1d] border border-[#1b2644] rounded-3xl p-6 shadow-2xl overflow-hidden select-none"
+        style={{
+          maxWidth: '460px',
+          width: '100%',
+          margin: '0 auto',
+        }}
+        className="relative bg-[#0a0f1d] border border-[#1b2644] rounded-3xl p-6 shadow-2xl overflow-hidden select-none"
       >
         {/* Emerald Ambient Glow at top center */}
         <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-64 h-44 bg-emerald-500/25 rounded-full blur-3xl pointer-events-none" />
@@ -293,27 +313,27 @@ export default function UserProfileModal({
         </div>
 
         {/* 4 Stats Cards Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
+        <div className="grid grid-cols-4 gap-2 mb-4">
           {/* Card 1: Total played */}
-          <div className="bg-[#10172a] border border-[#1c2949] rounded-2xl p-3 flex flex-col justify-between min-h-[78px]">
-            <span className="text-[11px] font-bold text-neutral-400">Total played</span>
-            <div className="flex items-center gap-1.5 my-1">
-              <span className="text-xs">🪙</span>
-              <span className="font-mono font-black text-white text-sm truncate">
+          <div className="bg-[#10172a] border border-[#1c2949] rounded-2xl p-2.5 flex flex-col justify-between min-h-[78px]">
+            <span className="text-[10px] sm:text-[11px] font-bold text-neutral-400 whitespace-nowrap">Total played</span>
+            <div className="flex items-center gap-1 my-1">
+              <span className="text-xs shrink-0">🪙</span>
+              <span className="font-mono font-black text-white text-xs sm:text-sm whitespace-nowrap">
                 {formatCompactNumber(totalWagered).toLowerCase()}
               </span>
             </div>
-            <span className="text-[10px] font-medium text-neutral-500">
+            <span className="text-[9px] sm:text-[10px] font-medium text-neutral-500 whitespace-nowrap">
               {gamesPlayed} bets
             </span>
           </div>
 
           {/* Card 2: Deposited */}
-          <div className="bg-[#10172a] border border-[#1c2949] rounded-2xl p-3 flex flex-col justify-between min-h-[78px]">
-            <span className="text-[11px] font-bold text-neutral-400">Deposited</span>
-            <div className="flex items-center gap-1.5 my-1">
-              <span className="text-xs">🪙</span>
-              <span className="font-mono font-black text-white text-sm truncate">
+          <div className="bg-[#10172a] border border-[#1c2949] rounded-2xl p-2.5 flex flex-col justify-between min-h-[78px]">
+            <span className="text-[10px] sm:text-[11px] font-bold text-neutral-400 whitespace-nowrap">Deposited</span>
+            <div className="flex items-center gap-1 my-1">
+              <span className="text-xs shrink-0">🪙</span>
+              <span className="font-mono font-black text-white text-xs sm:text-sm whitespace-nowrap">
                 {formatCompactNumber(depositedAmount).toLowerCase()}
               </span>
             </div>
@@ -321,11 +341,11 @@ export default function UserProfileModal({
           </div>
 
           {/* Card 3: Withdrawn */}
-          <div className="bg-[#10172a] border border-[#1c2949] rounded-2xl p-3 flex flex-col justify-between min-h-[78px]">
-            <span className="text-[11px] font-bold text-neutral-400">Withdrawn</span>
-            <div className="flex items-center gap-1.5 my-1">
-              <span className="text-xs">🪙</span>
-              <span className="font-mono font-black text-white text-sm truncate">
+          <div className="bg-[#10172a] border border-[#1c2949] rounded-2xl p-2.5 flex flex-col justify-between min-h-[78px]">
+            <span className="text-[10px] sm:text-[11px] font-bold text-neutral-400 whitespace-nowrap">Withdrawn</span>
+            <div className="flex items-center gap-1 my-1">
+              <span className="text-xs shrink-0">🪙</span>
+              <span className="font-mono font-black text-white text-xs sm:text-sm whitespace-nowrap">
                 {formatCompactNumber(withdrawnAmount).toLowerCase()}
               </span>
             </div>
@@ -333,11 +353,11 @@ export default function UserProfileModal({
           </div>
 
           {/* Card 4: Profit */}
-          <div className="bg-[#10172a] border border-[#1c2949] rounded-2xl p-3 flex flex-col justify-between min-h-[78px]">
-            <span className="text-[11px] font-bold text-neutral-400">Profit</span>
-            <div className="flex items-center gap-1.5 my-1">
-              <span className="text-xs">🪙</span>
-              <span className={`font-mono font-black text-sm truncate ${netProfit >= 0 ? 'text-emerald-400' : 'text-amber-400'}`}>
+          <div className="bg-[#10172a] border border-[#1c2949] rounded-2xl p-2.5 flex flex-col justify-between min-h-[78px]">
+            <span className="text-[10px] sm:text-[11px] font-bold text-neutral-400 whitespace-nowrap">Profit</span>
+            <div className="flex items-center gap-1 my-1">
+              <span className="text-xs shrink-0">🪙</span>
+              <span className={`font-mono font-black text-xs sm:text-sm whitespace-nowrap ${netProfit >= 0 ? 'text-emerald-400' : 'text-amber-400'}`}>
                 {netProfit < 0 ? '-' : ''}{formatCompactNumber(Math.abs(netProfit)).toLowerCase()}
               </span>
             </div>
