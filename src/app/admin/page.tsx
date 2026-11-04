@@ -51,6 +51,11 @@ export default function AdminPage() {
   const [userSearch, setUserSearch] = useState<string>('');
   const [memberLogs, setMemberLogs] = useState<any[]>([]);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+  const [isMounted, setIsMounted] = useState<boolean>(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const fetchServerLogs = useCallback(async () => {
     setIsRefreshing(true);
@@ -93,79 +98,72 @@ export default function AdminPage() {
   const [banSuccess, setBanSuccess] = useState<string>('');
 
   // Settings form
-  const [cfgIgn, setCfgIgn] = useState<string>(settings.designatedIgn);
-  const [cfgRate, setCfgRate] = useState<number>(settings.exchangeRate);
-  const [cfgMinDep, setCfgMinDep] = useState<number>(settings.minDeposit);
+  const [cfgIgn, setCfgIgn] = useState<string>(settings?.designatedIgn || 'cartisneakz');
+  const [cfgRate, setCfgRate] = useState<number>(settings?.exchangeRate || 1);
+  const [cfgMinDep, setCfgMinDep] = useState<number>(settings?.minDeposit || 10000);
   const [cfgSaved, setCfgSaved] = useState<boolean>(false);
 
-  // If user is not admin, show password-protected staff gate
-  if (!user || user.role !== 'admin') {
-    const handleStaffLogin = (e: React.FormEvent) => {
-      e.preventDefault();
-      setLoginError('');
-      if (!loginPass) {
-        setLoginError('Please enter your staff password.');
-        return;
+  useEffect(() => {
+    if (settings) {
+      if (settings.designatedIgn) setCfgIgn(settings.designatedIgn);
+      if (settings.exchangeRate) setCfgRate(settings.exchangeRate);
+      if (settings.minDeposit) setCfgMinDep(settings.minDeposit);
+    }
+  }, [settings]);
+
+  // Deduplicate users strictly by Minecraft IGN (case-insensitive) and merge balances
+  const uniqueUsers = React.useMemo(() => {
+    const list = Array.isArray(users) ? users : [];
+    const map = new Map<string, typeof list[0]>();
+    for (const u of list) {
+      if (!u) continue;
+      const key = (u.minecraftIgn || u.username || '').trim().toLowerCase();
+      if (!key) continue;
+      const existing = map.get(key);
+      if (!existing) {
+        map.set(key, u);
+      } else {
+        map.set(key, {
+          ...existing,
+          ...u,
+          balance: Math.max(Number(existing.balance) || 0, Number(u.balance) || 0),
+          totalWagered: Math.max(Number(existing.totalWagered) || 0, Number(u.totalWagered) || 0),
+          totalWon: Math.max(Number(existing.totalWon) || 0, Number(u.totalWon) || 0),
+          gamesPlayed: Math.max(Number(existing.gamesPlayed) || 0, Number(u.gamesPlayed) || 0),
+          isBanned: Boolean(existing.isBanned || u.isBanned),
+          bannedUntil: existing.bannedUntil || u.bannedUntil,
+          banReason: existing.banReason || u.banReason,
+        });
       }
-      const res = signIn(loginEmail, loginPass);
-      if (!res.success) {
-        setLoginError(res.message);
-      }
-    };
+    }
+    return Array.from(map.values());
+  }, [users]);
 
-    return (
-      <div className="max-w-md mx-auto px-4 py-20">
-        <div className="bg-[#12141a] border-2 border-amber-500/40 rounded-3xl p-8 flex flex-col items-center shadow-2xl shadow-amber-500/10">
-          <div className="w-16 h-16 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center mb-4 border border-amber-500/30">
-            <ShieldAlert className="w-8 h-8" />
-          </div>
-          <h2 className="text-xl font-black text-white mb-1 tracking-wide">STAFF PORTAL ACCESS</h2>
-          <p className="text-xs text-neutral-400 mb-6 text-center">
-            Sign in with your designated administrator account and password:
-          </p>
+  const filteredUsers = uniqueUsers.filter(u => {
+    if (!u) return false;
+    const s = (userSearch || '').toLowerCase();
+    const uname = (u.username || '').toLowerCase();
+    const ign = (u.minecraftIgn || '').toLowerCase();
+    const email = (u.email || '').toLowerCase();
+    return uname.includes(s) || ign.includes(s) || email.includes(s);
+  });
 
-          <form onSubmit={handleStaffLogin} className="w-full flex flex-col gap-4 text-xs">
-            {loginError && (
-              <div className="p-3 rounded-xl bg-red-500/20 border border-red-500/40 text-red-400 font-bold">
-                {loginError}
-              </div>
-            )}
+  const pendingDeposits = (Array.isArray(deposits) ? deposits : []).filter(d => d && (d.status === 'pending' || d.status === 'under_review'));
+  const pendingWithdrawals = (Array.isArray(withdrawals) ? withdrawals : []).filter(w => w && w.status === 'pending');
+  const pendingAccountRequests = (Array.isArray(users) ? users : []).filter(u => u && u.accountStatus === 'pending');
 
-            <div>
-              <label className="text-neutral-400 font-bold block mb-1">Staff Account</label>
-              <select
-                value={loginEmail}
-                onChange={(e) => setLoginEmail(e.target.value)}
-                className="w-full bg-[#0b0c10] border border-white/10 rounded-xl p-3 text-white font-bold"
-              >
-                <option value="xynfnagsss@gmail.com">xynfnagsss@gmail.com (Staff Owner)</option>
-                <option value="cartisneakz@donutprofit.online">cartisneakz (Designated IGN / Staff)</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="text-neutral-400 font-bold block mb-1">Staff Master Password</label>
-              <input
-                type="password"
-                placeholder="Enter password..."
-                value={loginPass}
-                onChange={(e) => setLoginPass(e.target.value)}
-                className="w-full bg-[#0b0c10] border border-white/10 rounded-xl p-3 text-white font-mono font-bold focus:border-amber-500/60 focus:outline-none"
-              />
-              <span className="text-[10px] text-neutral-500 mt-1 block">Default: donutprofitadmin21</span>
-            </div>
-
-            <button
-              type="submit"
-              className="w-full mt-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 text-black font-extrabold text-xs py-3.5 rounded-xl shadow-lg transition flex items-center justify-center gap-2 uppercase tracking-wider"
-            >
-              <span>👑 Unlock Staff Portal</span>
-            </button>
-          </form>
-        </div>
-      </div>
-    );
-  }
+  const handleStaffLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoginError('');
+    if (!loginPass) {
+      setLoginError('Please enter your staff password.');
+      return;
+    }
+    const res = signIn(loginEmail, loginPass);
+    if (!res.success) {
+      setLoginError(res.message);
+    }
+  };
 
   const handlePasswordChangeSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -217,39 +215,61 @@ export default function AdminPage() {
     setTimeout(() => setCfgSaved(false), 2000);
   };
 
-  // Deduplicate users strictly by Minecraft IGN (case-insensitive) and merge balances
-  const uniqueUsers = React.useMemo(() => {
-    const map = new Map<string, typeof users[0]>();
-    for (const u of users) {
-      const key = (u.minecraftIgn || u.username || '').trim().toLowerCase();
-      if (!key) continue;
-      const existing = map.get(key);
-      if (!existing) {
-        map.set(key, u);
-      } else {
-        map.set(key, {
-          ...existing,
-          ...u,
-          balance: Math.max(Number(existing.balance) || 0, Number(u.balance) || 0),
-          totalWagered: Math.max(Number(existing.totalWagered) || 0, Number(u.totalWagered) || 0),
-          totalWon: Math.max(Number(existing.totalWon) || 0, Number(u.totalWon) || 0),
-          gamesPlayed: Math.max(Number(existing.gamesPlayed) || 0, Number(u.gamesPlayed) || 0),
-          isBanned: existing.isBanned || u.isBanned,
-        });
-      }
-    }
-    return Array.from(map.values());
-  }, [users]);
+  // If user is not admin, show password-protected staff gate
+  if (!user || user.role !== 'admin') {
+    return (
+      <div className="max-w-md mx-auto px-4 py-20">
+        <div className="bg-[#12141a] border-2 border-amber-500/40 rounded-3xl p-8 flex flex-col items-center shadow-2xl shadow-amber-500/10">
+          <div className="w-16 h-16 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center mb-4 border border-amber-500/30">
+            <ShieldAlert className="w-8 h-8" />
+          </div>
+          <h2 className="text-xl font-black text-white mb-1 tracking-wide">STAFF PORTAL ACCESS</h2>
+          <p className="text-xs text-neutral-400 mb-6 text-center">
+            Sign in with your designated administrator account and password:
+          </p>
 
-  const filteredUsers = uniqueUsers.filter(u => 
-    u.username.toLowerCase().includes(userSearch.toLowerCase()) || 
-    u.minecraftIgn.toLowerCase().includes(userSearch.toLowerCase()) ||
-    (u.email && u.email.toLowerCase().includes(userSearch.toLowerCase()))
-  );
+          <form onSubmit={handleStaffLogin} className="w-full flex flex-col gap-4 text-xs">
+            {loginError && (
+              <div className="p-3 rounded-xl bg-red-500/20 border border-red-500/40 text-red-400 font-bold">
+                {loginError}
+              </div>
+            )}
 
-  const pendingDeposits = deposits.filter(d => d.status === 'pending' || d.status === 'under_review');
-  const pendingWithdrawals = withdrawals.filter(w => w.status === 'pending');
-  const pendingAccountRequests = users.filter(u => u.accountStatus === 'pending');
+            <div>
+              <label className="text-neutral-400 font-bold block mb-1">Staff Account</label>
+              <select
+                value={loginEmail}
+                onChange={(e) => setLoginEmail(e.target.value)}
+                className="w-full bg-[#0b0c10] border border-white/10 rounded-xl p-3 text-white font-bold"
+              >
+                <option value="xynfnagsss@gmail.com">xynfnagsss@gmail.com (Staff Owner)</option>
+                <option value="cartisneakz@donutprofit.online">cartisneakz (Designated IGN / Staff)</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="text-neutral-400 font-bold block mb-1">Staff Master Password</label>
+              <input
+                type="password"
+                placeholder="Enter password..."
+                value={loginPass}
+                onChange={(e) => setLoginPass(e.target.value)}
+                className="w-full bg-[#0b0c10] border border-white/10 rounded-xl p-3 text-white font-mono font-bold focus:border-amber-500/60 focus:outline-none"
+              />
+              <span className="text-[10px] text-neutral-500 mt-1 block">Default: donutprofitadmin21</span>
+            </div>
+
+            <button
+              type="submit"
+              className="w-full mt-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 text-black font-extrabold text-xs py-3.5 rounded-xl shadow-lg transition flex items-center justify-center gap-2 uppercase tracking-wider cursor-pointer"
+            >
+              <span>👑 Unlock Staff Portal</span>
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
@@ -264,7 +284,7 @@ export default function AdminPage() {
             </span>
           </div>
           <p className="text-xs text-neutral-400 mt-1">
-            Designated deposit IGN: <span className="text-emerald-400 font-bold font-mono">{settings.designatedIgn}</span> &bull; Supply coins, ban players, approve deposits.
+            Designated deposit IGN: <span className="text-emerald-400 font-bold font-mono">{settings?.designatedIgn || 'cartisneakz'}</span> &bull; Supply coins, ban players, approve deposits.
           </p>
         </div>
 
@@ -492,20 +512,20 @@ export default function AdminPage() {
                   <div className="flex items-center gap-3 min-w-0">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src={`https://mc-heads.net/avatar/${u.minecraftIgn}/32`}
-                      alt={u.minecraftIgn}
+                      src={`https://mc-heads.net/avatar/${encodeURIComponent(u.minecraftIgn || u.username || 'steve')}/32`}
+                      alt={u.minecraftIgn || u.username || 'Player'}
                       className="w-8 h-8 rounded-md bg-neutral-800 shrink-0"
                       onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }}
                     />
                     <div className="min-w-0">
                       <div className="flex items-center gap-1.5">
-                        <p className="font-bold text-white truncate">{u.minecraftIgn}</p>
+                        <p className="font-bold text-white truncate">{u.minecraftIgn || u.username || 'Player'}</p>
                         {u.role === 'admin' && (
                           <span className="text-[9px] bg-amber-500/20 text-amber-400 px-1 rounded font-black">ADMIN</span>
                         )}
                         {u.isBanned && (
                           <span className="text-[9px] bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded font-black border border-red-500/30">
-                            {u.bannedUntil && u.bannedUntil > Date.now() ? '24H ANTI-TAMPER BAN' : 'BANNED'}
+                            {isMounted && u.bannedUntil && u.bannedUntil > Date.now() ? '24H ANTI-TAMPER BAN' : 'BANNED'}
                           </span>
                         )}
                       </div>
