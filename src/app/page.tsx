@@ -19,6 +19,7 @@ import HiloGame from '@/components/games/HiloGame';
 import RecentBetsTable from '@/components/RecentBetsTable';
 import AuthModal from '@/components/AuthModal';
 import GameArtwork from '@/components/GameArtwork';
+import RotatingGameShowcase from '@/components/RotatingGameShowcase';
 import { sound } from '@/lib/sound';
 import { 
   Gamepad2,
@@ -152,87 +153,9 @@ export default function HomePage() {
           </div>
         )}
 
-        {/* 1. Bespoke Hero Spotlight Lounge Banner */}
-        <div className="relative w-full rounded-3xl overflow-hidden border border-white/[0.08] bg-gradient-to-br from-[#121424] via-[#0d0f1a] to-[#080912] p-6 sm:p-10 shadow-2xl">
-          {/* Subtle Cyber Grid Background & Ambient Lighting */}
-          <div className="absolute top-0 right-0 w-96 h-96 bg-violet-600/15 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute bottom-0 left-1/4 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute top-1/2 right-1/3 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
-
-          <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
-            <div className="max-w-2xl flex flex-col gap-4">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-violet-500/15 border border-violet-500/30 text-violet-300 text-xs font-black tracking-wider uppercase w-fit">
-                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                <span>Next-Gen Minecraft Gaming Platform</span>
-              </div>
-
-              <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight">
-                THE PREMIER <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 via-cyan-400 to-amber-300">DONUT SMP</span> ARCADE
-              </h1>
-
-              <p className="text-xs sm:text-sm text-neutral-300 leading-relaxed">
-                Play 17 provably fair games including Mines, Crash, Plinko, Coinflip, and Case Battles. Instant in-game delivery, automated payouts, and real-time multiplayer duels.
-              </p>
-
-              <div className="flex flex-wrap items-center gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => handleLaunchGame(activeGame)}
-                  className="px-6 py-3 rounded-2xl bg-gradient-to-r from-violet-600 via-indigo-600 to-violet-600 hover:from-violet-500 hover:to-indigo-500 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-violet-500/25 transition cursor-pointer flex items-center gap-2 active:scale-95"
-                >
-                  <Play className="w-4 h-4 fill-white" />
-                  <span>Launch {activeGameMeta.title}</span>
-                </button>
-
-                <a
-                  href="#game-library"
-                  className="px-5 py-3 rounded-2xl bg-white/5 hover:bg-white/10 text-neutral-200 border border-white/10 font-bold text-xs uppercase tracking-wider transition cursor-pointer flex items-center gap-2"
-                >
-                  <span>Browse 17 Games</span>
-                  <ArrowRight className="w-4 h-4 text-neutral-400" />
-                </a>
-              </div>
-            </div>
-
-            {/* Quick Live Platform Stats Ticker */}
-            <div className="grid grid-cols-2 gap-3 w-full lg:w-auto shrink-0">
-              <div className="p-4 rounded-2xl bg-[#090b14]/80 border border-white/10 flex flex-col gap-1 min-w-[140px]">
-                <div className="flex items-center gap-1.5 text-amber-400 text-xs font-black">
-                  <Coins className="w-4 h-4" />
-                  <span>100% RATIO</span>
-                </div>
-                <span className="text-lg font-black text-white font-mono">$1 = 1 Coin</span>
-                <span className="text-[10px] text-neutral-400">Zero Exchange Fees</span>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-[#090b14]/80 border border-white/10 flex flex-col gap-1 min-w-[140px]">
-                <div className="flex items-center gap-1.5 text-cyan-400 text-xs font-black">
-                  <ShieldCheck className="w-4 h-4" />
-                  <span>SHA-256</span>
-                </div>
-                <span className="text-lg font-black text-white font-mono">Provably Fair</span>
-                <span className="text-[10px] text-neutral-400">Cryptographic Seeds</span>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-[#090b14]/80 border border-white/10 flex flex-col gap-1 min-w-[140px]">
-                <div className="flex items-center gap-1.5 text-violet-400 text-xs font-black">
-                  <Zap className="w-4 h-4" />
-                  <span>INSTANT</span>
-                </div>
-                <span className="text-lg font-black text-white font-mono">In-Game /pay</span>
-                <span className="text-[10px] text-neutral-400">Automated Bot Delivery</span>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-[#090b14]/80 border border-white/10 flex flex-col gap-1 min-w-[140px]">
-                <div className="flex items-center gap-1.5 text-emerald-400 text-xs font-black">
-                  <Users className="w-4 h-4" />
-                  <span>ONLINE</span>
-                </div>
-                <span className="text-lg font-black text-white font-mono">1,400+</span>
-                <span className="text-[10px] text-neutral-400">Community Players</span>
-              </div>
-            </div>
-          </div>
+        {/* 1. Full-Width Sliding Game Showcase Slider */}
+        <div className="w-full">
+          <RotatingGameShowcase onSelectGame={(gameId) => handleLaunchGame(gameId)} />
         </div>
 
         {/* 2. The Pro Cyber Arena Cabinet (The Active Play Centerpiece) */}

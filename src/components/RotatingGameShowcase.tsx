@@ -254,7 +254,7 @@ export default function RotatingGameShowcase({ onSelectGame }: RotatingGameShowc
                     e.stopPropagation();
                     handleSelectGame(slide.id);
                   }}
-                  className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-black text-xs uppercase tracking-wider shadow-xl shadow-emerald-500/40 transition transform active:scale-95 flex items-center gap-2 cursor-pointer"
+                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-violet-600 via-indigo-600 to-violet-600 hover:from-violet-500 hover:to-indigo-500 text-white font-black text-xs uppercase tracking-wider shadow-xl shadow-violet-500/40 transition transform active:scale-95 flex items-center gap-2 cursor-pointer"
                 >
                   <Play className="w-3.5 h-3.5 fill-current" />
                   <span>PLAY NOW</span>
@@ -277,7 +277,7 @@ export default function RotatingGameShowcase({ onSelectGame }: RotatingGameShowc
                 setCurrentIndex(idx);
               }}
               className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
-                isActive ? 'w-6 bg-emerald-400 shadow-md shadow-emerald-400/80' : 'w-1.5 bg-white/30 hover:bg-white/60'
+                isActive ? 'w-6 bg-cyan-400 shadow-md shadow-cyan-400/80' : 'w-1.5 bg-white/30 hover:bg-white/60'
               }`}
               title={`Slide to ${slide.title}`}
             />
