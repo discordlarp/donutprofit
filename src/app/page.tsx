@@ -42,7 +42,7 @@ import {
   Crown,
   Play,
   ArrowRight,
-  Sparkle
+  X
 } from 'lucide-react';
 
 interface GamePoster {
@@ -93,6 +93,7 @@ const QUICK_SWITCH_GAMES: { id: GameType; name: string; emoji: string }[] = [
 export default function HomePage() {
   const { user, activeReferrer, activeGame, setActiveGame } = useGame();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isGameModalOpen, setIsGameModalOpen] = useState(false);
   const [isTheaterMode, setIsTheaterMode] = useState(false);
   const [isSoundMuted, setIsSoundMuted] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<'all' | 'originals' | 'pvp' | 'cards' | 'high_multiplier'>('all');
@@ -104,6 +105,29 @@ export default function HomePage() {
     }
   }, [activeReferrer, user]);
 
+  // Support direct game opening from query or event
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const playParam = params.get('play');
+      if (playParam) {
+        setActiveGame(playParam as GameType);
+        setIsGameModalOpen(true);
+      }
+    }
+  }, [setActiveGame]);
+
+  useEffect(() => {
+    const handleOpenGame = (e: any) => {
+      if (e.detail) {
+        setActiveGame(e.detail);
+        setIsGameModalOpen(true);
+      }
+    };
+    window.addEventListener('open-game', handleOpenGame);
+    return () => window.removeEventListener('open-game', handleOpenGame);
+  }, [setActiveGame]);
+
   const toggleSound = () => {
     const isNowMuted = sound.toggleSound();
     setIsSoundMuted(isNowMuted);
@@ -111,11 +135,8 @@ export default function HomePage() {
 
   const handleLaunchGame = (gameId: GameType) => {
     setActiveGame(gameId);
+    setIsGameModalOpen(true);
     sound.playClick();
-    const arena = document.getElementById('play-arena');
-    if (arena) {
-      arena.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
   };
 
   const activeGameMeta = POSTER_GAMES.find((g) => g.id === activeGame) || POSTER_GAMES[0];
@@ -129,7 +150,117 @@ export default function HomePage() {
     <div className="min-h-screen text-neutral-100 flex flex-col selection:bg-violet-600 selection:text-white">
       <AuthModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
 
-      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 flex flex-col gap-10">
+      {/* Interactive Game Arena Modal */}
+      {isGameModalOpen && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-200"
+          onClick={() => setIsGameModalOpen(false)}
+        >
+          <div 
+            className={`relative w-full ${isTheaterMode ? 'max-w-6xl' : 'max-w-4xl'} max-h-[92vh] overflow-y-auto bg-[#0b0d18] border border-violet-500/30 rounded-3xl shadow-2xl flex flex-col text-white`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header Bar */}
+            <div className="sticky top-0 z-30 h-14 border-b border-white/[0.08] px-4 sm:px-6 flex items-center justify-between bg-[#101322]/95 backdrop-blur-md">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-xl bg-violet-600/20 border border-violet-500/30 flex items-center justify-center text-violet-400">
+                  <Gamepad2 className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-black text-sm text-white uppercase tracking-wider">
+                      {activeGameMeta.title}
+                    </span>
+                    <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-violet-500/15 text-violet-300 border border-violet-500/30 font-mono">
+                      {activeGameMeta.multiplier} MAX
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {/* Sound toggle */}
+                <button
+                  onClick={toggleSound}
+                  title={isSoundMuted ? 'Unmute Audio' : 'Mute Audio'}
+                  className={`p-2 rounded-xl border transition cursor-pointer ${
+                    isSoundMuted
+                      ? 'bg-rose-500/15 border-rose-500/30 text-rose-400'
+                      : 'bg-white/5 border-white/10 text-neutral-300 hover:text-white hover:bg-white/10'
+                  }`}
+                >
+                  {isSoundMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                </button>
+
+                {/* Theater mode */}
+                <button
+                  onClick={() => setIsTheaterMode(!isTheaterMode)}
+                  title={isTheaterMode ? 'Normal Mode' : 'Theater Mode'}
+                  className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-neutral-300 hover:text-white border border-white/10 transition cursor-pointer"
+                >
+                  {isTheaterMode ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+                </button>
+
+                {/* Close Button */}
+                <button
+                  onClick={() => setIsGameModalOpen(false)}
+                  aria-label="Close Game"
+                  title="Close Game"
+                  className="p-2 rounded-xl bg-white/5 hover:bg-rose-500/20 text-neutral-400 hover:text-rose-400 border border-white/10 hover:border-rose-500/30 transition cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Quick Switch Bar Inside Modal */}
+            <div className="bg-[#090b14] py-2 px-3 border-b border-white/5 flex items-center gap-2 overflow-x-auto scrollbar-none select-none">
+              <span className="text-[10px] font-black uppercase text-violet-400 px-2 shrink-0">
+                SWITCH:
+              </span>
+              {QUICK_SWITCH_GAMES.map((g) => {
+                const isCurrent = activeGame === g.id;
+                return (
+                  <button
+                    key={g.id}
+                    onClick={() => {
+                      setActiveGame(g.id);
+                      sound.playClick();
+                    }}
+                    className={`px-3 py-1 rounded-xl text-xs font-black whitespace-nowrap transition flex items-center gap-1.5 cursor-pointer ${
+                      isCurrent
+                        ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-md shadow-violet-500/25 border border-violet-400/40'
+                        : 'bg-[#111422] hover:bg-[#181d30] text-neutral-300 border border-white/5'
+                    }`}
+                  >
+                    <span>{g.emoji}</span>
+                    <span>{g.name}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Active Game Stage */}
+            <div className="p-3 sm:p-5">
+              {activeGame === 'coinflip' && <CoinflipGame />}
+              {activeGame === 'crash' && <CrashGame />}
+              {activeGame === 'towers' && <TowersGame />}
+              {activeGame === 'limbo' && <LimboGame />}
+              {activeGame === 'plinko' && <PlinkoGame />}
+              {(activeGame === 'cases' || activeGame === 'casebattles') && <CasesGame />}
+              {activeGame === 'hilo' && <HiloGame />}
+              {(activeGame === 'mines' || activeGame === 'chicken') && <MinesGame />}
+              {activeGame === 'roulette' && <RouletteGame />}
+              {activeGame === 'blackjack' && <BlackjackGame />}
+              {(activeGame === 'slots' || activeGame === 'rabbits' || activeGame === 'slide' || activeGame === 'keno') && <SlotsGame />}
+              {activeGame === 'dice' && <DiceGame />}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Main Page Layout: 1. Sliding Game Showcase, 2. All The Games, 3. Live Bets */}
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 flex flex-col gap-8">
         {/* Active Referrer Banner */}
         {activeReferrer && !user && (
           <div className="p-4 rounded-3xl bg-gradient-to-r from-violet-600/20 via-amber-500/15 to-violet-600/20 border-2 border-amber-400/80 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl shadow-violet-500/10 backdrop-blur-md">
@@ -153,118 +284,13 @@ export default function HomePage() {
           </div>
         )}
 
-        {/* 1. Full-Width Sliding Game Showcase Slider */}
+        {/* 1. The Sliding Game Showcase */}
         <div className="w-full">
           <RotatingGameShowcase onSelectGame={(gameId) => handleLaunchGame(gameId)} />
         </div>
 
-        {/* 2. The Pro Cyber Arena Cabinet (The Active Play Centerpiece) */}
-        <div id="play-arena" className={`scroll-mt-20 transition-all duration-300 ${isTheaterMode ? 'w-full max-w-none' : ''}`}>
-          {/* Quick-Switch Game Dock directly above Arena */}
-          <div className="sticky top-16 z-30 bg-[#090b14]/95 backdrop-blur-md py-2.5 px-3 rounded-2xl mb-4 flex items-center gap-2 overflow-x-auto scrollbar-none select-none border border-violet-500/20 shadow-xl">
-            <span className="text-[10px] font-black uppercase text-violet-400 px-2 shrink-0 flex items-center gap-1">
-              <Gamepad2 className="w-3.5 h-3.5" />
-              QUICK DOCK:
-            </span>
-            {QUICK_SWITCH_GAMES.map((g) => {
-              const isCurrent = activeGame === g.id;
-              return (
-                <button
-                  key={g.id}
-                  onClick={() => {
-                    setActiveGame(g.id);
-                    sound.playClick();
-                  }}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-black whitespace-nowrap transition flex items-center gap-1.5 cursor-pointer ${
-                    isCurrent
-                      ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg shadow-violet-500/25 scale-102 border border-violet-400/40'
-                      : 'bg-[#111422] hover:bg-[#181d30] text-neutral-300 border border-white/5'
-                  }`}
-                >
-                  <span>{g.emoji}</span>
-                  <span>{g.name}</span>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* The Main Arena Frame */}
-          <div className="rounded-3xl border border-violet-500/25 bg-[#0b0d18] shadow-2xl overflow-hidden pro-cabinet">
-            {/* Arena Command Bar */}
-            <div className="h-14 border-b border-white/[0.08] px-4 sm:px-6 flex items-center justify-between bg-[#101322]">
-              {/* Left: Active Game Title & Fair Badge */}
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-xl bg-violet-600/20 border border-violet-500/30 flex items-center justify-center text-violet-400">
-                  <Gamepad2 className="w-4 h-4" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-black text-sm text-white uppercase tracking-wider">
-                      {activeGameMeta.title}
-                    </span>
-                    <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-violet-500/15 text-violet-300 border border-violet-500/30 font-mono">
-                      {activeGameMeta.multiplier} MAX
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Right: Sound, Theater, and Sign-in Promo */}
-              <div className="flex items-center gap-2.5">
-                {/* Sound FX Toggle */}
-                <button
-                  onClick={toggleSound}
-                  title={isSoundMuted ? 'Unmute Audio' : 'Mute Audio'}
-                  className={`p-2 rounded-xl border transition cursor-pointer ${
-                    isSoundMuted
-                      ? 'bg-rose-500/15 border-rose-500/30 text-rose-400'
-                      : 'bg-white/5 border-white/10 text-neutral-300 hover:text-white hover:bg-white/10'
-                  }`}
-                >
-                  {isSoundMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-                </button>
-
-                {/* Theater Mode Toggle */}
-                <button
-                  onClick={() => setIsTheaterMode(!isTheaterMode)}
-                  title={isTheaterMode ? 'Exit Theater Mode' : 'Expand Theater Mode'}
-                  className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-neutral-300 hover:text-white border border-white/10 transition cursor-pointer"
-                >
-                  {isTheaterMode ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
-                </button>
-
-                {!user && (
-                  <button
-                    onClick={() => setIsModalOpen(true)}
-                    className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-violet-600/30 to-indigo-600/20 hover:from-violet-600/40 border border-violet-500/40 text-violet-300 text-xs font-black transition cursor-pointer"
-                  >
-                    <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                    <span>Sign In to Save Cash</span>
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* Active Game Stage Viewport */}
-            <div className="p-3 sm:p-5">
-              {activeGame === 'coinflip' && <CoinflipGame />}
-              {activeGame === 'crash' && <CrashGame />}
-              {activeGame === 'towers' && <TowersGame />}
-              {activeGame === 'limbo' && <LimboGame />}
-              {activeGame === 'plinko' && <PlinkoGame />}
-              {(activeGame === 'cases' || activeGame === 'casebattles') && <CasesGame />}
-              {activeGame === 'hilo' && <HiloGame />}
-              {(activeGame === 'mines' || activeGame === 'chicken') && <MinesGame />}
-              {activeGame === 'roulette' && <RouletteGame />}
-              {activeGame === 'blackjack' && <BlackjackGame />}
-              {(activeGame === 'slots' || activeGame === 'rabbits' || activeGame === 'slide' || activeGame === 'keno') && <SlotsGame />}
-              {activeGame === 'dice' && <DiceGame />}
-            </div>
-          </div>
-        </div>
-
-        {/* 3. The Interactive Games Matrix / Library (Our Own Layout) */}
-        <section id="game-library" className="flex flex-col gap-5 pt-4">
+        {/* 2. Below that: All The Games (like it already is) */}
+        <section id="game-library" className="flex flex-col gap-5 pt-2">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <h2 className="text-xl sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2">
@@ -338,53 +364,10 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* 4. Live Platform Activity Feed & High Rollers */}
-        <div className="mb-2">
+        {/* 3. Below that: The Live Bets */}
+        <div className="mb-4">
           <RecentBetsTable />
         </div>
-
-        {/* 5. Trust Pillars Grid */}
-        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-4">
-          <div className="p-5 rounded-2xl bg-[#0e101c]/80 border border-white/10 flex flex-col gap-2">
-            <div className="w-10 h-10 rounded-xl bg-violet-600/20 border border-violet-500/30 flex items-center justify-center text-violet-400">
-              <Zap className="w-5 h-5" />
-            </div>
-            <h4 className="text-sm font-black text-white uppercase tracking-wider">Instant In-Game Pay</h4>
-            <p className="text-xs text-neutral-400 leading-relaxed">
-              Automated Minecraft bot verification. Transfer virtual cash via /pay with zero delays or manual approvals.
-            </p>
-          </div>
-
-          <div className="p-5 rounded-2xl bg-[#0e101c]/80 border border-white/10 flex flex-col gap-2">
-            <div className="w-10 h-10 rounded-xl bg-cyan-600/20 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
-              <ShieldCheck className="w-5 h-5" />
-            </div>
-            <h4 className="text-sm font-black text-white uppercase tracking-wider">100% Provably Fair</h4>
-            <p className="text-xs text-neutral-400 leading-relaxed">
-              Every card flip, dice roll, and multiplier spike is determined by cryptographic SHA-256 random algorithms.
-            </p>
-          </div>
-
-          <div className="p-5 rounded-2xl bg-[#0e101c]/80 border border-white/10 flex flex-col gap-2">
-            <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400">
-              <Gift className="w-5 h-5" />
-            </div>
-            <h4 className="text-sm font-black text-white uppercase tracking-wider">Affiliate Bonuses</h4>
-            <p className="text-xs text-neutral-400 leading-relaxed">
-              Share your custom invite link. Earn $20M Cash bonuses and recurring commissions every time your friends play.
-            </p>
-          </div>
-
-          <div className="p-5 rounded-2xl bg-[#0e101c]/80 border border-white/10 flex flex-col gap-2">
-            <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
-              <Users className="w-5 h-5" />
-            </div>
-            <h4 className="text-sm font-black text-white uppercase tracking-wider">Active Community</h4>
-            <p className="text-xs text-neutral-400 leading-relaxed">
-              Live lounge chat with player tipping, weekly high-roller leaderboards, and 24/7 Discord support tickets.
-            </p>
-          </div>
-        </section>
       </div>
     </div>
   );

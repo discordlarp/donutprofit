@@ -78,12 +78,9 @@ export default function GamesSidebar({ activeGame: propActiveGame, onSelectGame 
     }
     sound.playClick();
     if (pathname !== '/') {
-      window.location.href = `/#play-arena`;
+      window.location.href = `/?play=${id}`;
     } else {
-      const arena = document.getElementById('play-arena');
-      if (arena) {
-        arena.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
+      window.dispatchEvent(new CustomEvent('open-game', { detail: id }));
     }
     if (isSidebarOpen) {
       toggleSidebar();
