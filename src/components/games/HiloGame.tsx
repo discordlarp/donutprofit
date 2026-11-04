@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useGame } from '@/context/GameContext';
 import { TrendingUp, TrendingDown, Coins, AlertCircle } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { secureRandom } from '@/lib/cryptoRandom';
 
 const CARDS = [
   { val: '2', num: 2 },
@@ -49,7 +50,7 @@ export default function HiloGame() {
 
     setIsDealing(true);
 
-    const rolled = CARDS[Math.floor(Math.random() * CARDS.length)];
+    const rolled = CARDS[Math.floor(secureRandom() * CARDS.length)];
     const won = guess === 'higher' ? rolled.num >= currentCard.num : rolled.num <= currentCard.num;
     const mult = 1.92;
 

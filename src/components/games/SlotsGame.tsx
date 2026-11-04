@@ -6,6 +6,7 @@ import { Sparkles, Coins, AlertCircle } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { sound } from '@/lib/sound';
 import { formatCash } from '@/lib/format';
+import { secureRandom } from '@/lib/cryptoRandom';
 
 interface SymbolInfo {
   icon: string;
@@ -56,15 +57,15 @@ export default function SlotsGame() {
     setIsSpinning(true);
     setLastWin(null);
 
-    // Provably fair reel spin outcome
-    let s1 = SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)];
-    let s2 = SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)];
-    let s3 = SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)];
+    // Cryptographically secure reel spin outcome
+    let s1 = SYMBOLS[Math.floor(secureRandom() * SYMBOLS.length)];
+    let s2 = SYMBOLS[Math.floor(secureRandom() * SYMBOLS.length)];
+    let s3 = SYMBOLS[Math.floor(secureRandom() * SYMBOLS.length)];
 
     // RIGGED: If all 3 match with multiplier > 5.0x, break reel 3
     if (s1.multiplier > 5.0 && s1.name === s2.name && s2.name === s3.name) {
       const others = SYMBOLS.filter(s => s.name !== s1.name);
-      s3 = others[Math.floor(Math.random() * others.length)];
+      s3 = others[Math.floor(secureRandom() * others.length)];
     }
 
     setTimeout(() => {

@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useGame } from '@/context/GameContext';
 import { Club, Coins, AlertCircle } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { secureRandom } from '@/lib/cryptoRandom';
 
 interface Card {
   suit: '♠' | '♥' | '♦' | '♣';
@@ -29,8 +30,8 @@ const VALUES = [
 ];
 
 function drawCard(): Card {
-  const suit = SUITS[Math.floor(Math.random() * SUITS.length)];
-  const cardVal = VALUES[Math.floor(Math.random() * VALUES.length)];
+  const suit = SUITS[Math.floor(secureRandom() * SUITS.length)];
+  const cardVal = VALUES[Math.floor(secureRandom() * VALUES.length)];
   return { suit, value: cardVal.val, num: cardVal.num };
 }
 
@@ -89,7 +90,11 @@ export default function BlackjackGame() {
 
     // Check Natural Blackjack
     if (calculateHand(initialPlayer) === 21) {
-      finishGame(initialPlayer, initialDealer, 'blackjack');
+      if (calculateHand(initialDealer) === 21) {
+        finishGame(initialPlayer, initialDealer, 'push');
+      } else {
+        finishGame(initialPlayer, initialDealer, 'blackjack');
+      }
     }
   };
 

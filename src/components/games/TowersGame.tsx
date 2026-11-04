@@ -6,6 +6,7 @@ import { Layers, AlertCircle } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { sound } from '@/lib/sound';
 import { formatCash } from '@/lib/format';
+import { secureRandom } from '@/lib/cryptoRandom';
 
 const FLOOR_MULTIPLIERS = [1.25, 1.65, 2.15, 2.80, 3.40, 4.00];
 
@@ -39,10 +40,10 @@ export default function TowersGame() {
       return;
     }
 
-    // Generate random bomb position for each of the 6 floors (0, 1, or 2)
+    // Generate random bomb position for each of the 6 floors using secure hardware RNG
     const newFloors: FloorState[] = FLOOR_MULTIPLIERS.map(() => ({
       tiles: ['hidden', 'hidden', 'hidden'],
-      bombIdx: Math.floor(Math.random() * 3),
+      bombIdx: Math.floor(secureRandom() * 3),
     }));
 
     setFloors(newFloors);

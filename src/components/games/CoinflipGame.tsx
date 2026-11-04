@@ -6,6 +6,7 @@ import { Coins, Sparkles, AlertCircle, RotateCcw } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { sound } from '@/lib/sound';
 import { formatCash } from '@/lib/format';
+import { secureRandom } from '@/lib/cryptoRandom';
 
 export default function CoinflipGame() {
   const { user, recordBet } = useGame();
@@ -40,9 +41,9 @@ export default function CoinflipGame() {
     setIsFlipping(true);
     setLastResult(null);
 
-    // Provably fair random outcome
+    // Cryptographically secure random outcome (protected against Math.random tampering)
     const winRate = 0.49;
-    const outcome: 'glazed' | 'chocolate' = Math.random() < winRate ? chosenSide : (chosenSide === 'glazed' ? 'chocolate' : 'glazed');
+    const outcome: 'glazed' | 'chocolate' = secureRandom() < winRate ? chosenSide : (chosenSide === 'glazed' ? 'chocolate' : 'glazed');
     const isWin = outcome === chosenSide;
 
     // Set 3D rotation: glazed lands on 0 / 360 multiples, chocolate lands on 180 deg

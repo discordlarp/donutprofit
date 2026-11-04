@@ -6,6 +6,7 @@ import { TrendingUp, Coins, Flame, AlertCircle, Rocket } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { sound } from '@/lib/sound';
 import { formatCash } from '@/lib/format';
+import { secureRandom } from '@/lib/cryptoRandom';
 
 export default function CrashGame() {
   const { user, recordBet } = useGame();
@@ -41,8 +42,8 @@ export default function CrashGame() {
 
     sound.playClick();
 
-    // Determine crash point using provably fair formula with STRICT 4.00x MAX CEILING
-    const r = Math.random();
+    // Determine crash point using cryptographically secure hardware RNG
+    const r = secureRandom();
     let point = 1.01;
     if (r > 0.08) {
       point = Number(Math.max(1.01, (0.95 / (1 - r * 0.75))).toFixed(2));

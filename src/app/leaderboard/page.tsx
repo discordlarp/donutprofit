@@ -39,8 +39,31 @@ export default function LeaderboardPage() {
     return () => window.clearInterval(interval);
   }, []);
 
-  const sortedByWager = [...users].sort((a, b) => b.totalWagered - a.totalWagered);
-  const referralLeaders = [...users]
+  const uniqueUsersList = React.useMemo(() => {
+    const map = new Map<string, typeof users[0]>();
+    for (const u of users) {
+      if (!u) continue;
+      const key = (u.minecraftIgn || u.username || '').toLowerCase().trim();
+      if (!key) continue;
+      const existing = map.get(key);
+      if (!existing) {
+        map.set(key, u);
+      } else {
+        map.set(key, {
+          ...existing,
+          ...u,
+          totalWagered: Math.max(Number(existing.totalWagered) || 0, Number(u.totalWagered) || 0),
+          gamesPlayed: Math.max(Number(existing.gamesPlayed) || 0, Number(u.gamesPlayed) || 0),
+          referralCount: Math.max(Number(existing.referralCount) || 0, Number(u.referralCount) || 0),
+          referralCountThisWeek: Math.max(Number(existing.referralCountThisWeek) || 0, Number(u.referralCountThisWeek) || 0),
+        });
+      }
+    }
+    return Array.from(map.values());
+  }, [users]);
+
+  const sortedByWager = [...uniqueUsersList].sort((a, b) => (Number(b.totalWagered) || 0) - (Number(a.totalWagered) || 0));
+  const referralLeaders = [...uniqueUsersList]
     .filter((u) => ((u.referralCountThisWeek ?? u.referralCount ?? 0) > 0))
     .sort((a, b) => (b.referralCountThisWeek ?? b.referralCount ?? 0) - (a.referralCountThisWeek ?? a.referralCount ?? 0));
   const resetAt = now ? getNextReferralReset(now) : null;
@@ -186,47 +209,57 @@ export default function LeaderboardPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-              {referralLeaders.slice(0, 3).map((userEntry, index) => (
-                <div key={userEntry.id} className={`rounded-2xl border p-4 ${index === 0 ? 'border-violet-500/40 bg-violet-500/10' : 'border-white/10 bg-[#0d0f14]'}`}>
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-[10px] font-black uppercase tracking-wider text-neutral-400">#{index + 1}</span>
-                    <span className="text-xs font-black text-violet-300">{userEntry.referralCountThisWeek ?? userEntry.referralCount ?? 0} refs</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <img src={`https://mc-heads.net/avatar/${userEntry.minecraftIgn}/48`} alt={userEntry.minecraftIgn} className="w-10 h-10 rounded-xl border border-white/10 bg-neutral-800" onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }} />
-                    <div>
-                      <div className="font-black text-white">{userEntry.minecraftIgn}</div>
-                      <div className="text-[10px] uppercase text-neutral-400">{userEntry.role === 'admin' ? 'Staff referrer' : 'Player referral lead'}</div>
+            {referralLeaders.length === 0 ? (
+              <div className="py-12 text-center text-neutral-400">
+                <Gift className="w-10 h-10 text-neutral-600 mx-auto mb-2" />
+                <p className="font-bold text-white text-sm">No referrals yet this week</p>
+                <p className="text-xs text-neutral-500 mt-1">Share your referral link on DonutSMP to earn $20,000,000 Cash and top the weekly race!</p>
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                  {referralLeaders.slice(0, 3).map((userEntry, index) => (
+                    <div key={userEntry.id} className={`rounded-2xl border p-4 ${index === 0 ? 'border-violet-500/40 bg-violet-500/10' : 'border-white/10 bg-[#0d0f14]'}`}>
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-neutral-400">#{index + 1}</span>
+                        <span className="text-xs font-black text-violet-300">{userEntry.referralCountThisWeek ?? userEntry.referralCount ?? 0} refs</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <img src={`https://mc-heads.net/avatar/${userEntry.minecraftIgn}/48`} alt={userEntry.minecraftIgn} className="w-10 h-10 rounded-xl border border-white/10 bg-neutral-800" onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }} />
+                        <div>
+                          <div className="font-black text-white">{userEntry.minecraftIgn}</div>
+                          <div className="text-[10px] uppercase text-neutral-400">{userEntry.role === 'admin' ? 'Staff referrer' : 'Player referral lead'}</div>
+                        </div>
+                      </div>
                     </div>
-                  </div>
+                  ))}
                 </div>
-              ))}
-            </div>
 
-            <table className="w-full text-left border-collapse text-xs">
-              <thead>
-                <tr className="border-b border-white/5 text-neutral-500 uppercase tracking-wider font-black bg-[#0d0f14]">
-                  <th className="py-3.5 px-4">Rank</th>
-                  <th className="py-3.5 px-4">Player</th>
-                  <th className="py-3.5 px-4">This Week</th>
-                  <th className="py-3.5 px-4 text-right">Total Signups</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5 font-mono">
-                {referralLeaders.map((u, i) => (
-                  <tr key={u.id} className="hover:bg-white/[0.03]">
-                    <td className="py-3.5 px-4 font-bold text-neutral-400">#{i + 1}</td>
-                    <td className="py-3.5 px-4 font-sans font-bold text-white flex items-center gap-2.5">
-                      <img src={`https://mc-heads.net/avatar/${u.minecraftIgn}/24`} alt={u.minecraftIgn} className="w-6 h-6 rounded-md bg-neutral-800" onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }} />
-                      <span>{u.minecraftIgn}</span>
-                    </td>
-                    <td className="py-3.5 px-4 text-violet-300 font-black">{u.referralCountThisWeek ?? u.referralCount ?? 0}</td>
-                    <td className="py-3.5 px-4 text-right font-black text-emerald-400">{u.referralCount ?? 0}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr className="border-b border-white/5 text-neutral-500 uppercase tracking-wider font-black bg-[#0d0f14]">
+                      <th className="py-3.5 px-4">Rank</th>
+                      <th className="py-3.5 px-4">Player</th>
+                      <th className="py-3.5 px-4">This Week</th>
+                      <th className="py-3.5 px-4 text-right">Total Signups</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5 font-mono">
+                    {referralLeaders.map((u, i) => (
+                      <tr key={u.id} className="hover:bg-white/[0.03]">
+                        <td className="py-3.5 px-4 font-bold text-neutral-400">#{i + 1}</td>
+                        <td className="py-3.5 px-4 font-sans font-bold text-white flex items-center gap-2.5">
+                          <img src={`https://mc-heads.net/avatar/${u.minecraftIgn}/24`} alt={u.minecraftIgn} className="w-6 h-6 rounded-md bg-neutral-800" onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }} />
+                          <span>{u.minecraftIgn}</span>
+                        </td>
+                        <td className="py-3.5 px-4 text-violet-300 font-black">{u.referralCountThisWeek ?? u.referralCount ?? 0}</td>
+                        <td className="py-3.5 px-4 text-right font-black text-emerald-400">{u.referralCount ?? 0}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </>
+            )}
           </div>
         )}
 

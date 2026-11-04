@@ -6,6 +6,7 @@ import { Bomb, Gem, Coins, AlertCircle } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { sound } from '@/lib/sound';
 import { formatCash } from '@/lib/format';
+import { secureRandom } from '@/lib/cryptoRandom';
 
 interface TileState {
   revealed: boolean;
@@ -55,10 +56,10 @@ export default function MinesGame() {
       return;
     }
 
-    // Place mines randomly
+    // Place mines using cryptographically secure hardware RNG (resistant to console overrides)
     const mineIndices = new Set<number>();
     while (mineIndices.size < mineCount) {
-      mineIndices.add(Math.floor(Math.random() * 25));
+      mineIndices.add(Math.floor(secureRandom() * 25));
     }
 
     const newGrid: TileState[] = Array(25).fill(null).map((_, i) => ({

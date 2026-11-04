@@ -6,6 +6,7 @@ import { Box, Coins, AlertCircle, Sparkles } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { sound } from '@/lib/sound';
 import { formatCash } from '@/lib/format';
+import { secureRandom } from '@/lib/cryptoRandom';
 
 interface LootItem {
   id: string;
@@ -174,8 +175,8 @@ export default function CasesGame() {
     setIsSpinning(true);
     setUnboxedItem(null);
 
-    // Pick winning item
-    const rand = Math.random();
+    // Pick winning item using secure hardware random
+    const rand = secureRandom();
     let winner: LootItem;
     if (rand < 0.07) winner = ITEMS[0]; // Totem 4.5x (Rigged to <= 5x)
     else if (rand < 0.20) winner = ITEMS[1]; // God Apple 4x
@@ -190,7 +191,7 @@ export default function CasesGame() {
       if (i === 35) {
         strip.push(winner);
       } else {
-        strip.push(ITEMS[Math.floor(Math.random() * ITEMS.length)]);
+        strip.push(ITEMS[Math.floor(secureRandom() * ITEMS.length)]);
       }
     }
     setReelItems(strip);
@@ -205,7 +206,7 @@ export default function CasesGame() {
     setTimeout(() => {
       if (stripRef.current) {
         const itemWidth = 120; // width + gap
-        const targetOffset = 35 * itemWidth - 140 + (Math.random() * 40 - 20);
+        const targetOffset = 35 * itemWidth - 140 + (secureRandom() * 40 - 20);
         stripRef.current.style.transition = 'transform 3.8s cubic-bezier(0.12, 0.8, 0.2, 1)';
         stripRef.current.style.transform = `translateX(-${targetOffset}px)`;
       }

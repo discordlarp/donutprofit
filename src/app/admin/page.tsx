@@ -60,7 +60,12 @@ export default function AdminPage() {
   const fetchServerLogs = useCallback(async () => {
     setIsRefreshing(true);
     try {
-      const res = await fetch('/api/users', { cache: 'no-store' });
+      const res = await fetch('/api/users', { 
+        cache: 'no-store',
+        headers: {
+          'x-admin-key': 'donutprofitadmin21'
+        }
+      });
       const data = await res.json();
       if (data.success && Array.isArray(data.memberLogs)) {
         setMemberLogs(data.memberLogs);

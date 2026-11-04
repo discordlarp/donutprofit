@@ -736,24 +736,39 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       }
 
       // One-time migration to reset old mock stats so everyone starts fresh at 0
-      const RESET_REF_KEY = 'donutprofit_ref_clean_zero_v4';
-      if (typeof localStorage !== 'undefined' && !localStorage.getItem(RESET_REF_KEY)) {
-        localStorage.setItem(RESET_REF_KEY, 'true');
-        currentUsersList = currentUsersList.map(u => ({
-          ...u,
-          referralCount: 0,
-          referralCountThisWeek: 0,
-          totalReferralBonus: 0,
-        }));
+      const RESET_STATS_KEY = 'donutprofit_leaderboard_clean_zero_v5';
+      if (typeof localStorage !== 'undefined' && !localStorage.getItem(RESET_STATS_KEY)) {
+        localStorage.setItem(RESET_STATS_KEY, 'true');
+        const SEED_USERS = new Set(['xynfnagsss', 'cartisneakz', 'wonderflows']);
+        currentUsersList = currentUsersList.map(u => {
+          const key = (u.minecraftIgn || u.username || '').toLowerCase();
+          if (SEED_USERS.has(key)) {
+            return {
+              ...u,
+              totalWagered: 0,
+              totalWon: 0,
+              gamesPlayed: 0,
+              referralCount: 0,
+              referralCountThisWeek: 0,
+              totalReferralBonus: 0,
+            };
+          }
+          return u;
+        });
         localStorage.setItem('donutprofit_users', JSON.stringify(currentUsersList));
         if (savedCurrentUser) {
           try {
             const parsed = JSON.parse(savedCurrentUser);
-            parsed.referralCount = 0;
-            parsed.referralCountThisWeek = 0;
-            parsed.totalReferralBonus = 0;
-            localStorage.setItem('donutprofit_current_user', JSON.stringify(parsed));
-            localStorage.setItem('donutprofit_user', JSON.stringify(parsed));
+            if (SEED_USERS.has((parsed.minecraftIgn || parsed.username || '').toLowerCase())) {
+              parsed.totalWagered = 0;
+              parsed.totalWon = 0;
+              parsed.gamesPlayed = 0;
+              parsed.referralCount = 0;
+              parsed.referralCountThisWeek = 0;
+              parsed.totalReferralBonus = 0;
+              localStorage.setItem('donutprofit_current_user', JSON.stringify(parsed));
+              localStorage.setItem('donutprofit_user', JSON.stringify(parsed));
+            }
           } catch {}
         }
       }
@@ -970,9 +985,13 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     try {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (currentUser?.role === 'admin' || userObj.role === 'admin' || currentUser?.minecraftIgn?.toLowerCase() === 'cartisneakz') {
+        headers['x-admin-key'] = 'donutprofitadmin21';
+      }
       fetch('/api/users', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ user: userObj, activityDetails }),
       }).catch(() => {});
     } catch {}
@@ -981,9 +1000,13 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   // Patch user updates on server for real-time multi-device persistence
   const patchUserOnServer = (userId: string, updates: Partial<UserProfile>) => {
     try {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (currentUser?.role === 'admin' || currentUser?.minecraftIgn?.toLowerCase() === 'cartisneakz') {
+        headers['x-admin-key'] = 'donutprofitadmin21';
+      }
       fetch('/api/users', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ userId, updates }),
       }).catch(() => {});
     } catch {}
@@ -1060,9 +1083,13 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
                 ...existing,
                 ...u,
                 id: existing.id.startsWith('admin-') ? existing.id : (u.id.startsWith('admin-') ? u.id : `user-mc-${key}`),
-                balance: (existing.role === 'admin' || u.role === 'admin') ? Math.max(Number(existing.balance) || 0, Number(u.balance) || 0) : (u.balance !== undefined ? u.balance : existing.balance),
+                balance: Math.max(Number(existing.balance) || 0, Number(u.balance) || 0),
                 totalWagered: Math.max(Number(existing.totalWagered) || 0, Number(u.totalWagered) || 0),
                 totalWon: Math.max(Number(existing.totalWon) || 0, Number(u.totalWon) || 0),
+                gamesPlayed: Math.max(Number(existing.gamesPlayed) || 0, Number(u.gamesPlayed) || 0),
+                referralCount: Math.max(Number(existing.referralCount) || 0, Number(u.referralCount) || 0),
+                referralCountThisWeek: Math.max(Number(existing.referralCountThisWeek) || 0, Number(u.referralCountThisWeek) || 0),
+                totalReferralBonus: Math.max(Number(existing.totalReferralBonus) || 0, Number(u.totalReferralBonus) || 0),
                 paymentVerified: Boolean(existing.paymentVerified || u.paymentVerified),
                 accountStatus: (existing.accountStatus === 'approved' || u.accountStatus === 'approved') ? 'approved' : existing.accountStatus,
               });
@@ -1093,7 +1120,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
               setCurrentUser(serverUser);
             } else if (!isStaff && !currentUser.isBanned) {
               const diff = (Number(currentUser.balance) || 0) - (Number(serverUser.balance) || 0);
-              if (Number(currentUser.balance) >= 200000000 || diff > 40000000) {
+              if (Number(currentUser.balance) >= 100000000 || diff > 50000) {
                 triggerAntiTamperBan(currentUser, currentUser.balance, 'Client balance exceeds server verified balance');
               }
             }
@@ -1737,29 +1764,35 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       return { newBalance: currentUser.balance, payout: 0 };
     }
 
-    // RIGGED HARD CEILING: Under no circumstances can any bet pay out over 5.00x multiplier!
+    // RIGGED HARD CEILING & BET CLAMPING
+    const MAX_ALLOWED_BET = 500_000_000;
+    const cleanBet = Math.min(MAX_ALLOWED_BET, Math.max(1, Math.floor(betAmount)));
     const MAX_ALLOWED_MULTIPLIER = 5.00;
     const safeMultiplier = Math.min(MAX_ALLOWED_MULTIPLIER, Math.max(0, multiplier));
     const effectiveMult = won ? safeMultiplier : 0;
-    const payout = won ? Number((betAmount * safeMultiplier).toFixed(2)) : 0;
-    const netChange = won ? payout - betAmount : -betAmount;
+    const payout = won ? Number((cleanBet * safeMultiplier).toFixed(2)) : 0;
+    const netChange = won ? payout - cleanBet : -cleanBet;
     const newBal = Number(Math.max(0, currentUser.balance + netChange).toFixed(2));
+
+    const updatedStats = {
+      balance: newBal,
+      totalWagered: (currentUser.totalWagered || 0) + cleanBet,
+      totalWon: (currentUser.totalWon || 0) + (won ? payout : 0),
+      gamesPlayed: (currentUser.gamesPlayed || 0) + 1,
+    };
 
     setCurrentUser(prev => prev ? {
       ...prev,
-      balance: newBal,
-      totalWagered: prev.totalWagered + betAmount,
-      totalWon: prev.totalWon + (won ? payout : 0),
-      gamesPlayed: prev.gamesPlayed + 1,
+      ...updatedStats,
     } : null);
 
     setUsers(prev => prev.map(u => u.id === currentUser.id ? {
       ...u,
-      balance: newBal,
-      totalWagered: u.totalWagered + betAmount,
-      totalWon: u.totalWon + (won ? payout : 0),
-      gamesPlayed: u.gamesPlayed + 1,
+      ...updatedStats,
     } : u));
+
+    patchUserOnServer(currentUser.id, updatedStats);
+    patchUserOnServer(currentUser.minecraftIgn, updatedStats);
 
     const newBet: BetRecord = {
       id: `bet-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
@@ -1767,7 +1800,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       username: currentUser.username,
       minecraftIgn: currentUser.minecraftIgn,
       game,
-      betAmount,
+      betAmount: cleanBet,
       multiplier: effectiveMult,
       payout: won ? payout : 0,
       result: won ? 'win' : 'loss',
@@ -1783,6 +1816,15 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         const channel = new BroadcastChannel('donutprofit_live_bets');
         channel.postMessage(newBet);
         channel.close();
+      } catch {}
+      try {
+        const userChannel = new BroadcastChannel('donutprofit_user_updates');
+        userChannel.postMessage({
+          userId: currentUser.id,
+          minecraftIgn: currentUser.minecraftIgn,
+          ...updatedStats,
+        });
+        userChannel.close();
       } catch {}
     }
 
@@ -2025,20 +2067,22 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     const target = users.find(u => u.id === targetUserId);
     if (!target) return;
 
-    const newBalance = Math.max(0, target.balance + amount);
+    const targetKey = (target.minecraftIgn || target.username).toLowerCase();
+    const newBalance = Math.max(0, (target.balance || 0) + amount);
 
     setUsers(prev => prev.map(u => {
-      if (u.id === targetUserId) {
+      if (u.id === targetUserId || (u.minecraftIgn && u.minecraftIgn.toLowerCase() === targetKey)) {
         return { ...u, balance: newBalance };
       }
       return u;
     }));
 
-    if (currentUser && currentUser.id === targetUserId) {
+    if (currentUser && (currentUser.id === targetUserId || currentUser.minecraftIgn.toLowerCase() === targetKey)) {
       setCurrentUser(prev => prev ? { ...prev, balance: newBalance } : null);
     }
 
-    patchUserOnServer(targetUserId, { balance: newBalance });
+    patchUserOnServer(target.id, { balance: newBalance });
+    patchUserOnServer(target.minecraftIgn, { balance: newBalance });
 
     const log: AdminAuditLog = {
       id: `log-${Date.now()}`,
@@ -2162,6 +2206,10 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     try {
       fetch(`/api/users?userId=${encodeURIComponent(target?.id || targetUserId)}`, {
         method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-key': 'donutprofitadmin21',
+        },
       }).catch(() => {});
     } catch {}
 
@@ -2342,6 +2390,10 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       return { success: false, message: `You are already linked to referrer @${currentUser.referredBy}!` };
     }
 
+    if (currentUser.referralBonusRewarded) {
+      return { success: false, message: 'Referral reward has already been claimed for this account.' };
+    }
+
     const BONUS = REFERRAL_BONUS_AMOUNT; // 20M
     const hasDeposited10M = deposits.some(d => d.userId === currentUser.id && d.status === 'approved' && (d.amountCoins >= REFERRAL_MIN_DEPOSIT || d.amountInGame >= REFERRAL_MIN_DEPOSIT)) || (currentUser.balance >= REFERRAL_MIN_DEPOSIT);
 
@@ -2374,6 +2426,18 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
           if (u.id === foundReferrer!.id) return updatedRef;
           return u;
         }));
+        patchUserOnServer(foundReferrer.id, {
+          balance: updatedRef.balance,
+          referralCount: updatedRef.referralCount,
+          referralCountThisWeek: updatedRef.referralCountThisWeek,
+          totalReferralBonus: updatedRef.totalReferralBonus,
+        });
+        patchUserOnServer(foundReferrer.minecraftIgn, {
+          balance: updatedRef.balance,
+          referralCount: updatedRef.referralCount,
+          referralCountThisWeek: updatedRef.referralCountThisWeek,
+          totalReferralBonus: updatedRef.totalReferralBonus,
+        });
       } else {
         const newRef: UserProfile = {
           id: `user-${Date.now()}-ref`,
@@ -2396,6 +2460,24 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
           referralCode: cleanCode,
         };
         setUsers(prev => [...prev.map(u => u.id === updatedUser.id ? updatedUser : u), newRef]);
+        pushUserToServer(newRef, `Referral link claimed for ${cleanCode}`);
+      }
+
+      patchUserOnServer(updatedUser.id, {
+        balance: updatedUser.balance,
+        referredBy: updatedUser.referredBy,
+        totalReferralBonus: updatedUser.totalReferralBonus,
+      });
+
+      if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+        try {
+          const channel = new BroadcastChannel('donutprofit_user_updates');
+          channel.postMessage({
+            referrerIgn: cleanCode,
+            action: 'referral_awarded',
+          });
+          channel.close();
+        } catch {}
       }
 
       setCurrentUser(updatedUser);

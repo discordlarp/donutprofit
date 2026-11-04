@@ -6,6 +6,7 @@ import { Flame, Coins, AlertCircle } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { sound } from '@/lib/sound';
 import { formatCash } from '@/lib/format';
+import { secureRandom } from '@/lib/cryptoRandom';
 
 export default function LimboGame() {
   const { user, recordBet } = useGame();
@@ -47,8 +48,8 @@ export default function LimboGame() {
     setIsRolling(true);
     setIsWin(null);
 
-    // Provably fair random multiplier formula
-    const rand = Math.random();
+    // Cryptographically secure random multiplier formula
+    const rand = secureRandom();
     // RIGGED: Result strictly capped at 5.00x; target > 5x can never win
     const result = Number(Math.min(5.00, Math.max(1.00, (0.98 / (1 - rand * 0.95)))).toFixed(2));
     const won = targetMult <= 5.00 && result >= targetMult;

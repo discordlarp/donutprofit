@@ -6,6 +6,7 @@ import { Dices, Coins, AlertCircle } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { sound } from '@/lib/sound';
 import { formatCash } from '@/lib/format';
+import { secureRandom } from '@/lib/cryptoRandom';
 
 export default function DiceGame() {
   const { user, recordBet } = useGame();
@@ -42,15 +43,15 @@ export default function DiceGame() {
     sound.playClick();
     setIsRolling(true);
 
-    let result = Number((Math.random() * 100).toFixed(2));
+    let result = Number((secureRandom() * 100).toFixed(2));
     let won = mode === 'over' ? result > targetNumber : result < targetNumber;
     // RIGGED: If multiplier exceeds 5x, force an immediate loss
     if (winChance < 19.6 || multiplier >= 5.00) {
       won = false;
       if (mode === 'over' && result > targetNumber) {
-        result = Number((Math.random() * targetNumber).toFixed(2));
+        result = Number((secureRandom() * targetNumber).toFixed(2));
       } else if (mode === 'under' && result < targetNumber) {
-        result = Number((targetNumber + Math.random() * (100 - targetNumber)).toFixed(2));
+        result = Number((targetNumber + secureRandom() * (100 - targetNumber)).toFixed(2));
       }
     }
 

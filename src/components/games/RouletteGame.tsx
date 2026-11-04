@@ -6,6 +6,7 @@ import { Disc, Coins, AlertCircle } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { sound } from '@/lib/sound';
 import { formatCash } from '@/lib/format';
+import { secureRandom } from '@/lib/cryptoRandom';
 
 type BetOption = 'red' | 'black' | 'gold';
 
@@ -69,19 +70,18 @@ export default function RouletteGame() {
     sound.playClick();
     setIsSpinning(true);
 
-    // Pick random outcome
-    // Pick outcome: RIGGED so if user bets on gold, it NEVER lands on gold!
-    let winIndex = Math.floor(Math.random() * WHEEL_ITEMS.length);
+    // Secure hardware random outcome (protected against Math.random tampering)
+    let winIndex = Math.floor(secureRandom() * WHEEL_ITEMS.length);
     if (selectedBet === 'gold') {
       const nonGold = WHEEL_ITEMS.map((item, idx) => item.color !== 'gold' ? idx : -1).filter(i => i !== -1);
-      winIndex = nonGold[Math.floor(Math.random() * nonGold.length)];
+      winIndex = nonGold[Math.floor(secureRandom() * nonGold.length)];
     }
     const winningItem = WHEEL_ITEMS[winIndex];
 
     // Compute pixel offset for smooth horizontal rolling (each card is 72px + 8px gap = 80px)
     const cardWidth = 80;
     const baseSpins = 4 * WHEEL_ITEMS.length;
-    const targetOffset = (baseSpins + winIndex) * cardWidth + Math.floor(Math.random() * 20 - 10);
+    const targetOffset = (baseSpins + winIndex) * cardWidth + Math.floor(secureRandom() * 20 - 10);
 
     setSpinOffset(prev => prev + targetOffset);
 

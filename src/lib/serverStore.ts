@@ -270,7 +270,7 @@ export function mergeUserProfiles(existing: UserProfile, incoming: UserProfile):
       banReason = ANTI_TAMPER_BAN_REASON;
       balance = 0; // Wipe spoofed balance
     } else {
-      balance = existing.balance !== undefined ? existing.balance : incomingBal;
+      balance = Math.max(balance, incomingBal);
     }
   } else if (isStaff) {
     balance = Math.max(Number(existing.balance) || 0, Number(incoming.balance) || 0);
@@ -289,6 +289,9 @@ export function mergeUserProfiles(existing: UserProfile, incoming: UserProfile):
     totalWagered: Math.max(Number(existing.totalWagered) || 0, Number(incoming.totalWagered) || 0),
     totalWon: Math.max(Number(existing.totalWon) || 0, Number(incoming.totalWon) || 0),
     gamesPlayed: Math.max(Number(existing.gamesPlayed) || 0, Number(incoming.gamesPlayed) || 0),
+    referralCount: Math.max(Number(existing.referralCount) || 0, Number(incoming.referralCount) || 0),
+    referralCountThisWeek: Math.max(Number(existing.referralCountThisWeek) || 0, Number(incoming.referralCountThisWeek) || 0),
+    totalReferralBonus: Math.max(Number(existing.totalReferralBonus) || 0, Number(incoming.totalReferralBonus) || 0),
     paymentVerified: Boolean(existing.paymentVerified || incoming.paymentVerified),
     accountStatus: (existing.accountStatus === 'approved' || incoming.accountStatus === 'approved') 
       ? 'approved' 
@@ -305,11 +308,20 @@ function loadStoreFromDisk() {
   isStoreInitialized = true;
 
   // Initialize with MOCK_USERS first (filtering out any removed accounts)
+  const SEED_RESET_SET = new Set(['xynfnagsss', 'cartisneakz', 'wonderflows']);
   for (const u of MOCK_USERS) {
     if (!isAccountRemoved(u.minecraftIgn) && !isAccountRemoved(u.username) && !isAccountRemoved(u.id) && !isAccountRemoved(u.email)) {
       const key = (u.minecraftIgn || u.username).trim().toLowerCase();
       const existing = memoryUsers.get(key);
       const merged = existing ? mergeUserProfiles(existing, u) : u;
+      if (SEED_RESET_SET.has(key)) {
+        merged.totalWagered = 0;
+        merged.totalWon = 0;
+        merged.gamesPlayed = 0;
+        merged.referralCount = 0;
+        merged.referralCountThisWeek = 0;
+        merged.totalReferralBonus = 0;
+      }
       memoryUsers.set(merged.id, merged);
       memoryUsers.set(key, merged);
     }
@@ -329,6 +341,14 @@ function loadStoreFromDisk() {
             const key = (u.minecraftIgn || u.username).trim().toLowerCase();
             const existing = memoryUsers.get(key);
             const merged = existing ? mergeUserProfiles(existing, u) : u;
+            if (SEED_RESET_SET.has(key)) {
+              merged.totalWagered = 0;
+              merged.totalWon = 0;
+              merged.gamesPlayed = 0;
+              merged.referralCount = 0;
+              merged.referralCountThisWeek = 0;
+              merged.totalReferralBonus = 0;
+            }
             // Clean up any stale old ID key
             if (existing && existing.id !== merged.id) {
               memoryUsers.delete(existing.id);
@@ -620,8 +640,21 @@ export function deleteUser(userIdOrIgn: string): boolean {
 
 export function updateUser(userIdOrIgn: string, updates: Partial<UserProfile>): UserProfile | null {
   loadStoreFromDisk();
-  const key = userIdOrIgn.toLowerCase();
-  const existing = memoryUsers.get(userIdOrIgn) || memoryUsers.get(key);
+  const cleanKey = userIdOrIgn.toLowerCase().trim().replace(/^@/, '');
+  let existing = memoryUsers.get(userIdOrIgn) || memoryUsers.get(cleanKey);
+  if (!existing) {
+    for (const u of memoryUsers.values()) {
+      if (
+        u.id.toLowerCase() === cleanKey ||
+        u.minecraftIgn.toLowerCase() === cleanKey ||
+        u.username.toLowerCase() === cleanKey ||
+        (u.email && u.email.toLowerCase() === cleanKey)
+      ) {
+        existing = u;
+        break;
+      }
+    }
+  }
   if (!existing) return null;
 
   const updated: UserProfile = {
@@ -629,8 +662,9 @@ export function updateUser(userIdOrIgn: string, updates: Partial<UserProfile>): 
     ...updates,
   };
 
+  const canonicalKey = (updated.minecraftIgn || updated.username).trim().toLowerCase();
   memoryUsers.set(updated.id, updated);
-  memoryUsers.set(updated.minecraftIgn.toLowerCase(), updated);
+  memoryUsers.set(canonicalKey, updated);
   persistUsersToDisk();
   return updated;
 }
@@ -678,6 +712,36 @@ export function addGlobalBet(bet: BetRecord): BetRecord {
     memoryBets = memoryBets.slice(0, 100);
   }
   persistBetsToDisk();
+
+  // Synchronize user wagering stats globally on server
+  const cleanUserKey = (bet.minecraftIgn || bet.username || '').trim().toLowerCase();
+  let user = memoryUsers.get(bet.userId) || memoryUsers.get(cleanUserKey);
+  if (!user) {
+    for (const u of memoryUsers.values()) {
+      if (
+        u.id === bet.userId ||
+        u.minecraftIgn.toLowerCase() === cleanUserKey ||
+        u.username.toLowerCase() === cleanUserKey
+      ) {
+        user = u;
+        break;
+      }
+    }
+  }
+
+  if (user) {
+    const updatedUser: UserProfile = {
+      ...user,
+      totalWagered: (Number(user.totalWagered) || 0) + Number(bet.betAmount || 0),
+      gamesPlayed: (Number(user.gamesPlayed) || 0) + 1,
+      totalWon: (Number(user.totalWon) || 0) + (bet.result === 'win' ? Number(bet.payout || 0) : 0),
+    };
+    const canonicalKey = (updatedUser.minecraftIgn || updatedUser.username).trim().toLowerCase();
+    memoryUsers.set(updatedUser.id, updatedUser);
+    memoryUsers.set(canonicalKey, updatedUser);
+    persistUsersToDisk();
+  }
+
   return bet;
 }
 
