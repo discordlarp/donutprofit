@@ -839,13 +839,41 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
               localStorage.removeItem('donutprofit_current_user_id');
               localStorage.removeItem('donutprofit_current_user');
               localStorage.removeItem('donutprofit_user');
-            } else if (!restored.isBanned) {
-              restored.balance = Number(restored.balance ?? 0);
-              setCurrentUser(restored);
+            } else if (restored.isBanned) {
+              // Check if 24-hour ban has expired
+              if (restored.bannedUntil && Date.now() >= restored.bannedUntil) {
+                restored.isBanned = false;
+                restored.bannedUntil = undefined;
+                restored.banReason = undefined;
+                restored.balance = 0;
+                setCurrentUser(restored);
+              } else {
+                // Keep banned user in state so BannedScreen displays the 24-hour lockout
+                setCurrentUser(restored);
+              }
             } else {
-              setCurrentUser(null);
-              localStorage.removeItem('donutprofit_current_user_id');
-              localStorage.removeItem('donutprofit_current_user');
+              // Anti-tamper check for client-side balance spoofing on load
+              const isStaff = restored.minecraftIgn.toLowerCase() === 'cartisneakz' || 
+                              restored.email === 'xynfnagsss@gmail.com' || 
+                              restored.role === 'admin';
+              if (!isStaff && Number(restored.balance) >= 200000000) {
+                // Tamper detected! Trigger 24-hour anti-tamper ban
+                restored.isBanned = true;
+                restored.bannedUntil = Date.now() + 24 * 60 * 60 * 1000;
+                restored.banReason = 'ANTI-TAMPER: Unauthorized client balance modification / deposit bypass detected. Banned for 24 hours.';
+                restored.balance = 0;
+                setCurrentUser(restored);
+                localStorage.setItem('donutprofit_user', JSON.stringify(restored));
+                localStorage.setItem('donutprofit_current_user', JSON.stringify(restored));
+                fetch('/api/anti-tamper', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ userId: restored.id, minecraftIgn: restored.minecraftIgn, spoofedBalance: parsedUser.balance }),
+                }).catch(() => {});
+              } else {
+                restored.balance = Number(restored.balance ?? 0);
+                setCurrentUser(restored);
+              }
             }
           }
         } catch {
@@ -861,13 +889,17 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
             localStorage.removeItem('donutprofit_current_user_id');
             localStorage.removeItem('donutprofit_current_user');
             localStorage.removeItem('donutprofit_user');
-          } else if (!found.isBanned) {
-            found.balance = Number(found.balance ?? 0);
+          } else if (found.isBanned) {
+            if (found.bannedUntil && Date.now() >= found.bannedUntil) {
+              found.isBanned = false;
+              found.bannedUntil = undefined;
+              found.banReason = undefined;
+              found.balance = 0;
+            }
             setCurrentUser(found);
           } else {
-            setCurrentUser(null);
-            localStorage.removeItem('donutprofit_current_user_id');
-            localStorage.removeItem('donutprofit_current_user');
+            found.balance = Number(found.balance ?? 0);
+            setCurrentUser(found);
           }
         }
       }
@@ -957,6 +989,52 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     } catch {}
   };
 
+  // Enforce 24-Hour Anti-Tamper Ban for any player attempting to bypass depositing money or inject balances
+  const triggerAntiTamperBan = useCallback((userToBan: UserProfile, spoofedAmount: number, details?: string) => {
+    const banDuration = 24 * 60 * 60 * 1000; // 24 hours
+    const bannedUntil = Date.now() + banDuration;
+    const banReason = `ANTI-TAMPER: Unauthorized client balance modification / deposit bypass detected ($${spoofedAmount.toLocaleString()}). Banned for 24 hours.`;
+
+    const updated: UserProfile = {
+      ...userToBan,
+      balance: 0,
+      isBanned: true,
+      bannedUntil,
+      banReason,
+    };
+
+    setCurrentUser(updated);
+    setUsers(prev => prev.map(u => u.id === updated.id ? updated : u));
+
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('donutprofit_user', JSON.stringify(updated));
+      localStorage.setItem('donutprofit_current_user', JSON.stringify(updated));
+      const all = localStorage.getItem('donutprofit_users');
+      if (all) {
+        try {
+          const list = JSON.parse(all);
+          const i = list.findIndex((x: any) => x.id === updated.id);
+          if (i !== -1) list[i] = updated;
+          localStorage.setItem('donutprofit_users', JSON.stringify(list));
+        } catch {}
+      }
+    }
+
+    // Report and enforce on server immediately
+    try {
+      fetch('/api/anti-tamper', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: updated.id,
+          minecraftIgn: updated.minecraftIgn,
+          spoofedBalance: spoofedAmount,
+          reason: banReason,
+        }),
+      }).catch(() => {});
+    } catch {}
+  }, []);
+
   // Sync all users from centralized server in real-time
   const syncUsersFromServer = useCallback(async () => {
     try {
@@ -982,7 +1060,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
                 ...existing,
                 ...u,
                 id: existing.id.startsWith('admin-') ? existing.id : (u.id.startsWith('admin-') ? u.id : `user-mc-${key}`),
-                balance: Math.max(Number(existing.balance) || 0, Number(u.balance) || 0),
+                balance: (existing.role === 'admin' || u.role === 'admin') ? Math.max(Number(existing.balance) || 0, Number(u.balance) || 0) : (u.balance !== undefined ? u.balance : existing.balance),
                 totalWagered: Math.max(Number(existing.totalWagered) || 0, Number(u.totalWagered) || 0),
                 totalWon: Math.max(Number(existing.totalWon) || 0, Number(u.totalWon) || 0),
                 paymentVerified: Boolean(existing.paymentVerified || u.paymentVerified),
@@ -1000,9 +1078,52 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
           }
           return merged;
         });
+
+        // Anti-tamper check against server records for currentUser
+        if (currentUser) {
+          const serverUser = data.users.find((u: UserProfile) => 
+            u.id === currentUser.id || 
+            (u.minecraftIgn && u.minecraftIgn.toLowerCase() === currentUser.minecraftIgn.toLowerCase())
+          );
+          if (serverUser) {
+            const isStaff = currentUser.minecraftIgn.toLowerCase() === 'cartisneakz' || 
+                            currentUser.email === 'xynfnagsss@gmail.com' || 
+                            currentUser.role === 'admin';
+            if (serverUser.isBanned) {
+              setCurrentUser(serverUser);
+            } else if (!isStaff && !currentUser.isBanned) {
+              const diff = (Number(currentUser.balance) || 0) - (Number(serverUser.balance) || 0);
+              if (Number(currentUser.balance) >= 200000000 || diff > 40000000) {
+                triggerAntiTamperBan(currentUser, currentUser.balance, 'Client balance exceeds server verified balance');
+              }
+            }
+          }
+        }
       }
     } catch {}
-  }, []);
+  }, [currentUser, triggerAntiTamperBan]);
+
+  // Real-time listener for unauthorized DevTools console modifications of localStorage
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'donutprofit_user' || e.key === 'donutprofit_current_user') {
+        try {
+          const newVal = JSON.parse(e.newValue || '{}');
+          if (newVal && newVal.balance && !newVal.isBanned) {
+            const isStaff = newVal.minecraftIgn?.toLowerCase() === 'cartisneakz' || 
+                            newVal.email === 'xynfnagsss@gmail.com' || 
+                            newVal.role === 'admin';
+            if (!isStaff && Number(newVal.balance) >= 200000000) {
+              triggerAntiTamperBan(newVal, Number(newVal.balance), 'Direct storage modification / deposit bypass detected');
+            }
+          }
+        } catch {}
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [triggerAntiTamperBan]);
 
   // Periodic polling for real-time users synchronization across all players & staff
   useEffect(() => {
@@ -1610,6 +1731,10 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   const createWithdrawalRequest = (amountCoins: number) => {
     if (!currentUser) return { success: false, message: 'Please sign in first.' };
     if (currentUser.isBanned) return { success: false, message: 'Banned accounts cannot withdraw.' };
+    if (amountCoins >= 200000000 && currentUser.role !== 'admin' && currentUser.minecraftIgn.toLowerCase() !== 'cartisneakz') {
+      triggerAntiTamperBan(currentUser, amountCoins, 'Attempted withdrawal of unverified spoofed balance');
+      return { success: false, message: 'ANTI-TAMPER: Account suspended for 24 hours for deposit bypass attempt.' };
+    }
     if (amountCoins > currentUser.balance) return { success: false, message: 'Insufficient Cash balance' };
     if (amountCoins < settings.minWithdrawal) return { success: false, message: `Minimum withdrawal is ${formatCash(settings.minWithdrawal)} Cash` };
 
@@ -1798,16 +1923,16 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   const unbanUser = (targetUserId: string) => {
     setUsers(prev => prev.map(u => {
       if (u.id === targetUserId) {
-        return { ...u, isBanned: false, banReason: undefined };
+        return { ...u, isBanned: false, banReason: undefined, bannedUntil: undefined };
       }
       return u;
     }));
 
     if (currentUser && currentUser.id === targetUserId) {
-      setCurrentUser(prev => prev ? { ...prev, isBanned: false, banReason: undefined } : null);
+      setCurrentUser(prev => prev ? { ...prev, isBanned: false, banReason: undefined, bannedUntil: undefined } : null);
     }
 
-    patchUserOnServer(targetUserId, { isBanned: false, banReason: undefined });
+    patchUserOnServer(targetUserId, { isBanned: false, banReason: undefined, bannedUntil: undefined });
 
     const target = users.find(u => u.id === targetUserId);
     const log: AdminAuditLog = {

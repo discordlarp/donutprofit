@@ -504,10 +504,18 @@ export default function AdminPage() {
                           <span className="text-[9px] bg-amber-500/20 text-amber-400 px-1 rounded font-black">ADMIN</span>
                         )}
                         {u.isBanned && (
-                          <span className="text-[9px] bg-red-500/20 text-red-400 px-1 rounded font-black">BANNED</span>
+                          <span className="text-[9px] bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded font-black border border-red-500/30">
+                            {u.bannedUntil && u.bannedUntil > Date.now() ? '24H ANTI-TAMPER BAN' : 'BANNED'}
+                          </span>
                         )}
                       </div>
-                      <p className="text-[11px] text-neutral-500 truncate">{u.email || u.username}</p>
+                      <p className="text-[11px] text-neutral-500 truncate">
+                        {u.isBanned && u.banReason ? (
+                          <span className="text-red-400 font-medium">{u.banReason}</span>
+                        ) : (
+                          u.email || u.username
+                        )}
+                      </p>
                     </div>
                   </div>
 

@@ -229,6 +229,9 @@ let memoryMemberLogs: MemberLogEntry[] = [];
 let memoryBets: BetRecord[] = [...SEED_GLOBAL_BETS];
 let isStoreInitialized = false;
 
+export const ANTI_TAMPER_BAN_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours
+export const ANTI_TAMPER_BAN_REASON = 'ANTI-TAMPER: Unauthorized client balance modification / deposit bypass detected. Banned for 24 hours.';
+
 export function getCanonicalUserId(ignOrUsername: string): string {
   const clean = ignOrUsername.trim().toLowerCase().replace(/^@/, '').replace(/^\./, '');
   return `user-mc-${clean}`;
@@ -240,6 +243,40 @@ export function mergeUserProfiles(existing: UserProfile, incoming: UserProfile):
     ? existing.id 
     : (incoming.id.startsWith('admin-') ? incoming.id : getCanonicalUserId(ign));
 
+  const isStaff = ign.toLowerCase() === 'cartisneakz' || ign.toLowerCase() === 'xynfnagsss' || existing.role === 'admin';
+
+  let isBanned = Boolean(existing.isBanned || incoming.isBanned);
+  let bannedUntil = existing.bannedUntil || incoming.bannedUntil;
+  let banReason = existing.banReason || incoming.banReason;
+
+  // Auto-expire 24-hour ban if time has elapsed
+  if (isBanned && bannedUntil && Date.now() >= bannedUntil) {
+    isBanned = false;
+    bannedUntil = undefined;
+    banReason = undefined;
+  }
+
+  // Anti-tamper balance check
+  let balance = Number(existing.balance) || 0;
+  const incomingBal = Number(incoming.balance) || 0;
+
+  if (!isStaff && !isBanned) {
+    const diff = incomingBal - balance;
+    // If incoming balance has an unauthorized surge (e.g. 50M+ leap without verified deposit, or claiming 500M+)
+    if (incomingBal >= 500000000 || diff > 50000000) {
+      isBanned = true;
+      bannedUntil = Date.now() + ANTI_TAMPER_BAN_DURATION_MS;
+      banReason = ANTI_TAMPER_BAN_REASON;
+      balance = 0; // Wipe spoofed balance
+    } else {
+      balance = existing.balance !== undefined ? existing.balance : incomingBal;
+    }
+  } else if (isStaff) {
+    balance = Math.max(Number(existing.balance) || 0, Number(incoming.balance) || 0);
+  } else if (isBanned) {
+    balance = 0;
+  }
+
   return {
     ...existing,
     ...incoming,
@@ -247,7 +284,7 @@ export function mergeUserProfiles(existing: UserProfile, incoming: UserProfile):
     minecraftIgn: ign,
     username: incoming.username || existing.username || ign,
     avatarUrl: `https://mc-heads.net/avatar/${encodeURIComponent(ign)}/64`,
-    balance: Math.max(Number(existing.balance) || 0, Number(incoming.balance) || 0),
+    balance,
     totalWagered: Math.max(Number(existing.totalWagered) || 0, Number(incoming.totalWagered) || 0),
     totalWon: Math.max(Number(existing.totalWon) || 0, Number(incoming.totalWon) || 0),
     gamesPlayed: Math.max(Number(existing.gamesPlayed) || 0, Number(incoming.gamesPlayed) || 0),
@@ -256,8 +293,9 @@ export function mergeUserProfiles(existing: UserProfile, incoming: UserProfile):
       ? 'approved' 
       : (existing.accountStatus || incoming.accountStatus || 'approved'),
     role: (existing.role === 'admin' || incoming.role === 'admin') ? 'admin' : 'user',
-    isBanned: Boolean(existing.isBanned || incoming.isBanned),
-    banReason: existing.banReason || incoming.banReason,
+    isBanned,
+    bannedUntil,
+    banReason,
   };
 }
 
@@ -603,4 +641,60 @@ export function addGlobalBet(bet: BetRecord): BetRecord {
   }
   persistBetsToDisk();
   return bet;
+}
+
+export function banUserForAntiTamper(userIdOrIgn: string, reasonDetails?: string): UserProfile | null {
+  loadStoreFromDisk();
+  const key = userIdOrIgn.toLowerCase().trim().replace(/^@/, '');
+  let user = memoryUsers.get(userIdOrIgn) || memoryUsers.get(key);
+  if (!user) {
+    for (const u of memoryUsers.values()) {
+      if (
+        u.id.toLowerCase() === key ||
+        u.minecraftIgn.toLowerCase() === key ||
+        u.username.toLowerCase() === key ||
+        (u.email && u.email.toLowerCase() === key)
+      ) {
+        user = u;
+        break;
+      }
+    }
+  }
+  if (!user) return null;
+
+  const bannedUntil = Date.now() + ANTI_TAMPER_BAN_DURATION_MS;
+  const reason = reasonDetails || ANTI_TAMPER_BAN_REASON;
+
+  const updated: UserProfile = {
+    ...user,
+    balance: 0, // Wipe any tampered balance
+    isBanned: true,
+    bannedUntil,
+    banReason: reason,
+  };
+
+  memoryUsers.set(updated.id, updated);
+  memoryUsers.set(updated.minecraftIgn.toLowerCase(), updated);
+  persistUsersToDisk();
+
+  // Log anti-tamper security ban to member logs
+  const entry: MemberLogEntry = {
+    id: `log-sec-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+    userId: updated.id,
+    username: updated.username,
+    minecraftIgn: updated.minecraftIgn,
+    authProvider: updated.authProvider || 'minecraft',
+    action: 'login',
+    details: `🚨 [ANTI-TAMPER BAN] ${updated.minecraftIgn} was banned for 24 hours: ${reason}`,
+    timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+    timeMs: Date.now(),
+  };
+
+  memoryMemberLogs.unshift(entry);
+  if (memoryMemberLogs.length > 200) {
+    memoryMemberLogs = memoryMemberLogs.slice(0, 200);
+  }
+  persistMemberLogsToDisk();
+
+  return updated;
 }

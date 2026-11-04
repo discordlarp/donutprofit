@@ -18,7 +18,9 @@ export interface UserProfile {
   balance: number;
   role: UserRole;
   isBanned?: boolean;
+  bannedUntil?: number;
   banReason?: string;
+  isAntiTamperBan?: boolean;
   avatarUrl?: string;
   totalWagered: number;
   totalWon: number;
