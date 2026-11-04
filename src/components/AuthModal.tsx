@@ -23,7 +23,7 @@ interface AuthModalProps {
   onClose: () => void;
 }
 
-const DISCORD_BOT_AUTH_URL = 'https://discord.com/oauth2/authorize?client_id=1566894227311435847';
+const DISCORD_BOT_AUTH_URL = 'https://discord.com/oauth2/authorize?client_id=1566894227311435847&response_type=code&scope=identify%20guilds.join';
 const DISCORD_INVITE_URL = 'https://discord.gg/qEHzmKNAv';
 
 export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
@@ -80,6 +80,19 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
       setDiscordTag('');
       setMsg(null);
       setIsVerifying(false);
+    } else {
+      // Check if user returned with Discord OAuth code
+      if (typeof window !== 'undefined') {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('code')) {
+          setActiveTab('discord');
+          setBotAuthorized(true);
+          setMsg({
+            type: 'success',
+            text: '✓ Discord OAuth authorization verified! Please complete your sign-up below.'
+          });
+        }
+      }
     }
     return () => clearTimers();
   }, [isOpen]);
