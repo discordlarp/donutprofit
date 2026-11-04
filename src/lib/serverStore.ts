@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
-import { UserProfile, ChatMessage, BetRecord } from '@/types';
+import { UserProfile, ChatMessage, BetRecord, WithdrawalRequest, RequestStatus } from '@/types';
 import { MOCK_USERS } from '@/lib/store';
 
 export interface MemberLogEntry {
@@ -227,6 +227,7 @@ let memoryUsers: Map<string, UserProfile> = new Map();
 let memoryChat: ChatMessage[] = [...SEED_CHAT_MESSAGES];
 let memoryMemberLogs: MemberLogEntry[] = [];
 let memoryBets: BetRecord[] = [...SEED_GLOBAL_BETS];
+let memoryWithdrawals: WithdrawalRequest[] = [];
 let isStoreInitialized = false;
 
 export const ANTI_TAMPER_BAN_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours
@@ -388,9 +389,39 @@ function loadStoreFromDisk() {
     console.error('[ServerStore] Failed to load bets.json:', err);
   }
 
+  // Load withdrawals.json
+  try {
+    const withFile = path.join(dir, 'withdrawals.json');
+    if (fs.existsSync(withFile)) {
+      const raw = fs.readFileSync(withFile, 'utf-8');
+      const list: WithdrawalRequest[] = JSON.parse(raw);
+      if (Array.isArray(list)) {
+        memoryWithdrawals = list.filter(
+          w => !isAccountRemoved(w.minecraftIgn) && !isAccountRemoved(w.username) && !isAccountRemoved(w.userId)
+        );
+      }
+    }
+  } catch (err) {
+    console.error('[ServerStore] Failed to load withdrawals.json:', err);
+  }
+
   // Save cleaned state
   persistUsersToDisk();
   persistBetsToDisk();
+  persistWithdrawalsToDisk();
+}
+
+function persistWithdrawalsToDisk() {
+  try {
+    const dir = getDataDir();
+    const withFile = path.join(dir, 'withdrawals.json');
+    const filtered = memoryWithdrawals
+      .filter(w => !isAccountRemoved(w.minecraftIgn) && !isAccountRemoved(w.username) && !isAccountRemoved(w.userId))
+      .slice(0, 200);
+    fs.writeFileSync(withFile, JSON.stringify(filtered, null, 2), 'utf-8');
+  } catch (err) {
+    console.error('[ServerStore] Error saving withdrawals to disk:', err);
+  }
 }
 
 function persistBetsToDisk() {
@@ -575,9 +606,15 @@ export function deleteUser(userIdOrIgn: string): boolean {
     (b) => !isAccountRemoved(b.minecraftIgn) && !isAccountRemoved(b.username) && !isAccountRemoved(b.userId)
   );
 
+  // Filter withdrawals
+  memoryWithdrawals = memoryWithdrawals.filter(
+    (w) => !isAccountRemoved(w.minecraftIgn) && !isAccountRemoved(w.username) && !isAccountRemoved(w.userId)
+  );
+
   persistUsersToDisk();
   persistMemberLogsToDisk();
   persistBetsToDisk();
+  persistWithdrawalsToDisk();
   return true;
 }
 
@@ -597,6 +634,7 @@ export function updateUser(userIdOrIgn: string, updates: Partial<UserProfile>): 
   persistUsersToDisk();
   return updated;
 }
+
 
 export function getChatMessages(limit: number = 60): ChatMessage[] {
   loadStoreFromDisk();
@@ -698,3 +736,79 @@ export function banUserForAntiTamper(userIdOrIgn: string, reasonDetails?: string
 
   return updated;
 }
+
+export function getAllWithdrawals(): WithdrawalRequest[] {
+  loadStoreFromDisk();
+  return memoryWithdrawals.filter(w => !isAccountRemoved(w.minecraftIgn) && !isAccountRemoved(w.username) && !isAccountRemoved(w.userId));
+}
+
+export function addWithdrawalRequest(req: WithdrawalRequest): WithdrawalRequest {
+  loadStoreFromDisk();
+  if (isAccountRemoved(req.minecraftIgn) || isAccountRemoved(req.username) || isAccountRemoved(req.userId)) {
+    return req;
+  }
+  memoryWithdrawals = memoryWithdrawals.filter(w => w.id !== req.id);
+  memoryWithdrawals.unshift(req);
+  if (memoryWithdrawals.length > 200) {
+    memoryWithdrawals = memoryWithdrawals.slice(0, 200);
+  }
+  persistWithdrawalsToDisk();
+
+  // Log to member logs so staff see it immediately
+  const logEntry: MemberLogEntry = {
+    id: `log-with-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+    userId: req.userId,
+    username: req.username,
+    minecraftIgn: req.minecraftIgn,
+    authProvider: 'minecraft',
+    action: 'login',
+    details: `💸 [WITHDRAWAL SUBMITTED] ${req.minecraftIgn} requested withdrawal of $${req.amountCoins.toLocaleString()} Cash (/pay in SMP: ${req.amountInGame.toLocaleString()})`,
+    timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+    timeMs: Date.now(),
+  };
+  memoryMemberLogs.unshift(logEntry);
+  if (memoryMemberLogs.length > 200) {
+    memoryMemberLogs = memoryMemberLogs.slice(0, 200);
+  }
+  persistMemberLogsToDisk();
+
+  return req;
+}
+
+export function updateWithdrawalRequestStatus(id: string, status: RequestStatus, note?: string): WithdrawalRequest | null {
+  loadStoreFromDisk();
+  const idx = memoryWithdrawals.findIndex(w => w.id === id);
+  if (idx === -1) return null;
+
+  const updated: WithdrawalRequest = {
+    ...memoryWithdrawals[idx],
+    status,
+    adminNote: note,
+    updatedAt: new Date().toISOString(),
+  };
+  memoryWithdrawals[idx] = updated;
+  persistWithdrawalsToDisk();
+
+  // Log fulfillment to member logs
+  const logEntry: MemberLogEntry = {
+    id: `log-with-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+    userId: updated.userId,
+    username: updated.username,
+    minecraftIgn: updated.minecraftIgn,
+    authProvider: 'minecraft',
+    action: 'login',
+    details: status === 'approved' 
+      ? `✅ [WITHDRAWAL PAID] Staff marked withdrawal for ${updated.minecraftIgn} as PAID (/pay in SMP: ${updated.amountInGame.toLocaleString()})`
+      : `❌ [WITHDRAWAL REJECTED] Staff rejected withdrawal for ${updated.minecraftIgn} (${note || 'Refunded'})`,
+    timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+    timeMs: Date.now(),
+  };
+  memoryMemberLogs.unshift(logEntry);
+  if (memoryMemberLogs.length > 200) {
+    memoryMemberLogs = memoryMemberLogs.slice(0, 200);
+  }
+  persistMemberLogsToDisk();
+
+  return updated;
+}
+

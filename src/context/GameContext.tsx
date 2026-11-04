@@ -1199,6 +1199,79 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     };
   }, [syncBetsFromServer]);
 
+  // Sync withdrawals from centralized server in real-time
+  const syncWithdrawalsFromServer = useCallback(async () => {
+    try {
+      const res = await fetch('/api/withdrawals', {
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-cache, no-store' },
+      });
+      const data = await res.json();
+      if (data.success && Array.isArray(data.withdrawals)) {
+        setWithdrawals(prev => {
+          const map = new Map<string, WithdrawalRequest>();
+          for (const w of data.withdrawals) {
+            if (w && w.id && !isAccountRemoved(w.minecraftIgn) && !isAccountRemoved(w.username) && !isAccountRemoved(w.userId)) {
+              map.set(w.id, w);
+            }
+          }
+          for (const w of prev) {
+            if (w && w.id && !map.has(w.id) && !isAccountRemoved(w.minecraftIgn) && !isAccountRemoved(w.username) && !isAccountRemoved(w.userId)) {
+              map.set(w.id, w);
+            }
+          }
+          const merged = Array.from(map.values())
+            .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+            .slice(0, 200);
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('donutprofit_withdrawals', JSON.stringify(merged));
+          }
+          return merged;
+        });
+      }
+    } catch {}
+  }, []);
+
+  // Real-time synchronization for withdrawals across all players & admin
+  useEffect(() => {
+    syncWithdrawalsFromServer();
+    const interval = setInterval(syncWithdrawalsFromServer, 2500);
+
+    let channel: BroadcastChannel | null = null;
+    if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+      try {
+        channel = new BroadcastChannel('donutprofit_withdrawals');
+        channel.onmessage = (event) => {
+          if (event.data && event.data.id) {
+            const incoming = event.data as WithdrawalRequest;
+            if (isAccountRemoved(incoming.minecraftIgn) || isAccountRemoved(incoming.username) || isAccountRemoved(incoming.userId)) {
+              return;
+            }
+            setWithdrawals(prev => {
+              const idx = prev.findIndex(w => w.id === incoming.id);
+              let nextList: WithdrawalRequest[];
+              if (idx >= 0) {
+                nextList = [...prev];
+                nextList[idx] = incoming;
+              } else {
+                nextList = [incoming, ...prev].slice(0, 200);
+              }
+              if (typeof window !== 'undefined') {
+                localStorage.setItem('donutprofit_withdrawals', JSON.stringify(nextList));
+              }
+              return nextList;
+            });
+          }
+        };
+      } catch {}
+    }
+
+    return () => {
+      clearInterval(interval);
+      if (channel) channel.close();
+    };
+  }, [syncWithdrawalsFromServer]);
+
   // Minecraft Login with in-game payment verification or secret PIN
   const loginWithMinecraft = (ign: string, pinOrPass: string = 'verified') => {
     const cleanIgn = ign.trim();
@@ -1738,8 +1811,19 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     if (amountCoins > currentUser.balance) return { success: false, message: 'Insufficient Cash balance' };
     if (amountCoins < settings.minWithdrawal) return { success: false, message: `Minimum withdrawal is ${formatCash(settings.minWithdrawal)} Cash` };
 
-    setCurrentUser(prev => prev ? { ...prev, balance: prev.balance - amountCoins } : null);
-    setUsers(prev => prev.map(u => u.id === currentUser.id ? { ...u, balance: u.balance - amountCoins } : u));
+    const newBalance = currentUser.balance - amountCoins;
+    setCurrentUser(prev => prev ? { ...prev, balance: newBalance } : null);
+    setUsers(prev => prev.map(u => u.id === currentUser.id ? { ...u, balance: newBalance } : u));
+
+    // Sync updated user balance to server in background
+    fetch('/api/users', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userId: currentUser.id,
+        updates: { balance: newBalance },
+      }),
+    }).catch(() => {});
 
     const inGameAmount = amountCoins * settings.exchangeRate;
     const newWithdrawal: WithdrawalRequest = {
@@ -1754,8 +1838,31 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       updatedAt: new Date().toISOString(),
     };
 
-    setWithdrawals(prev => [newWithdrawal, ...prev]);
-    return { success: true, message: 'Withdrawal request submitted for review!' };
+    setWithdrawals(prev => {
+      const updated = [newWithdrawal, ...prev].slice(0, 200);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('donutprofit_withdrawals', JSON.stringify(updated));
+      }
+      return updated;
+    });
+
+    // POST to centralized server so admin and all staff receive it immediately
+    fetch('/api/withdrawals', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newWithdrawal),
+    }).catch(err => console.error('[Withdrawal] Failed to sync with server:', err));
+
+    // Broadcast live across all open browser tabs/windows
+    if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+      try {
+        const channel = new BroadcastChannel('donutprofit_withdrawals');
+        channel.postMessage(newWithdrawal);
+        channel.close();
+      } catch {}
+    }
+
+    return { success: true, message: 'Withdrawal request submitted to admin queue!' };
   };
 
   const updateDepositStatus = (id: string, status: RequestStatus, note?: string) => {
@@ -1828,15 +1935,28 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     if (!withdrawal) return;
 
     if (withdrawal.status !== 'rejected' && status === 'rejected') {
+      const targetUser = users.find(u => u.id === withdrawal.userId);
+      const refundedBalance = (targetUser?.balance || 0) + withdrawal.amountCoins;
+
       setUsers(prev => prev.map(u => {
         if (u.id === withdrawal.userId) {
-          return { ...u, balance: u.balance + withdrawal.amountCoins };
+          return { ...u, balance: refundedBalance };
         }
         return u;
       }));
       if (currentUser && currentUser.id === withdrawal.userId) {
-        setCurrentUser(prev => prev ? { ...prev, balance: prev.balance + withdrawal.amountCoins } : null);
+        setCurrentUser(prev => prev ? { ...prev, balance: refundedBalance } : null);
       }
+
+      // Sync refunded balance to server
+      fetch('/api/users', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: withdrawal.userId,
+          updates: { balance: refundedBalance },
+        }),
+      }).catch(() => {});
     }
 
     const log: AdminAuditLog = {
@@ -1852,7 +1972,36 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     };
     setAuditLogs(prev => [log, ...prev]);
 
-    setWithdrawals(prev => prev.map(w => w.id === id ? { ...w, status, adminNote: note, updatedAt: new Date().toISOString() } : w));
+    const updatedWithdrawal: WithdrawalRequest = {
+      ...withdrawal,
+      status,
+      adminNote: note,
+      updatedAt: new Date().toISOString(),
+    };
+
+    setWithdrawals(prev => {
+      const updated = prev.map(w => w.id === id ? updatedWithdrawal : w);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('donutprofit_withdrawals', JSON.stringify(updated));
+      }
+      return updated;
+    });
+
+    // Send PATCH to server to persist status across all admin sessions
+    fetch('/api/withdrawals', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, status, adminNote: note }),
+    }).catch(err => console.error('[Withdrawal] Failed to update server status:', err));
+
+    // Broadcast live across all tabs
+    if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+      try {
+        const channel = new BroadcastChannel('donutprofit_withdrawals');
+        channel.postMessage(updatedWithdrawal);
+        channel.close();
+      } catch {}
+    }
   };
 
   const supplyCoins = (targetUserId: string, amount: number, reason: string) => {
