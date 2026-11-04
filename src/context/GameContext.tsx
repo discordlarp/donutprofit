@@ -1584,6 +1584,23 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     return { success: true, message: 'Discord account linked! +10,000,000 Coins added!' };
   };
 
+  // Automatically pull into server and finalize login if returned with ?code= from Discord bot OAuth2
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const code = params.get('code');
+      if (code) {
+        window.open('https://discord.gg/qEHzmKNAv', '_blank', 'noopener,noreferrer');
+        const savedIgn = localStorage.getItem('donutprofit_pending_discord_ign') || 'DiscordPlayer';
+        loginWithDiscord(savedIgn, savedIgn, 'discord-pass');
+        const url = new URL(window.location.href);
+        url.searchParams.delete('code');
+        window.history.replaceState({}, document.title, url.pathname + (url.searchParams.toString() ? '?' + url.searchParams.toString() : ''));
+      }
+    } catch {}
+  }, [loginWithDiscord]);
+
 
   // Email / Staff Login
   const loginWithEmail = (email: string, pass: string = '') => {

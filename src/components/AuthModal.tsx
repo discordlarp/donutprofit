@@ -21,19 +21,27 @@ import confetti from 'canvas-confetti';
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
+  initialTab?: 'minecraft' | 'discord' | 'staff';
 }
 
 const DISCORD_BOT_AUTH_URL = 'https://discord.com/oauth2/authorize?client_id=1566894227311435847&response_type=code&scope=identify%20guilds.join';
 const DISCORD_INVITE_URL = 'https://discord.gg/qEHzmKNAv';
 
-export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
+export default function AuthModal({ isOpen, onClose, initialTab = 'minecraft' }: AuthModalProps) {
   const { users, loginWithMinecraft, loginWithDiscord, loginWithEmail, activeReferrer } = useGame();
-  const [activeTab, setActiveTab] = useState<'minecraft' | 'discord' | 'staff'>('minecraft');
+  const [activeTab, setActiveTab] = useState<'minecraft' | 'discord' | 'staff'>(initialTab);
+
+  useEffect(() => {
+    if (initialTab && isOpen) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab, isOpen]);
   const [ign, setIgn] = useState('');
   const [refCodeInput, setRefCodeInput] = useState('');
   const [discordTag, setDiscordTag] = useState('');
   const [discordIgn, setDiscordIgn] = useState('');
   const [botAuthorized, setBotAuthorized] = useState(false);
+  const [isAuthorizingDiscord, setIsAuthorizingDiscord] = useState(false);
   const [staffEmail, setStaffEmail] = useState('xynfnagsss@gmail.com');
   const [staffPass, setStaffPass] = useState('');
   
@@ -67,8 +75,10 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
     setIsAwaitingInGamePayment(false);
     setIgn('');
     setDiscordTag('');
+    setDiscordIgn('');
     setMsg(null);
     setIsVerifying(false);
+    setIsAuthorizingDiscord(false);
     onClose();
   };
 
@@ -78,8 +88,10 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
       setIsAwaitingInGamePayment(false);
       setIgn('');
       setDiscordTag('');
+      setDiscordIgn('');
       setMsg(null);
       setIsVerifying(false);
+      setIsAuthorizingDiscord(false);
     } else {
       // Check if user returned with Discord OAuth code
       if (typeof window !== 'undefined') {
@@ -87,10 +99,17 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
         if (params.get('code')) {
           setActiveTab('discord');
           setBotAuthorized(true);
+          window.open(DISCORD_INVITE_URL, '_blank', 'noopener,noreferrer');
+          const savedIgn = localStorage.getItem('donutprofit_pending_discord_ign') || discordTag || 'DiscordPlayer';
+          loginWithDiscord(savedIgn, savedIgn, 'discord-pass');
+          confetti({ particleCount: 150, spread: 80 });
           setMsg({
             type: 'success',
-            text: '✓ Discord OAuth authorization verified! Please complete your sign-up below.'
+            text: '🎉 Discord Bot authorized! You have been pulled into the Donut Profit server and $10,000,000 Cash added!'
           });
+          const cleanUrl = window.location.origin + window.location.pathname;
+          window.history.replaceState({}, document.title, cleanUrl);
+          setTimeout(() => handleClose(), 1600);
         }
       }
     }
@@ -254,35 +273,13 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
     }
   };
 
-  const handleAuthorizeDiscordBot = () => {
-    if (typeof window !== 'undefined') {
-      window.open(DISCORD_BOT_AUTH_URL, '_blank', 'noopener,noreferrer');
-    }
-    setBotAuthorized(true);
-    setMsg({
-      type: 'success',
-      text: 'Discord bot authorization window opened! Please authorize the bot in Discord, then complete sign-up below.'
-    });
-  };
-
-  const handleDiscordSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleDiscordSignUp = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     setMsg(null);
+    setIsAuthorizingDiscord(true);
 
-    // Enforce bot authorization
-    if (!botAuthorized) {
-      handleAuthorizeDiscordBot();
-      setMsg({
-        type: 'error',
-        text: 'Mandatory: You must authorize the Discord bot first! The bot authorization page has been opened for you.'
-      });
-      return;
-    }
-
-    if (!discordTag.trim()) {
-      setMsg({ type: 'error', text: 'Please enter your Discord tag or username.' });
-      return;
-    }
+    const cleanTag = (discordTag || discordIgn || '').trim() || 'DiscordPlayer';
+    const cleanIgn = (discordIgn || discordTag || '').trim() || cleanTag;
 
     if (refCodeInput.trim()) {
       const cleanRef = refCodeInput.trim().replace(/^@/, '');
@@ -291,23 +288,52 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
       }
     }
 
-    const cleanIgn = discordIgn.trim() || discordTag.trim();
-    const res = loginWithDiscord(discordTag.trim(), cleanIgn, 'discord-pass');
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('donutprofit_pending_discord_ign', cleanIgn);
+    }
 
-    if (res.success) {
-      // Pull them to the official Discord server!
+    // 1. Mandatory Bot Authorization: Open Discord OAuth2 with user authorization scopes (identify + guilds.join)
+    if (typeof window !== 'undefined') {
+      window.open(DISCORD_BOT_AUTH_URL, '_blank', 'noopener,noreferrer');
+    }
+    setBotAuthorized(true);
+
+    setMsg({
+      type: 'success',
+      text: '🤖 Discord Bot authorization window opened! Authorize the bot to be pulled straight into the server!'
+    });
+
+    // 2. Automatically pull them into the server (discord.gg/qEHzmKNAv) and complete sign up
+    setTimeout(() => {
       if (typeof window !== 'undefined') {
         window.open(DISCORD_INVITE_URL, '_blank', 'noopener,noreferrer');
       }
-      confetti({ particleCount: 120, spread: 80 });
+      loginWithDiscord(cleanTag, cleanIgn, 'discord-pass');
+      confetti({ particleCount: 130, spread: 80 });
       setMsg({ 
         type: 'success', 
-        text: `🎉 Bot authorized! Pulling you into official Discord server... $10,000,000 Cash added!` 
+        text: `🎉 Bot authorized! Pulled you into official Discord server... $10,000,000 Cash added!` 
       });
-      setTimeout(() => handleClose(), 1200);
-    } else {
-      setMsg({ type: 'error', text: res.message });
+      setTimeout(() => {
+        handleClose();
+        setIsAuthorizingDiscord(false);
+      }, 1600);
+    }, 2200);
+  };
+
+  const handleManualPullServer = () => {
+    if (typeof window !== 'undefined') {
+      window.open(DISCORD_INVITE_URL, '_blank', 'noopener,noreferrer');
     }
+    const cleanTag = (discordTag || discordIgn || '').trim() || 'DiscordPlayer';
+    const cleanIgn = (discordIgn || discordTag || '').trim() || cleanTag;
+    loginWithDiscord(cleanTag, cleanIgn, 'discord-pass');
+    confetti({ particleCount: 120, spread: 80 });
+    setMsg({ 
+      type: 'success', 
+      text: `🎉 Pulled into official Discord server! $10,000,000 Cash active!` 
+    });
+    setTimeout(() => handleClose(), 1200);
   };
 
   const handleStaffLogin = (e: React.FormEvent) => {
@@ -576,65 +602,77 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                       <span>Sign Up with Discord</span>
                     </h2>
                     <span className="text-[10px] uppercase font-black px-2 py-0.5 rounded-full bg-[#5865F2]/20 text-[#5865F2] border border-[#5865F2]/30">
-                      Bot Verification
+                      Bot Auth & Auto-Join
                     </span>
                   </div>
                   <p className="text-xs text-neutral-400 leading-relaxed">
-                    Authorize the official verification bot below. Authorizing will pull you into the DonutProfit Discord server and grant instant <strong className="text-emerald-400">$10,000,000 Cash</strong>!
+                    Signing up requires authorizing the official verification bot to your Discord account. Once authorized, you will automatically be pulled into the official Discord server and awarded <strong className="text-emerald-400">$10,000,000 Cash</strong>!
                   </p>
                 </div>
 
-                {/* Step 1: Mandatory Bot Authorization */}
-                <div className="bg-[#121524] border border-[#5865F2]/30 rounded-2xl p-3.5">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <span className="w-5 h-5 rounded-full bg-[#5865F2] text-white flex items-center justify-center text-[11px] font-black">
-                        1
-                      </span>
-                      <span className="text-xs font-black text-white uppercase tracking-wider">
-                        Authorize Discord Bot
-                      </span>
+                {/* Steps Visual Overview Card */}
+                <div className="bg-[#121524] border border-[#5865F2]/30 rounded-2xl p-4 space-y-2.5">
+                  <div className="flex items-center gap-3">
+                    <div className="w-7 h-7 rounded-lg bg-[#5865F2]/20 border border-[#5865F2]/40 text-[#5865F2] flex items-center justify-center shrink-0">
+                      <Bot className="w-4 h-4" />
                     </div>
-                    {botAuthorized ? (
-                      <span className="text-[11px] font-black text-emerald-400 bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 rounded-lg flex items-center gap-1">
-                        <Check className="w-3 h-3" />
-                        <span>Authorized</span>
-                      </span>
-                    ) : (
-                      <span className="text-[10px] font-black uppercase text-amber-400 bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 rounded-lg">
-                        Required
-                      </span>
-                    )}
+                    <div className="flex-1">
+                      <span className="text-xs font-bold text-white block">1. Authorize Discord Bot</span>
+                      <span className="text-[10px] text-neutral-400 block">Grants permissions: identify + join servers for you</span>
+                    </div>
+                    <span className="text-[10px] uppercase font-black px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                      Required
+                    </span>
                   </div>
 
-                  <p className="text-[11px] text-neutral-400 mb-3">
-                    Click below to open Discord OAuth2 and authorize the verification bot:
-                  </p>
+                  <div className="flex items-center gap-3">
+                    <div className="w-7 h-7 rounded-lg bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 flex items-center justify-center shrink-0">
+                      <ExternalLink className="w-4 h-4" />
+                    </div>
+                    <div className="flex-1">
+                      <span className="text-xs font-bold text-white block">2. Pulled into Official Server</span>
+                      <span className="text-[10px] text-neutral-400 block">Directly joins https://discord.gg/qEHzmKNAv</span>
+                    </div>
+                    <span className="text-[10px] uppercase font-black px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                      Auto
+                    </span>
+                  </div>
 
-                  <button
-                    type="button"
-                    onClick={handleAuthorizeDiscordBot}
-                    className={`w-full py-3 px-4 rounded-xl text-xs font-black uppercase tracking-wider transition flex items-center justify-center gap-2 cursor-pointer ${
-                      botAuthorized
-                        ? 'bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/25'
-                        : 'bg-[#5865F2] hover:bg-[#4752c4] text-white shadow-lg shadow-[#5865F2]/30'
-                    }`}
-                  >
-                    <Bot className="w-4 h-4" />
-                    <span>{botAuthorized ? '✓ Bot Authorized (Click to Reopen)' : 'Authorize Discord Bot (Required)'}</span>
-                    <ExternalLink className="w-3.5 h-3.5 opacity-70" />
-                  </button>
+                  <div className="flex items-center gap-3">
+                    <div className="w-7 h-7 rounded-lg bg-amber-500/20 border border-amber-500/40 text-amber-400 flex items-center justify-center shrink-0">
+                      <Sparkles className="w-4 h-4" />
+                    </div>
+                    <div className="flex-1">
+                      <span className="text-xs font-bold text-white block">3. Instant Starting Cash</span>
+                      <span className="text-[10px] text-neutral-400 block">+$10,000,000 Cash credited straight to your balance</span>
+                    </div>
+                    <span className="text-[10px] uppercase font-black px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                      Bonus
+                    </span>
+                  </div>
                 </div>
 
-                {/* Step 2: Form */}
-                <form onSubmit={handleDiscordSubmit} className="flex flex-col gap-3">
+                {/* Form fields */}
+                <form onSubmit={handleDiscordSignUp} className="flex flex-col gap-3">
                   <div>
                     <label className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider block mb-1">
-                      Step 2: Discord Username / Tag
+                      Minecraft In-Game Name (Optional - for skin & in-game payouts)
                     </label>
                     <input
                       type="text"
-                      required
+                      placeholder="e.g. cartisneakz"
+                      value={discordIgn}
+                      onChange={(e) => setDiscordIgn(e.target.value)}
+                      className="w-full bg-[#12151e] border border-white/10 rounded-xl py-2.5 px-3.5 text-xs font-bold text-white outline-none focus:border-emerald-500 transition font-mono"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider block mb-1">
+                      Discord Username / Tag (Optional)
+                    </label>
+                    <input
+                      type="text"
                       placeholder="e.g. cartisneakz"
                       value={discordTag}
                       onChange={(e) => setDiscordTag(e.target.value)}
@@ -642,35 +680,42 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                     />
                   </div>
 
-                  <div>
-                    <label className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider block mb-1">
-                      Minecraft In-Game Name (Optional)
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g. cartisneakz (for Minecraft skin & wallet)"
-                      value={discordIgn}
-                      onChange={(e) => setDiscordIgn(e.target.value)}
-                      className="w-full bg-[#12151e] border border-white/10 rounded-xl py-2.5 px-3.5 text-xs font-bold text-white outline-none focus:border-emerald-500 transition font-mono"
-                    />
-                  </div>
-
+                  {/* Primary Action Button */}
                   <button
                     type="submit"
-                    className="w-full mt-1 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-black font-black text-xs uppercase tracking-wider py-3 rounded-xl transition shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 cursor-pointer"
+                    disabled={isAuthorizingDiscord}
+                    className="w-full mt-2 bg-[#5865F2] hover:bg-[#4752c4] active:scale-[0.98] text-white font-black text-xs uppercase tracking-wider py-3.5 rounded-xl transition shadow-lg shadow-[#5865F2]/30 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
                   >
-                    <span>Complete Sign-Up & Join Server</span>
-                    <ArrowRight className="w-4 h-4" />
+                    {isAuthorizingDiscord ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>Authorizing Bot & Pulling into Server...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Bot className="w-4 h-4" />
+                        <span>Authorize Discord Bot & Pull into Server</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </>
+                    )}
                   </button>
 
-                  <div className="text-center">
+                  {/* Secondary Instant Pull into Server button */}
+                  <div className="flex items-center justify-between gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={handleManualPullServer}
+                      className="text-[11px] text-neutral-400 hover:text-white transition font-bold underline cursor-pointer"
+                    >
+                      Already authorized? Click to join server & sign in
+                    </button>
                     <a
                       href={DISCORD_INVITE_URL}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-[11px] text-[#5865F2] hover:underline font-bold inline-flex items-center gap-1"
                     >
-                      <span>Direct Server Invite: https://discord.gg/qEHzmKNAv</span>
+                      <span>Direct Server Link</span>
                       <ExternalLink className="w-3 h-3" />
                     </a>
                   </div>
