@@ -18,7 +18,7 @@ import LimboGame from '@/components/games/LimboGame';
 import HiloGame from '@/components/games/HiloGame';
 import RecentBetsTable from '@/components/RecentBetsTable';
 import AuthModal from '@/components/AuthModal';
-import RotatingGameShowcase from '@/components/RotatingGameShowcase';
+import GameArtwork from '@/components/GameArtwork';
 import { sound } from '@/lib/sound';
 import { 
   Gamepad2,
@@ -35,11 +35,13 @@ import {
   VolumeX,
   ExternalLink,
   Users,
-  Clock,
   Coins,
   ChevronRight,
   Swords,
-  Crown
+  Crown,
+  Play,
+  ArrowRight,
+  Sparkle
 } from 'lucide-react';
 
 interface GamePoster {
@@ -49,40 +51,42 @@ interface GamePoster {
   players: number;
   multiplier: string;
   tag: string;
+  description: string;
 }
 
 const POSTER_GAMES: GamePoster[] = [
-  { id: 'mines', title: 'Mines', category: 'originals', players: 28, multiplier: '4.95x', tag: 'FEATURED' },
-  { id: 'crash', title: 'Crash', category: 'high_multiplier', players: 34, multiplier: '5.00x', tag: 'POPULAR' },
-  { id: 'casebattles', title: 'Case Battles', category: 'pvp', players: 31, multiplier: 'PVP', tag: 'BATTLE' },
-  { id: 'plinko', title: 'Plinko', category: 'high_multiplier', players: 29, multiplier: '5.00x', tag: '60FPS' },
-  { id: 'slots', title: 'Slots', category: 'originals', players: 22, multiplier: '5.00x', tag: 'HOT' },
-  { id: 'coinflip', title: 'Coinflip', category: 'pvp', players: 24, multiplier: '2.00x', tag: 'PVP' },
-  { id: 'roulette', title: 'Roulette', category: 'cards', players: 18, multiplier: '5.00x', tag: 'CLASSIC' },
-  { id: 'blackjack', title: 'Blackjack', category: 'cards', players: 19, multiplier: '2.50x', tag: 'CARDS' },
-  { id: 'towers', title: 'Towers', category: 'originals', players: 15, multiplier: '4.00x', tag: 'ORIGINAL' },
-  { id: 'limbo', title: 'Limbo', category: 'high_multiplier', players: 16, multiplier: '5.00x', tag: 'FAST' },
-  { id: 'dice', title: 'Dice', category: 'originals', players: 14, multiplier: '5.00x', tag: 'FAIR' },
-  { id: 'cases', title: 'Cases', category: 'originals', players: 12, multiplier: '4.50x', tag: 'LOOT' },
-  { id: 'hilo', title: 'Hilo', category: 'cards', players: 11, multiplier: '1.92x', tag: 'FAIR' },
-  { id: 'chicken', title: 'Chicken', category: 'originals', players: 10, multiplier: '5.00x', tag: 'MINES' },
-  { id: 'rabbits', title: 'Rabbits', category: 'high_multiplier', players: 12, multiplier: '5.00x', tag: 'LUCKY' },
-  { id: 'slide', title: 'Slide', category: 'high_multiplier', players: 13, multiplier: '5.00x', tag: 'SPEED' },
-  { id: 'keno', title: 'Keno', category: 'originals', players: 9, multiplier: '5.00x', tag: 'CASINO' },
+  { id: 'mines', title: 'Mines', category: 'originals', players: 38, multiplier: '4.95x', tag: 'FEATURED', description: 'Uncover gems, dodge hidden explosives.' },
+  { id: 'crash', title: 'Crash', category: 'high_multiplier', players: 42, multiplier: '100x', tag: 'HOT', description: 'Cash out before the rocket explodes.' },
+  { id: 'plinko', title: 'Plinko', category: 'high_multiplier', players: 35, multiplier: '1000x', tag: 'HIGH VOLATILITY', description: 'Drop pegs down the pyramid for high multipliers.' },
+  { id: 'slots', title: 'Slots', category: 'originals', players: 28, multiplier: '5.00x', tag: 'JACKPOT', description: 'Match Donut SMP symbols to hit jackpots.' },
+  { id: 'casebattles', title: 'Case Battles', category: 'pvp', players: 31, multiplier: 'PVP', tag: '1V1 DUELS', description: 'Open mystery cases against other players in real-time.' },
+  { id: 'coinflip', title: 'Coinflip', category: 'pvp', players: 29, multiplier: '2.00x', tag: 'INSTANT PVP', description: '50/50 heads or tails against rivals.' },
+  { id: 'roulette', title: 'Roulette', category: 'cards', players: 24, multiplier: '14.00x', tag: 'CLASSIC', description: 'Bet on Red, Black, or the elusive Golden 14x.' },
+  { id: 'blackjack', title: 'Blackjack', category: 'cards', players: 22, multiplier: '2.50x', tag: 'CARDS', description: 'Hit, stand, double down. Beat the dealer to 21.' },
+  { id: 'towers', title: 'Towers', category: 'originals', players: 18, multiplier: '4.00x', tag: 'ORIGINAL', description: 'Climb the skyscraper floor by floor.' },
+  { id: 'limbo', title: 'Limbo', category: 'high_multiplier', players: 19, multiplier: '5.00x', tag: 'LIGHTNING', description: 'Target multipliers with ultra-fast rolls.' },
+  { id: 'dice', title: 'Dice', category: 'originals', players: 16, multiplier: '5.00x', tag: 'FAIR', description: 'Roll over or under with adjustable win chances.' },
+  { id: 'cases', title: 'Cases', category: 'originals', players: 15, multiplier: '4.50x', tag: 'LOOT', description: 'Unbox rare Minecraft tools, armor, and cash.' },
+  { id: 'hilo', title: 'Hilo', category: 'cards', players: 14, multiplier: '1.92x', tag: 'PROBABILITY', description: 'Guess higher or lower on sequential cards.' },
+  { id: 'chicken', title: 'Chicken', category: 'originals', players: 12, multiplier: '5.00x', tag: 'ORIGINAL', description: 'Guide the chicken across the street without frying.' },
+  { id: 'rabbits', title: 'Rabbits', category: 'high_multiplier', players: 15, multiplier: '5.00x', tag: 'BONUS', description: 'Collect lucky carrots for wild multi triggers.' },
+  { id: 'slide', title: 'Slide', category: 'high_multiplier', players: 13, multiplier: '5.00x', tag: 'SPEED', description: 'Ride the continuous multiplier slide.' },
+  { id: 'keno', title: 'Keno', category: 'originals', players: 11, multiplier: '5.00x', tag: 'NUMBERS', description: 'Pick your lucky numbers for instant payout matches.' },
 ];
 
 const QUICK_SWITCH_GAMES: { id: GameType; name: string; emoji: string }[] = [
   { id: 'mines', name: 'Mines', emoji: '💣' },
   { id: 'crash', name: 'Crash', emoji: '🚀' },
-  { id: 'casebattles', name: 'Case Battles', emoji: '⚔️' },
   { id: 'plinko', name: 'Plinko', emoji: '🟢' },
   { id: 'slots', name: 'Slots', emoji: '🎰' },
+  { id: 'casebattles', name: 'Case Battles', emoji: '⚔️' },
   { id: 'coinflip', name: 'Coinflip', emoji: '🪙' },
-  { id: 'roulette', name: 'Roulette', emoji: '🎲' },
+  { id: 'roulette', name: 'Roulette', emoji: '🎯' },
   { id: 'blackjack', name: 'Blackjack', emoji: '🃏' },
   { id: 'towers', name: 'Towers', emoji: '🏰' },
   { id: 'limbo', name: 'Limbo', emoji: '📈' },
   { id: 'cases', name: 'Cases', emoji: '📦' },
+  { id: 'dice', name: 'Dice', emoji: '🎲' },
 ];
 
 export default function HomePage() {
@@ -90,6 +94,7 @@ export default function HomePage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isTheaterMode, setIsTheaterMode] = useState(false);
   const [isSoundMuted, setIsSoundMuted] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<'all' | 'originals' | 'pvp' | 'cards' | 'high_multiplier'>('all');
 
   // Automatically open sign-up modal if visitor arrived via a referral link
   useEffect(() => {
@@ -103,16 +108,30 @@ export default function HomePage() {
     setIsSoundMuted(isNowMuted);
   };
 
+  const handleLaunchGame = (gameId: GameType) => {
+    setActiveGame(gameId);
+    sound.playClick();
+    const arena = document.getElementById('play-arena');
+    if (arena) {
+      arena.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   const activeGameMeta = POSTER_GAMES.find((g) => g.id === activeGame) || POSTER_GAMES[0];
 
+  const filteredGames = POSTER_GAMES.filter((g) => {
+    if (selectedCategory === 'all') return true;
+    return g.category === selectedCategory;
+  });
+
   return (
-    <div className="min-h-screen text-neutral-100 flex flex-col selection:bg-emerald-500 selection:text-black">
+    <div className="min-h-screen text-neutral-100 flex flex-col selection:bg-violet-600 selection:text-white">
       <AuthModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
 
-      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 flex flex-col gap-8">
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 flex flex-col gap-10">
         {/* Active Referrer Banner */}
         {activeReferrer && !user && (
-          <div className="p-4 rounded-3xl bg-gradient-to-r from-amber-500/20 via-orange-500/15 to-amber-500/20 border-2 border-amber-400/80 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl shadow-amber-500/10 backdrop-blur-md">
+          <div className="p-4 rounded-3xl bg-gradient-to-r from-violet-600/20 via-amber-500/15 to-violet-600/20 border-2 border-amber-400/80 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl shadow-violet-500/10 backdrop-blur-md">
             <div className="flex items-center gap-3.5">
               <span className="text-3xl animate-bounce">🎁</span>
               <div>
@@ -133,28 +152,110 @@ export default function HomePage() {
           </div>
         )}
 
-        {/* 1. Full-Width Featured Games Showcase Slider */}
-        <div className="w-full">
-          <RotatingGameShowcase onSelectGame={(gameId) => setActiveGame(gameId)} />
+        {/* 1. Bespoke Hero Spotlight Lounge Banner */}
+        <div className="relative w-full rounded-3xl overflow-hidden border border-white/[0.08] bg-gradient-to-br from-[#121424] via-[#0d0f1a] to-[#080912] p-6 sm:p-10 shadow-2xl">
+          {/* Subtle Cyber Grid Background & Ambient Lighting */}
+          <div className="absolute top-0 right-0 w-96 h-96 bg-violet-600/15 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute bottom-0 left-1/4 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute top-1/2 right-1/3 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+
+          <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
+            <div className="max-w-2xl flex flex-col gap-4">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-violet-500/15 border border-violet-500/30 text-violet-300 text-xs font-black tracking-wider uppercase w-fit">
+                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                <span>Next-Gen Minecraft Gaming Platform</span>
+              </div>
+
+              <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight">
+                THE PREMIER <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 via-cyan-400 to-amber-300">DONUT SMP</span> ARCADE
+              </h1>
+
+              <p className="text-xs sm:text-sm text-neutral-300 leading-relaxed">
+                Play 17 provably fair games including Mines, Crash, Plinko, Coinflip, and Case Battles. Instant in-game delivery, automated payouts, and real-time multiplayer duels.
+              </p>
+
+              <div className="flex flex-wrap items-center gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => handleLaunchGame(activeGame)}
+                  className="px-6 py-3 rounded-2xl bg-gradient-to-r from-violet-600 via-indigo-600 to-violet-600 hover:from-violet-500 hover:to-indigo-500 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-violet-500/25 transition cursor-pointer flex items-center gap-2 active:scale-95"
+                >
+                  <Play className="w-4 h-4 fill-white" />
+                  <span>Launch {activeGameMeta.title}</span>
+                </button>
+
+                <a
+                  href="#game-library"
+                  className="px-5 py-3 rounded-2xl bg-white/5 hover:bg-white/10 text-neutral-200 border border-white/10 font-bold text-xs uppercase tracking-wider transition cursor-pointer flex items-center gap-2"
+                >
+                  <span>Browse 17 Games</span>
+                  <ArrowRight className="w-4 h-4 text-neutral-400" />
+                </a>
+              </div>
+            </div>
+
+            {/* Quick Live Platform Stats Ticker */}
+            <div className="grid grid-cols-2 gap-3 w-full lg:w-auto shrink-0">
+              <div className="p-4 rounded-2xl bg-[#090b14]/80 border border-white/10 flex flex-col gap-1 min-w-[140px]">
+                <div className="flex items-center gap-1.5 text-amber-400 text-xs font-black">
+                  <Coins className="w-4 h-4" />
+                  <span>100% RATIO</span>
+                </div>
+                <span className="text-lg font-black text-white font-mono">$1 = 1 Coin</span>
+                <span className="text-[10px] text-neutral-400">Zero Exchange Fees</span>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-[#090b14]/80 border border-white/10 flex flex-col gap-1 min-w-[140px]">
+                <div className="flex items-center gap-1.5 text-cyan-400 text-xs font-black">
+                  <ShieldCheck className="w-4 h-4" />
+                  <span>SHA-256</span>
+                </div>
+                <span className="text-lg font-black text-white font-mono">Provably Fair</span>
+                <span className="text-[10px] text-neutral-400">Cryptographic Seeds</span>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-[#090b14]/80 border border-white/10 flex flex-col gap-1 min-w-[140px]">
+                <div className="flex items-center gap-1.5 text-violet-400 text-xs font-black">
+                  <Zap className="w-4 h-4" />
+                  <span>INSTANT</span>
+                </div>
+                <span className="text-lg font-black text-white font-mono">In-Game /pay</span>
+                <span className="text-[10px] text-neutral-400">Automated Bot Delivery</span>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-[#090b14]/80 border border-white/10 flex flex-col gap-1 min-w-[140px]">
+                <div className="flex items-center gap-1.5 text-emerald-400 text-xs font-black">
+                  <Users className="w-4 h-4" />
+                  <span>ONLINE</span>
+                </div>
+                <span className="text-lg font-black text-white font-mono">1,400+</span>
+                <span className="text-[10px] text-neutral-400">Community Players</span>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* 2. The Pro Arena Cabinet (Centerpiece of DonutProfit) */}
+        {/* 2. The Pro Cyber Arena Cabinet (The Active Play Centerpiece) */}
         <div id="play-arena" className={`scroll-mt-20 transition-all duration-300 ${isTheaterMode ? 'w-full max-w-none' : ''}`}>
-          {/* Quick-Switch Game Dock directly above Arena (Sticky so you never need to scroll up to change games) */}
-          <div className="sticky top-16 z-30 bg-[#07080e]/95 backdrop-blur-md py-2 px-2.5 rounded-2xl mb-3 flex items-center gap-1.5 overflow-x-auto scrollbar-none select-none border border-white/10 shadow-xl">
-            <span className="text-[10px] font-black uppercase text-neutral-400 px-2 shrink-0">
-              QUICK SWITCH:
+          {/* Quick-Switch Game Dock directly above Arena */}
+          <div className="sticky top-16 z-30 bg-[#090b14]/95 backdrop-blur-md py-2.5 px-3 rounded-2xl mb-4 flex items-center gap-2 overflow-x-auto scrollbar-none select-none border border-violet-500/20 shadow-xl">
+            <span className="text-[10px] font-black uppercase text-violet-400 px-2 shrink-0 flex items-center gap-1">
+              <Gamepad2 className="w-3.5 h-3.5" />
+              QUICK DOCK:
             </span>
             {QUICK_SWITCH_GAMES.map((g) => {
               const isCurrent = activeGame === g.id;
               return (
                 <button
                   key={g.id}
-                  onClick={() => setActiveGame(g.id)}
+                  onClick={() => {
+                    setActiveGame(g.id);
+                    sound.playClick();
+                  }}
                   className={`px-3 py-1.5 rounded-xl text-xs font-black whitespace-nowrap transition flex items-center gap-1.5 cursor-pointer ${
                     isCurrent
-                      ? 'bg-emerald-500 text-black shadow-lg shadow-emerald-500/25 scale-102'
-                      : 'bg-[#10131d] hover:bg-[#181d2c] text-neutral-300 border border-white/10'
+                      ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg shadow-violet-500/25 scale-102 border border-violet-400/40'
+                      : 'bg-[#111422] hover:bg-[#181d30] text-neutral-300 border border-white/5'
                   }`}
                 >
                   <span>{g.emoji}</span>
@@ -165,12 +266,12 @@ export default function HomePage() {
           </div>
 
           {/* The Main Arena Frame */}
-          <div className="rounded-3xl border border-white/10 bg-[#090b12] shadow-2xl overflow-hidden pro-cabinet">
+          <div className="rounded-3xl border border-violet-500/25 bg-[#0b0d18] shadow-2xl overflow-hidden pro-cabinet">
             {/* Arena Command Bar */}
-            <div className="h-14 border-b border-white/10 px-4 sm:px-6 flex items-center justify-between bg-[#0e111a]">
+            <div className="h-14 border-b border-white/[0.08] px-4 sm:px-6 flex items-center justify-between bg-[#101322]">
               {/* Left: Active Game Title & Fair Badge */}
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                <div className="w-8 h-8 rounded-xl bg-violet-600/20 border border-violet-500/30 flex items-center justify-center text-violet-400">
                   <Gamepad2 className="w-4 h-4" />
                 </div>
                 <div>
@@ -178,7 +279,7 @@ export default function HomePage() {
                     <span className="font-black text-sm text-white uppercase tracking-wider">
                       {activeGameMeta.title}
                     </span>
-                    <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-mono">
+                    <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-violet-500/15 text-violet-300 border border-violet-500/30 font-mono">
                       {activeGameMeta.multiplier} MAX
                     </span>
                   </div>
@@ -190,10 +291,10 @@ export default function HomePage() {
                 {/* Sound FX Toggle */}
                 <button
                   onClick={toggleSound}
-                  title={isSoundMuted ? 'Unmute Casino Sounds' : 'Mute Casino Sounds'}
+                  title={isSoundMuted ? 'Unmute Audio' : 'Mute Audio'}
                   className={`p-2 rounded-xl border transition cursor-pointer ${
                     isSoundMuted
-                      ? 'bg-red-500/15 border-red-500/30 text-red-400'
+                      ? 'bg-rose-500/15 border-rose-500/30 text-rose-400'
                       : 'bg-white/5 border-white/10 text-neutral-300 hover:text-white hover:bg-white/10'
                   }`}
                 >
@@ -212,9 +313,9 @@ export default function HomePage() {
                 {!user && (
                   <button
                     onClick={() => setIsModalOpen(true)}
-                    className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-400 text-xs font-black transition cursor-pointer"
+                    className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-violet-600/30 to-indigo-600/20 hover:from-violet-600/40 border border-violet-500/40 text-violet-300 text-xs font-black transition cursor-pointer"
                   >
-                    <Sparkles className="w-3.5 h-3.5" />
+                    <Sparkles className="w-3.5 h-3.5 text-amber-400" />
                     <span>Sign In to Save Cash</span>
                   </button>
                 )}
@@ -239,10 +340,128 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* 3. Live Platform Activity Feed & High Rollers */}
-        <div className="mb-4">
+        {/* 3. The Interactive Games Matrix / Library (Our Own Layout) */}
+        <section id="game-library" className="flex flex-col gap-5 pt-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <h2 className="text-xl sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2">
+                <Gamepad2 className="w-6 h-6 text-violet-400" />
+                <span>EXPLORE ALL GAMES</span>
+              </h2>
+              <p className="text-xs text-neutral-400 mt-0.5">
+                17 Provably Fair games with high multipliers and verified random seeds
+              </p>
+            </div>
+
+            {/* Category Filter Pills */}
+            <div className="flex items-center gap-1.5 bg-[#090b14] border border-white/10 p-1 rounded-2xl overflow-x-auto scrollbar-none w-full sm:w-auto">
+              {[
+                { id: 'all', label: 'All Games (17)' },
+                { id: 'originals', label: '⚡ Originals' },
+                { id: 'pvp', label: '⚔️ PvP Duels' },
+                { id: 'cards', label: '🃏 Tables' },
+                { id: 'high_multiplier', label: '💎 High Multi' },
+              ].map((cat) => (
+                <button
+                  key={cat.id}
+                  onClick={() => setSelectedCategory(cat.id as any)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-black transition cursor-pointer whitespace-nowrap ${
+                    selectedCategory === cat.id
+                      ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-md shadow-violet-500/20'
+                      : 'text-neutral-400 hover:text-white'
+                  }`}
+                >
+                  {cat.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Game Cards Grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
+            {filteredGames.map((game) => (
+              <div
+                key={game.id}
+                onClick={() => handleLaunchGame(game.id)}
+                className="group relative flex flex-col rounded-2xl overflow-hidden bg-[#0e101c] border border-white/10 hover:border-violet-500/50 hover:shadow-xl hover:shadow-violet-500/15 transition-all duration-300 cursor-pointer transform hover:-translate-y-1"
+              >
+                {/* 3D Poster Artwork with Hover Zoom */}
+                <div className="aspect-[4/5] w-full overflow-hidden relative">
+                  <GameArtwork type={game.id} className="w-full h-full" />
+                </div>
+
+                {/* Card Bottom Meta Info */}
+                <div className="p-3 flex flex-col gap-1 bg-[#101322]">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-black text-white uppercase tracking-wider truncate">
+                      {game.title}
+                    </span>
+                    <span className="text-[10px] font-mono font-bold text-amber-300">
+                      {game.multiplier}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-[10px] text-neutral-400">
+                    <span className="flex items-center gap-1 text-cyan-400 font-bold">
+                      <Users className="w-3 h-3" />
+                      <span>{game.players} online</span>
+                    </span>
+                    <span className="uppercase font-mono text-[9px] text-neutral-500">
+                      {game.category}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* 4. Live Platform Activity Feed & High Rollers */}
+        <div className="mb-2">
           <RecentBetsTable />
         </div>
+
+        {/* 5. Trust Pillars Grid */}
+        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-4">
+          <div className="p-5 rounded-2xl bg-[#0e101c]/80 border border-white/10 flex flex-col gap-2">
+            <div className="w-10 h-10 rounded-xl bg-violet-600/20 border border-violet-500/30 flex items-center justify-center text-violet-400">
+              <Zap className="w-5 h-5" />
+            </div>
+            <h4 className="text-sm font-black text-white uppercase tracking-wider">Instant In-Game Pay</h4>
+            <p className="text-xs text-neutral-400 leading-relaxed">
+              Automated Minecraft bot verification. Transfer virtual cash via /pay with zero delays or manual approvals.
+            </p>
+          </div>
+
+          <div className="p-5 rounded-2xl bg-[#0e101c]/80 border border-white/10 flex flex-col gap-2">
+            <div className="w-10 h-10 rounded-xl bg-cyan-600/20 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+              <ShieldCheck className="w-5 h-5" />
+            </div>
+            <h4 className="text-sm font-black text-white uppercase tracking-wider">100% Provably Fair</h4>
+            <p className="text-xs text-neutral-400 leading-relaxed">
+              Every card flip, dice roll, and multiplier spike is determined by cryptographic SHA-256 random algorithms.
+            </p>
+          </div>
+
+          <div className="p-5 rounded-2xl bg-[#0e101c]/80 border border-white/10 flex flex-col gap-2">
+            <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400">
+              <Gift className="w-5 h-5" />
+            </div>
+            <h4 className="text-sm font-black text-white uppercase tracking-wider">Affiliate Bonuses</h4>
+            <p className="text-xs text-neutral-400 leading-relaxed">
+              Share your custom invite link. Earn $20M Cash bonuses and recurring commissions every time your friends play.
+            </p>
+          </div>
+
+          <div className="p-5 rounded-2xl bg-[#0e101c]/80 border border-white/10 flex flex-col gap-2">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+              <Users className="w-5 h-5" />
+            </div>
+            <h4 className="text-sm font-black text-white uppercase tracking-wider">Active Community</h4>
+            <p className="text-xs text-neutral-400 leading-relaxed">
+              Live lounge chat with player tipping, weekly high-roller leaderboards, and 24/7 Discord support tickets.
+            </p>
+          </div>
+        </section>
       </div>
     </div>
   );

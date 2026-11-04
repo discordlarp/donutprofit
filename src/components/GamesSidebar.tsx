@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useGame } from '@/context/GameContext';
@@ -15,14 +15,13 @@ import {
   ShieldCheck, 
   Scale, 
   ExternalLink, 
-  ChevronLeft, 
-  ChevronRight,
   Crown,
   Gamepad2,
   Sparkles,
   Layers,
   X,
-  Star
+  Star,
+  Search
 } from 'lucide-react';
 
 interface GamesSidebarProps {
@@ -51,7 +50,7 @@ const SIDEBAR_GAMES: SidebarGameItem[] = [
   { id: 'cases', name: 'Cases', badge: 'LOOT', category: 'originals', emoji: '📦' },
   { id: 'hilo', name: 'Hilo', badge: 'CLASSIC', category: 'originals', emoji: '🃏' },
   { id: 'keno', name: 'Keno', badge: 'CASINO', category: 'originals', emoji: '🎱' },
-  // PvP Battles (DonutFortune signature)
+  // PvP Battles
   { id: 'casebattles', name: 'Case Battles', badge: 'PVP', category: 'pvp', isHot: true, emoji: '⚔️' },
   { id: 'coinflip', name: 'Coinflip', badge: '1V1', category: 'pvp', isHot: true, emoji: '🪙' },
   // Tables
@@ -64,13 +63,12 @@ export default function GamesSidebar({ activeGame: propActiveGame, onSelectGame 
   const { 
     isSidebarOpen, 
     toggleSidebar, 
-    isSidebarCollapsed, 
-    toggleSidebarCollapse, 
     activeGame: contextActiveGame,
     setActiveGame,
     user 
   } = useGame();
 
+  const [searchQuery, setSearchQuery] = useState('');
   const activeGame = propActiveGame || contextActiveGame;
 
   const handleGameClick = (id: GameType) => {
@@ -92,143 +90,159 @@ export default function GamesSidebar({ activeGame: propActiveGame, onSelectGame 
     }
   };
 
+  const filteredGames = SIDEBAR_GAMES.filter((g) => 
+    g.name.toLowerCase().includes(searchQuery.toLowerCase().trim())
+  );
+
   return (
     <>
-      {/* Mobile Backdrop */}
+      {/* Slide-out Backdrop Overlay */}
       {isSidebarOpen && (
         <div
           onClick={toggleSidebar}
-          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 lg:hidden transition-opacity"
+          className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 transition-opacity animate-fade-in"
         />
       )}
 
-      {/* Sidebar Container */}
+      {/* Slide-out Game Vault Drawer */}
       <aside
-        className={`fixed top-16 bottom-0 left-0 z-40 bg-[#080910] border-r border-white/5 flex flex-col transition-all duration-300 ease-in-out select-none ${
-          isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-        } ${
-          isSidebarCollapsed ? 'w-18' : 'w-64'
+        className={`fixed top-0 bottom-0 left-0 z-50 w-80 max-w-[85vw] bg-[#0c0e17]/98 backdrop-blur-2xl border-r border-violet-500/20 shadow-2xl flex flex-col transition-transform duration-300 ease-out select-none ${
+          isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        {/* Sidebar Header & Collapse Toggle */}
-        <div className="h-12 border-b border-white/5 px-3 flex items-center justify-between shrink-0 bg-[#0b0d16]">
-          {!isSidebarCollapsed && (
-            <div className="flex items-center gap-2">
-              <span className="text-[11px] font-black uppercase tracking-wider text-neutral-300 flex items-center gap-1.5">
-                <Gamepad2 className="w-3.5 h-3.5 text-emerald-400" />
-                CASINO MENU
-              </span>
-              <span className="text-[9px] font-mono font-bold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
-                17 GAMES
-              </span>
+        {/* Drawer Header */}
+        <div className="h-16 border-b border-white/10 px-4 flex items-center justify-between shrink-0 bg-[#101322]">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-700 flex items-center justify-center text-white shadow-md shadow-violet-500/25">
+              <Gamepad2 className="w-4 h-4" />
             </div>
-          )}
+            <div>
+              <h3 className="text-sm font-black uppercase tracking-wider text-white">
+                Game Vault
+              </h3>
+              <p className="text-[10px] text-violet-400 font-mono">17 Provably Fair Games</p>
+            </div>
+          </div>
 
-          {/* Desktop Rail Collapse Toggle Button */}
-          <button
-            onClick={toggleSidebarCollapse}
-            title={isSidebarCollapsed ? 'Expand Sidebar' : 'Collapse to Rail'}
-            className="hidden lg:flex p-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-white/5 transition ml-auto cursor-pointer"
-          >
-            {isSidebarCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-          </button>
-
-          {/* Mobile Close Button */}
           <button
             onClick={toggleSidebar}
-            title="Close Menu"
-            className="lg:hidden p-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-white/5 transition ml-auto cursor-pointer"
+            title="Close Drawer"
+            className="p-2 rounded-xl text-neutral-400 hover:text-white hover:bg-white/10 transition cursor-pointer"
           >
-            <X className="w-4 h-4" />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Scrollable Navigation Body */}
-        <div className="flex-1 overflow-y-auto px-2 py-3 flex flex-col gap-4 scrollbar-none">
-          {/* Quick Highlight Links (Affiliates & Promo) */}
-          <div className="flex flex-col gap-1">
+        {/* Quick Search */}
+        <div className="p-3 border-b border-white/5">
+          <div className="relative">
+            <Search className="w-4 h-4 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <input
+              type="text"
+              placeholder="Search games..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-[#141828] border border-white/10 rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder-neutral-500 outline-none focus:border-violet-500 transition"
+            />
+          </div>
+        </div>
+
+        {/* Scrollable Games List */}
+        <div className="flex-1 overflow-y-auto px-3 py-3 flex flex-col gap-4 scrollbar-none">
+          {/* Quick Highlight Links */}
+          <div className="grid grid-cols-2 gap-2">
             <Link
               href="/referral"
-              className={`flex items-center gap-3 px-2.5 py-2 rounded-xl text-xs font-black transition group ${
+              onClick={() => isSidebarOpen && toggleSidebar()}
+              className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-black transition group ${
                 pathname === '/referral'
-                  ? 'bg-gradient-to-r from-emerald-500/20 to-teal-500/10 border border-emerald-500/40 text-emerald-300'
-                  : 'text-neutral-300 hover:text-emerald-300 hover:bg-emerald-500/10'
+                  ? 'bg-amber-500/20 border border-amber-500/40 text-amber-300'
+                  : 'bg-white/5 hover:bg-amber-500/10 text-neutral-300 hover:text-amber-300 border border-white/5'
               }`}
-              title="Affiliates"
             >
-              <div className="w-7 h-7 rounded-lg bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
-                <Gift className="w-4 h-4" />
-              </div>
-              {!isSidebarCollapsed && (
-                <div className="flex flex-col min-w-0">
-                  <span className="truncate">Affiliates</span>
-                  <span className="text-[9px] text-emerald-400/80 font-mono font-bold leading-none mt-0.5">
-                    Referral Rewards
-                  </span>
-                </div>
-              )}
+              <Gift className="w-4 h-4 text-amber-400 shrink-0" />
+              <span className="truncate">Affiliates</span>
             </Link>
 
             <Link
               href="/promo"
-              className={`flex items-center gap-3 px-2.5 py-2 rounded-xl text-xs font-black transition group ${
+              onClick={() => isSidebarOpen && toggleSidebar()}
+              className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-black transition group ${
                 pathname === '/promo'
-                  ? 'bg-gradient-to-r from-amber-500/20 to-yellow-500/10 border border-amber-500/40 text-amber-300'
-                  : 'text-neutral-300 hover:text-amber-300 hover:bg-amber-500/10'
+                  ? 'bg-amber-500/20 border border-amber-500/40 text-amber-300'
+                  : 'bg-white/5 hover:bg-amber-500/10 text-neutral-300 hover:text-amber-300 border border-white/5'
               }`}
-              title="Promo"
             >
-              <div className="w-7 h-7 rounded-lg bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
-                <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
-              </div>
-              {!isSidebarCollapsed && (
-                <div className="flex flex-col min-w-0">
-                  <span className="truncate">Promo</span>
-                  <span className="text-[9px] text-amber-400/80 font-mono font-bold leading-none mt-0.5">
-                    Promotions
-                  </span>
-                </div>
-              )}
+              <Star className="w-4 h-4 text-amber-400 fill-amber-400 shrink-0" />
+              <span className="truncate">Promo</span>
             </Link>
           </div>
 
-          {/* Section: PvP Battles (DonutFortune highlight) */}
+          {/* Section: PvP Battles */}
           <div className="flex flex-col gap-1">
-            {!isSidebarCollapsed && (
-              <span className="text-[10px] font-black uppercase tracking-wider text-neutral-500 px-2 flex items-center gap-1.5">
-                <Swords className="w-3 h-3 text-amber-400" />
-                PVP BATTLES
-              </span>
-            )}
-            {SIDEBAR_GAMES.filter((g) => g.category === 'pvp').map((g) => {
+            <span className="text-[10px] font-black uppercase tracking-wider text-amber-400/90 px-2 py-1 flex items-center gap-1.5">
+              <Swords className="w-3.5 h-3.5 text-amber-400" />
+              PVP BATTLES
+            </span>
+            {filteredGames.filter((g) => g.category === 'pvp').map((g) => {
               const isActive = activeGame === g.id && pathname === '/';
               return (
                 <button
                   key={g.id}
                   onClick={() => handleGameClick(g.id)}
-                  title={`${g.name} (${g.badge})`}
-                  className={`flex items-center justify-between px-2.5 py-2 rounded-xl text-xs font-bold transition group cursor-pointer ${
+                  className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition group cursor-pointer ${
                     isActive
-                      ? 'bg-gradient-to-r from-[#17202b] to-[#121620] text-emerald-400 border border-emerald-500/40 shadow-md shadow-emerald-500/10'
-                      : 'text-neutral-400 hover:text-white hover:bg-white/5'
+                      ? 'bg-gradient-to-r from-violet-600/30 to-indigo-600/20 text-white border border-violet-500/40 shadow-md shadow-violet-500/10'
+                      : 'text-neutral-300 hover:text-white hover:bg-white/5'
                   }`}
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
                     <span className="text-base shrink-0">{g.emoji}</span>
-                    {!isSidebarCollapsed && (
-                      <span className={`truncate text-xs ${isActive ? 'text-white font-black' : 'group-hover:text-white'}`}>
-                        {g.name}
-                      </span>
-                    )}
+                    <span className={`truncate text-xs ${isActive ? 'text-white font-black' : 'group-hover:text-white'}`}>
+                      {g.name}
+                    </span>
                   </div>
 
-                  {!isSidebarCollapsed && g.badge && (
-                    <span className={`text-[9px] font-black px-1.5 py-0.5 rounded shrink-0 ${
-                      isActive
-                        ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                        : g.isHot
-                        ? 'bg-amber-500/15 text-amber-400 border border-amber-500/20'
-                        : 'bg-white/5 text-neutral-500 group-hover:text-neutral-300'
+                  {g.badge && (
+                    <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                      {g.badge}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Section: Originals */}
+          <div className="flex flex-col gap-1">
+            <span className="text-[10px] font-black uppercase tracking-wider text-violet-400/90 px-2 py-1 flex items-center gap-1.5">
+              <Zap className="w-3.5 h-3.5 text-violet-400" />
+              ORIGINALS
+            </span>
+            {filteredGames.filter((g) => g.category === 'originals').map((g) => {
+              const isActive = activeGame === g.id && pathname === '/';
+              return (
+                <button
+                  key={g.id}
+                  onClick={() => handleGameClick(g.id)}
+                  className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition group cursor-pointer ${
+                    isActive
+                      ? 'bg-gradient-to-r from-violet-600/30 to-indigo-600/20 text-white border border-violet-500/40 shadow-md shadow-violet-500/10'
+                      : 'text-neutral-300 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <span className="text-base shrink-0">{g.emoji}</span>
+                    <span className={`truncate text-xs ${isActive ? 'text-white font-black' : 'group-hover:text-white'}`}>
+                      {g.name}
+                    </span>
+                  </div>
+
+                  {g.badge && (
+                    <span className={`text-[9px] font-black px-1.5 py-0.5 rounded ${
+                      g.isHot
+                        ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
+                        : 'bg-white/5 text-neutral-400 border border-white/5'
                     }`}>
                       {g.badge}
                     </span>
@@ -238,44 +252,33 @@ export default function GamesSidebar({ activeGame: propActiveGame, onSelectGame 
             })}
           </div>
 
-          {/* Section: Casino Originals */}
+          {/* Section: Tables */}
           <div className="flex flex-col gap-1">
-            {!isSidebarCollapsed && (
-              <span className="text-[10px] font-black uppercase tracking-wider text-neutral-500 px-2 flex items-center gap-1.5">
-                <Zap className="w-3 h-3 text-emerald-400" />
-                DONUT ORIGINALS
-              </span>
-            )}
-            {SIDEBAR_GAMES.filter((g) => g.category === 'originals').map((g) => {
+            <span className="text-[10px] font-black uppercase tracking-wider text-cyan-400/90 px-2 py-1 flex items-center gap-1.5">
+              <Layers className="w-3.5 h-3.5 text-cyan-400" />
+              TABLES & CARDS
+            </span>
+            {filteredGames.filter((g) => g.category === 'tables').map((g) => {
               const isActive = activeGame === g.id && pathname === '/';
               return (
                 <button
                   key={g.id}
                   onClick={() => handleGameClick(g.id)}
-                  title={`${g.name} (${g.badge})`}
-                  className={`flex items-center justify-between px-2.5 py-2 rounded-xl text-xs font-bold transition group cursor-pointer ${
+                  className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition group cursor-pointer ${
                     isActive
-                      ? 'bg-gradient-to-r from-[#17202b] to-[#121620] text-emerald-400 border border-emerald-500/40 shadow-md shadow-emerald-500/10'
-                      : 'text-neutral-400 hover:text-white hover:bg-white/5'
+                      ? 'bg-gradient-to-r from-violet-600/30 to-indigo-600/20 text-white border border-violet-500/40 shadow-md shadow-violet-500/10'
+                      : 'text-neutral-300 hover:text-white hover:bg-white/5'
                   }`}
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
                     <span className="text-base shrink-0">{g.emoji}</span>
-                    {!isSidebarCollapsed && (
-                      <span className={`truncate text-xs ${isActive ? 'text-white font-black' : 'group-hover:text-white'}`}>
-                        {g.name}
-                      </span>
-                    )}
+                    <span className={`truncate text-xs ${isActive ? 'text-white font-black' : 'group-hover:text-white'}`}>
+                      {g.name}
+                    </span>
                   </div>
 
-                  {!isSidebarCollapsed && g.badge && (
-                    <span className={`text-[9px] font-black px-1.5 py-0.5 rounded shrink-0 ${
-                      isActive
-                        ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                        : g.isHot
-                        ? 'bg-amber-500/15 text-amber-400 border border-amber-500/20'
-                        : 'bg-white/5 text-neutral-500 group-hover:text-neutral-300'
-                    }`}>
+                  {g.badge && (
+                    <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
                       {g.badge}
                     </span>
                   )}
@@ -283,80 +286,23 @@ export default function GamesSidebar({ activeGame: propActiveGame, onSelectGame 
               );
             })}
           </div>
+        </div>
 
-          {/* Section: Table Games */}
-          <div className="flex flex-col gap-1">
-            {!isSidebarCollapsed && (
-              <span className="text-[10px] font-black uppercase tracking-wider text-neutral-500 px-2 flex items-center gap-1.5">
-                <Layers className="w-3 h-3 text-sky-400" />
-                TABLE & CARDS
-              </span>
-            )}
-            {SIDEBAR_GAMES.filter((g) => g.category === 'tables').map((g) => {
-              const isActive = activeGame === g.id && pathname === '/';
-              return (
-                <button
-                  key={g.id}
-                  onClick={() => handleGameClick(g.id)}
-                  title={`${g.name} (${g.badge})`}
-                  className={`flex items-center justify-between px-2.5 py-2 rounded-xl text-xs font-bold transition group cursor-pointer ${
-                    isActive
-                      ? 'bg-gradient-to-r from-[#17202b] to-[#121620] text-emerald-400 border border-emerald-500/40 shadow-md shadow-emerald-500/10'
-                      : 'text-neutral-400 hover:text-white hover:bg-white/5'
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <span className="text-base shrink-0">{g.emoji}</span>
-                    {!isSidebarCollapsed && (
-                      <span className={`truncate text-xs ${isActive ? 'text-white font-black' : 'group-hover:text-white'}`}>
-                        {g.name}
-                      </span>
-                    )}
-                  </div>
-
-                  {!isSidebarCollapsed && g.badge && (
-                    <span className={`text-[9px] font-black px-1.5 py-0.5 rounded shrink-0 ${
-                      isActive
-                        ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                        : 'bg-white/5 text-neutral-500 group-hover:text-neutral-300'
-                    }`}>
-                      {g.badge}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
+        {/* Drawer Footer */}
+        <div className="p-3 border-t border-white/10 bg-[#090b13] flex items-center justify-between text-[11px] text-neutral-400">
+          <div className="flex items-center gap-1.5 text-violet-400 font-bold">
+            <ShieldCheck className="w-3.5 h-3.5" />
+            <span>Provably Fair SHA-256</span>
           </div>
-
-          {/* Provably Fair & Community Footer */}
-          <div className="mt-auto pt-3 border-t border-white/5 flex flex-col gap-1.5">
-            <Link
-              href="/leaderboard"
-              className={`flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-bold transition ${
-                pathname === '/leaderboard' ? 'bg-white/10 text-white' : 'text-neutral-400 hover:text-white hover:bg-white/5'
-              }`}
-              title="Casino Leaderboard"
-            >
-              <Trophy className="w-4 h-4 text-neutral-500" />
-              {!isSidebarCollapsed && <span>Leaderboard</span>}
-            </Link>
-
-            <a
-              href="https://discord.gg/qEHzmKNAv"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-bold text-[#858ffc] hover:text-white hover:bg-[#5865F2]/15 transition"
-              title="Official Discord"
-            >
-              <span className="text-sm">💬</span>
-              {!isSidebarCollapsed && (
-                <div className="flex items-center justify-between w-full">
-                  <span>Discord</span>
-                  <ExternalLink className="w-3 h-3 text-[#858ffc]" />
-                </div>
-              )}
-            </a>
-          </div>
+          <a
+            href="https://discord.gg/qEHzmKNAv"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-indigo-400 hover:text-indigo-300 font-bold flex items-center gap-1"
+          >
+            <span>Discord</span>
+            <ExternalLink className="w-3 h-3" />
+          </a>
         </div>
       </aside>
     </>

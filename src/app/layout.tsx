@@ -9,9 +9,9 @@ import LiveBetsMarquee from '@/components/LiveBetsMarquee';
 import { Analytics } from '@vercel/analytics/next';
 
 export const metadata: Metadata = {
-  title: 'DonutProfit — #1 Donut SMP Casino Platform',
-  description: 'Provably fair in-game community casino platform for Minecraft Donut SMP players. Play Coinflip, Crash, Mines, Roulette, Blackjack, and Slots.',
-  keywords: ['DonutSMP', 'Minecraft Casino', 'Donut SMP Gambing', 'DonutProfit', 'Cash', 'Minecraft Minigames'],
+  title: 'Donut Profit — #1 Donut SMP Arcade & Casino',
+  description: 'Bespoke provably fair gaming arcade for Minecraft Donut SMP players. Play Mines, Crash, Plinko, Coinflip, Roulette, Blackjack, and Case Battles.',
+  keywords: ['DonutSMP', 'Minecraft Arcade', 'Donut SMP Minigames', 'Donut Profit', 'Cash', 'Donut Casino'],
 };
 
 export default function RootLayout({
@@ -21,7 +21,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="antialiased bg-[#07080f] text-neutral-100 min-h-screen flex flex-col selection:bg-emerald-500 selection:text-black">
+      <body className="antialiased bg-[#090a10] text-neutral-100 min-h-screen flex flex-col selection:bg-violet-600 selection:text-white">
         <GameProvider>
           <BannedScreen />
           <DepositNotificationToast />

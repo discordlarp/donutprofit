@@ -1,12 +1,14 @@
 @import "tailwindcss";
 
 :root {
-  --background: #07080f;
-  --foreground: #f3f4f6;
-  --card-bg: #0c0e17;
+  --background: #090a10;
+  --foreground: #f8fafc;
+  --card-bg: #0f121d;
   --card-border: rgba(255, 255, 255, 0.08);
+  --accent-violet: #8b5cf6;
+  --accent-cyan: #06b6d4;
+  --accent-amber: #f59e0b;
   --accent-emerald: #10b981;
-  --accent-gold: #f59e0b;
 }
 
 * { box-sizing: border-box; }
@@ -17,10 +19,10 @@ html {
 
 body {
   background:
-    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(16, 185, 129, 0.14), transparent 50%),
-    radial-gradient(ellipse 60% 40% at 85% 25%, rgba(245, 158, 11, 0.08), transparent 45%),
-    radial-gradient(ellipse 60% 40% at 15% 65%, rgba(14, 165, 233, 0.06), transparent 45%),
-    #07080f;
+    radial-gradient(ellipse 90% 55% at 50% -10%, rgba(139, 92, 246, 0.16), transparent 55%),
+    radial-gradient(ellipse 65% 45% at 88% 20%, rgba(6, 182, 212, 0.10), transparent 50%),
+    radial-gradient(ellipse 65% 45% at 12% 65%, rgba(245, 158, 11, 0.08), transparent 50%),
+    #090a10;
   color: var(--foreground);
   font-family: var(--font-sans, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
   overflow-x: hidden;
@@ -35,40 +37,54 @@ img, video {
 }
 
 button, input, select, textarea {
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 button:hover {
   transform: translateY(-1px);
 }
 
+button:active {
+  transform: translateY(0);
+}
+
 ::selection {
-  background: rgba(16, 185, 129, 0.35);
+  background: rgba(139, 92, 246, 0.4);
   color: #fff;
 }
 
-/* Custom Casino Glass & Neon Cabinets */
+/* Custom Cyber Glass & Neon Arena Cabinets */
 .pro-cabinet {
-  background: linear-gradient(180deg, rgba(14, 17, 26, 0.96) 0%, rgba(8, 10, 16, 0.98) 100%);
+  background: linear-gradient(180deg, rgba(17, 20, 32, 0.96) 0%, rgba(10, 12, 20, 0.98) 100%);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 24px 60px -12px rgba(0, 0, 0, 0.8), 0 0 35px -10px rgba(16, 185, 129, 0.15);
+  box-shadow: 0 24px 60px -12px rgba(0, 0, 0, 0.8), 0 0 35px -10px rgba(139, 92, 246, 0.2);
 }
 
 .glass-panel {
-  background: rgba(13, 16, 24, 0.8);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  background: rgba(15, 18, 29, 0.82);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.glass-panel-gold {
-  background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(217, 119, 6, 0.06));
+.glass-panel-violet {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.12), rgba(124, 58, 237, 0.05));
   backdrop-filter: blur(14px);
-  border: 1px solid rgba(245, 158, 11, 0.25);
+  border: 1px solid rgba(139, 92, 246, 0.3);
 }
 
-.glow-emerald {
-  box-shadow: 0 0 25px rgba(16, 185, 129, 0.35);
+.glass-panel-gold {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.14), rgba(217, 119, 6, 0.06));
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.glow-violet {
+  box-shadow: 0 0 25px rgba(139, 92, 246, 0.35);
+}
+
+.glow-cyan {
+  box-shadow: 0 0 25px rgba(6, 182, 212, 0.35);
 }
 
 .glow-gold {
@@ -76,7 +92,7 @@ button:hover {
 }
 
 .text-glow {
-  text-shadow: 0 0 12px rgba(16, 185, 129, 0.5);
+  text-shadow: 0 0 12px rgba(139, 92, 246, 0.5);
 }
 
 /* Custom Scrollbar */
@@ -86,37 +102,19 @@ button:hover {
 }
 
 ::-webkit-scrollbar-track {
-  background: #07080f;
+  background: #090a10;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1f2433;
+  background: #23283b;
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #10b981;
+  background: #8b5cf6;
 }
 
-/* Coinflip 3D Flip Styles */
-.perspective-1000 {
-  perspective: 1000px;
-}
-
-.preserve-3d {
-  transform-style: preserve-3d;
-}
-
-.backface-hidden {
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-}
-
-.rotate-y-180 {
-  transform: rotateY(180deg);
-}
-
-/* Ticker Animations */
+/* Animations */
 @keyframes marquee {
   0% { transform: translateX(0%); }
   100% { transform: translateX(-50%); }
@@ -124,28 +122,19 @@ button:hover {
 
 .animate-marquee {
   display: flex;
-  width: 200%;
-  animation: marquee 30s linear infinite;
+  width: max-content;
+  animation: marquee 35s linear infinite;
 }
 
 .animate-marquee:hover {
   animation-play-state: paused;
 }
 
-/* Continuous Sliding Game Showcase Reel */
-@keyframes showcaseSlide {
-  0% { transform: translateX(0%); }
-  100% { transform: translateX(-50%); }
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.85; transform: scale(0.98); }
 }
 
-.animate-showcase-slide {
-  display: flex;
-  width: max-content;
-  animation: showcaseSlide 32s linear infinite;
-  will-change: transform;
-}
-
-.animate-showcase-slide:hover,
-.hover\:pause:hover {
-  animation-play-state: paused !important;
+.animate-pulse-subtle {
+  animation: pulse-subtle 3s ease-in-out infinite;
 }

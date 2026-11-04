@@ -16,79 +16,90 @@ export default function DonutLogo({ className = 'w-8 h-8', size = 36 }: DonutLog
       className={className}
     >
       <defs>
-        {/* Outer Glow */}
-        <filter id="donutGlow" x="-20%" y="-20%" width="140%" height="140%">
-          <feDropShadow dx="0" dy="4" stdDeviation="6" floodColor="#10B981" floodOpacity="0.45" />
+        {/* Ambient Outer Aura Glow */}
+        <filter id="donutAura" x="-25%" y="-25%" width="150%" height="150%">
+          <feDropShadow dx="0" dy="2" stdDeviation="5" floodColor="#8B5CF6" floodOpacity="0.5" />
+          <feDropShadow dx="0" dy="4" stdDeviation="8" floodColor="#F59E0B" floodOpacity="0.35" />
         </filter>
-        {/* Dough Base Gradient */}
-        <radialGradient id="doughGrad" cx="50%" cy="40%" r="50%">
-          <stop offset="0%" stopColor="#F59E0B" />
-          <stop offset="70%" stopColor="#D97706" />
-          <stop offset="100%" stopColor="#92400E" />
+
+        {/* Golden Baked Crust Gradient */}
+        <radialGradient id="crustGrad" cx="45%" cy="35%" r="55%">
+          <stop offset="0%" stopColor="#FBBF24" />
+          <stop offset="60%" stopColor="#D97706" />
+          <stop offset="100%" stopColor="#78350F" />
         </radialGradient>
-        {/* Vibrant Green Frosted Glaze Gradient (Stake Style) */}
-        <linearGradient id="glazeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#34D399" />
-          <stop offset="50%" stopColor="#10B981" />
-          <stop offset="100%" stopColor="#059669" />
+
+        {/* Electric Amethyst to Cyber Flame Glaze */}
+        <linearGradient id="cyberGlaze" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#A855F7" />
+          <stop offset="45%" stopColor="#8B5CF6" />
+          <stop offset="75%" stopColor="#6366F1" />
+          <stop offset="100%" stopColor="#3B82F6" />
         </linearGradient>
-        {/* Glaze Shine Highlight */}
-        <linearGradient id="shineGrad" x1="20%" y1="10%" x2="50%" y2="50%">
-          <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.8" />
+
+        {/* Golden Energy Ring */}
+        <linearGradient id="neonRing" x1="0%" y1="100%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#F59E0B" />
+          <stop offset="50%" stopColor="#FCD34D" />
+          <stop offset="100%" stopColor="#06B6D4" />
+        </linearGradient>
+
+        {/* High Gloss Specular Highlight */}
+        <linearGradient id="glossHighlight" x1="15%" y1="10%" x2="50%" y2="60%">
+          <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.9" />
           <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0" />
         </linearGradient>
       </defs>
 
-      {/* Dough Outer Ring */}
-      <circle cx="50" cy="50" r="44" fill="url(#doughGrad)" filter="url(#donutGlow)" />
-      
-      {/* 3D Depth Shadow under donut */}
-      <ellipse cx="50" cy="86" rx="34" ry="7" fill="#000000" opacity="0.35" />
+      {/* Outer Holographic Energy Ring */}
+      <circle cx="50" cy="50" r="46" stroke="url(#neonRing)" strokeWidth="2" strokeDasharray="6 3" opacity="0.65" />
 
-      {/* Wavy Icing Glaze Layer */}
+      {/* Dough Base Ring with Shadow */}
+      <circle cx="50" cy="50" r="41" fill="url(#crustGrad)" filter="url(#donutAura)" />
+      <ellipse cx="50" cy="85" rx="30" ry="5.5" fill="#000000" opacity="0.4" />
+
+      {/* Sculpted Electric Glaze Waves */}
       <path
-        d="M 50 8
-           C 62 8, 73 13, 81 21
-           C 87 27, 91 35, 91 44
-           C 91 50, 87 54, 85 59
-           C 82 65, 87 72, 82 78
-           C 77 84, 70 82, 65 86
-           C 60 90, 55 92, 48 92
-           C 40 92, 34 88, 29 84
-           C 24 80, 26 73, 20 69
-           C 14 65, 9 58, 9 50
-           C 9 39, 15 30, 22 22
-           C 30 13, 40 8, 50 8 Z"
-        fill="url(#glazeGrad)"
+        d="M 50 11
+           C 61 11, 71 16, 78 23
+           C 84 29, 87 37, 87 45
+           C 87 51, 83 55, 81 60
+           C 78 66, 82 72, 78 77
+           C 73 82, 67 80, 62 84
+           C 57 88, 53 90, 48 90
+           C 40 90, 35 86, 30 82
+           C 25 78, 27 72, 21 68
+           C 15 64, 11 57, 11 49
+           C 11 39, 16 30, 23 23
+           C 31 15, 40 11, 50 11 Z"
+        fill="url(#cyberGlaze)"
       />
 
-      {/* Glossy Reflection Arc */}
+      {/* Glossy Top Curve Shine */}
       <path
-        d="M 28 20 C 35 14, 44 12, 53 12 C 60 12, 67 14, 73 18 C 68 15, 60 14, 53 14 C 43 14, 34 16, 28 20 Z"
-        fill="url(#shineGrad)"
+        d="M 28 21 C 35 15, 43 13, 52 13 C 59 13, 66 15, 71 19 C 66 16, 59 15, 52 15 C 43 15, 34 17, 28 21 Z"
+        fill="url(#glossHighlight)"
       />
 
-      {/* Donut Hole (Inner Cutout) */}
-      <circle cx="50" cy="50" r="17" fill="#07080B" />
-      <circle cx="50" cy="50" r="17" stroke="#78350F" strokeWidth="2.5" fill="none" opacity="0.6" />
+      {/* Inner Donut Core */}
+      <circle cx="50" cy="50" r="15" fill="#090A10" />
+      <circle cx="50" cy="50" r="15" stroke="#F59E0B" strokeWidth="2" fill="none" opacity="0.8" />
 
-      {/* Colorful Casino Sprinkles */}
-      {/* White sprinkles */}
-      <rect x="32" y="22" width="6" height="2.5" rx="1.25" transform="rotate(-30 32 22)" fill="#FFFFFF" />
-      <rect x="68" y="24" width="6" height="2.5" rx="1.25" transform="rotate(45 68 24)" fill="#FFFFFF" />
-      <rect x="74" y="60" width="6" height="2.5" rx="1.25" transform="rotate(-20 74 60)" fill="#FFFFFF" />
-      <rect x="24" y="58" width="6" height="2.5" rx="1.25" transform="rotate(65 24 58)" fill="#FFFFFF" />
+      {/* Cyber Neon Sprinkles */}
+      {/* Cyan Neon Chips */}
+      <rect x="33" y="24" width="6.5" height="2.5" rx="1.25" transform="rotate(-30 33 24)" fill="#06B6D4" />
+      <rect x="67" y="26" width="6.5" height="2.5" rx="1.25" transform="rotate(45 67 26)" fill="#06B6D4" />
+      <rect x="73" y="61" width="6.5" height="2.5" rx="1.25" transform="rotate(-20 73 61)" fill="#06B6D4" />
 
-      {/* Gold sprinkles */}
-      <rect x="48" y="16" width="6.5" height="2.5" rx="1.25" transform="rotate(15 48 16)" fill="#FBBF24" />
-      <rect x="78" y="42" width="6.5" height="2.5" rx="1.25" transform="rotate(-60 78 42)" fill="#FBBF24" />
-      <rect x="42" y="82" width="6.5" height="2.5" rx="1.25" transform="rotate(25 42 82)" fill="#FBBF24" />
-      <rect x="18" y="40" width="6.5" height="2.5" rx="1.25" transform="rotate(10 18 40)" fill="#FBBF24" />
+      {/* Gold Amber Sparkles */}
+      <rect x="49" y="18" width="6.5" height="2.5" rx="1.25" transform="rotate(15 49 18)" fill="#F59E0B" />
+      <rect x="76" y="43" width="6.5" height="2.5" rx="1.25" transform="rotate(-60 76 43)" fill="#F59E0B" />
+      <rect x="42" y="80" width="6.5" height="2.5" rx="1.25" transform="rotate(25 42 80)" fill="#F59E0B" />
+      <rect x="20" y="42" width="6.5" height="2.5" rx="1.25" transform="rotate(10 20 42)" fill="#F59E0B" />
 
-      {/* Cyan/Diamond sprinkles */}
-      <rect x="58" y="22" width="6" height="2.5" rx="1.25" transform="rotate(-15 58 22)" fill="#38BDF8" />
-      <rect x="64" y="74" width="6" height="2.5" rx="1.25" transform="rotate(35 64 74)" fill="#38BDF8" />
-      <rect x="26" y="74" width="6" height="2.5" rx="1.25" transform="rotate(-45 26 74)" fill="#38BDF8" />
+      {/* Diamond Sparkle Stars */}
+      <polygon points="58,23 60,20 62,23 65,25 62,27 60,30 58,27 55,25" fill="#FFFFFF" />
+      <polygon points="26,72 27,70 28,72 30,73 28,74 27,76 26,74 24,73" fill="#FFFFFF" />
     </svg>
   );
 }

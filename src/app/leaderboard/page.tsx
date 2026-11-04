@@ -76,12 +76,12 @@ export default function LeaderboardPage() {
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       <div className="text-center max-w-3xl mx-auto mb-10">
-        <div className="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/30 px-3.5 py-1 rounded-full text-xs font-black text-emerald-400 mb-3 shadow-sm">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-          <span>CASINO RANKINGS</span>
+        <div className="inline-flex items-center gap-2 bg-violet-600/15 border border-violet-500/30 px-3.5 py-1 rounded-full text-xs font-black text-violet-300 mb-3 shadow-sm">
+          <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+          <span>GLOBAL RANKINGS</span>
         </div>
-        <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight">
-          DONUT<span className="text-emerald-400">PROFIT</span> LEADERBOARD
+        <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight uppercase">
+          DONUT<span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 via-cyan-400 to-amber-300">PROFIT</span> LEADERBOARD
         </h1>
         <p className="text-xs text-neutral-400 mt-2">
           Real-time high rollers, total wagers, and referral champions across DonutSMP.

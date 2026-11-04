@@ -528,18 +528,18 @@ export default function CommunityChat({ isOpen: propIsOpen, onToggle: propOnTogg
         <button
           onClick={onToggle}
           aria-label="Open Live Chat"
-          className="fixed bottom-6 right-6 z-40 flex items-center gap-2.5 px-4 py-2.5 rounded-full bg-[#121622]/95 hover:bg-[#1a1f30] text-white border border-emerald-500/40 shadow-2xl shadow-emerald-500/20 hover:border-emerald-400 transition-all duration-200 active:scale-95 group backdrop-blur-md cursor-pointer"
+          className="fixed bottom-6 right-6 z-40 flex items-center gap-2.5 px-4 py-2.5 rounded-full bg-[#121424]/95 hover:bg-[#181c32] text-white border border-violet-500/40 shadow-2xl shadow-violet-500/20 hover:border-violet-400 transition-all duration-200 active:scale-95 group backdrop-blur-md cursor-pointer"
         >
           <div className="relative flex items-center justify-center">
-            <MessageSquare className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition-transform" />
-            <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-            <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-emerald-400" />
+            <MessageSquare className="w-4 h-4 text-violet-400 group-hover:scale-110 transition-transform" />
+            <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
+            <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-cyan-400" />
           </div>
           <span className="text-xs font-black uppercase tracking-wider text-neutral-200 group-hover:text-white">
-            Live Chat
+            Community Lounge
           </span>
-          <span className="bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-full">
-            122
+          <span className="bg-violet-500/20 border border-violet-500/30 text-cyan-300 text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-full">
+            LIVE
           </span>
         </button>
       )}
@@ -554,20 +554,20 @@ export default function CommunityChat({ isOpen: propIsOpen, onToggle: propOnTogg
 
       {/* Slide-out Cyber Chat Drawer */}
       <aside
-        className={`fixed top-16 bottom-0 right-0 z-50 w-84 sm:w-92 bg-[#0a0c14]/98 backdrop-blur-2xl border-l border-white/10 flex flex-col shadow-2xl transition-transform duration-300 ease-in-out ${
+        className={`fixed top-16 bottom-0 right-0 z-50 w-84 sm:w-92 bg-[#0c0e18]/98 backdrop-blur-2xl border-l border-violet-500/20 flex flex-col shadow-2xl transition-transform duration-300 ease-in-out ${
           isOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
         {/* Chat Header */}
-        <div className="h-14 border-b border-white/10 px-4 flex items-center justify-between bg-[#0e111c] shrink-0">
+        <div className="h-14 border-b border-white/10 px-4 flex items-center justify-between bg-[#111322] shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+            <div className="w-8 h-8 rounded-xl bg-violet-600/20 border border-violet-500/30 flex items-center justify-center text-violet-400">
               <MessageSquare className="w-4 h-4" />
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <span className="font-black text-sm text-white tracking-wide">Live Chat</span>
-                <span className="inline-flex items-center gap-1 text-[9px] font-black text-emerald-400 bg-emerald-500/20 px-1.5 py-0.5 rounded-full border border-emerald-500/30">
+                <span className="font-black text-sm text-white tracking-wide">Community Lounge</span>
+                <span className="inline-flex items-center gap-1 text-[9px] font-black text-cyan-400 bg-cyan-500/20 px-1.5 py-0.5 rounded-full border border-cyan-500/30">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                   LIVE
                 </span>

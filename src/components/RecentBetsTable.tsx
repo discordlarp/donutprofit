@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { useGame } from '@/context/GameContext';
 import { formatCash } from '@/lib/format';
 import UserProfileModal from '@/components/UserProfileModal';
-import { Activity, Flame, User, Sparkles } from 'lucide-react';
+import { Activity, Flame, User, Sparkles, TrendingUp } from 'lucide-react';
 
 export default function RecentBetsTable() {
   const { bets, user } = useGame();
@@ -25,35 +25,35 @@ export default function RecentBetsTable() {
         targetIgn={selectedPlayer}
       />
 
-      <div className="bg-[#0b0d16] border border-white/10 rounded-3xl p-5 sm:p-7 shadow-2xl backdrop-blur-xl">
+      <div className="bg-[#0e101c]/90 border border-violet-500/20 rounded-3xl p-5 sm:p-7 shadow-2xl backdrop-blur-xl">
         {/* Table Header & Tabs */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-violet-600/30 to-indigo-600/20 border border-violet-500/30 flex items-center justify-center text-violet-400 shrink-0 shadow-md shadow-violet-500/10">
               <Activity className="w-5 h-5 animate-pulse" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-lg sm:text-xl font-black text-white tracking-wide">
-                  LIVE CASINO FEED
+                <h3 className="text-lg sm:text-xl font-black text-white tracking-wide uppercase">
+                  LIVE ACTIVITY FEED
                 </h3>
-                <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-400 border border-cyan-500/30">
                   REAL-TIME
                 </span>
               </div>
               <p className="text-xs text-neutral-400 mt-0.5">
-                Live wagers, high multipliers, and payouts across DonutProfit
+                Live wagers, high multipliers, and payouts across Donut Profit
               </p>
             </div>
           </div>
 
           {/* Filter Pills */}
-          <div className="flex items-center gap-1.5 bg-[#07080e] border border-white/10 p-1 rounded-2xl">
+          <div className="flex items-center gap-1.5 bg-[#090b14] border border-white/10 p-1 rounded-2xl">
             <button
               onClick={() => setFilter('all')}
               className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition cursor-pointer ${
                 filter === 'all'
-                  ? 'bg-emerald-500 text-black shadow-lg shadow-emerald-500/20'
+                  ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg shadow-violet-500/25'
                   : 'text-neutral-400 hover:text-white'
               }`}
             >
@@ -63,7 +63,7 @@ export default function RecentBetsTable() {
               onClick={() => setFilter('high_rollers')}
               className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition flex items-center gap-1 cursor-pointer ${
                 filter === 'high_rollers'
-                  ? 'bg-amber-400 text-black shadow-lg shadow-amber-400/20'
+                  ? 'bg-gradient-to-r from-amber-400 to-yellow-500 text-black shadow-lg shadow-amber-500/25'
                   : 'text-neutral-400 hover:text-white'
               }`}
             >
@@ -74,7 +74,7 @@ export default function RecentBetsTable() {
               onClick={() => setFilter('my_bets')}
               className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition flex items-center gap-1 cursor-pointer ${
                 filter === 'my_bets'
-                  ? 'bg-emerald-500 text-black shadow-lg shadow-emerald-500/20'
+                  ? 'bg-gradient-to-r from-cyan-600 to-teal-600 text-white shadow-lg shadow-cyan-500/25'
                   : 'text-neutral-400 hover:text-white'
               }`}
             >
@@ -99,66 +99,73 @@ export default function RecentBetsTable() {
             <tbody className="divide-y divide-white/5 font-mono">
               {filteredBets.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="py-12 text-center text-neutral-500 font-sans">
-                    <div className="flex flex-col items-center justify-center gap-2">
-                      <Sparkles className="w-8 h-8 text-neutral-600 animate-spin" />
-                      <p className="font-bold text-neutral-300 text-sm">No live bets placed yet</p>
-                      <p className="text-xs text-neutral-500">
-                        Spin slots, open mines, or place a wager to see live action here!
-                      </p>
-                    </div>
+                  <td colSpan={5} className="py-8 text-center text-neutral-400 font-sans">
+                    No recent bets recorded yet in this category.
                   </td>
                 </tr>
               ) : (
-                filteredBets.slice(0, 20).map((b) => {
-                  const isWin = b.result === 'win';
+                filteredBets.slice(0, 15).map((bet) => {
+                  const isWin = bet.result === 'win';
                   return (
-                    <tr key={b.id} className="hover:bg-white/[0.03] transition duration-150">
-                      <td className="py-3 px-3 font-sans">
-                        <span className="font-black text-white uppercase text-[10px] tracking-wider bg-[#141724] border border-white/10 px-2.5 py-1 rounded-lg">
-                          {b.game}
-                        </span>
+                    <tr
+                      key={bet.id}
+                      className="hover:bg-white/[0.03] transition duration-150 group"
+                    >
+                      {/* Game */}
+                      <td className="py-3 px-3 font-sans font-bold text-neutral-200 capitalize flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-violet-400 group-hover:scale-125 transition-transform" />
+                        <span>{bet.game}</span>
                       </td>
-                      <td className="py-3 px-3 font-sans font-bold">
+
+                      {/* Player */}
+                      <td className="py-3 px-3 font-sans font-medium text-neutral-300">
                         <button
                           type="button"
-                          onClick={() => setSelectedPlayer(b.minecraftIgn)}
-                          className="flex items-center gap-2 text-neutral-200 hover:text-emerald-400 transition cursor-pointer text-left group"
+                          onClick={() => setSelectedPlayer(bet.minecraftIgn)}
+                          className="flex items-center gap-2 hover:text-cyan-400 transition cursor-pointer text-left group-hover:underline"
                         >
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
-                            src={`https://mc-heads.net/avatar/${b.minecraftIgn}/24`}
-                            alt={b.minecraftIgn}
-                            className="w-5 h-5 rounded-md bg-neutral-800 border border-white/10 shrink-0 group-hover:border-emerald-400/50"
-                            onError={(e) => {
-                              (e.target as HTMLElement).style.display = 'none';
-                            }}
+                            src={`https://mc-heads.net/avatar/${encodeURIComponent(bet.minecraftIgn)}/24`}
+                            alt={bet.minecraftIgn}
+                            className="w-5 h-5 rounded-md bg-neutral-800 border border-white/10 shrink-0"
+                            onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }}
                           />
-                          <span className="truncate max-w-[120px]">{b.minecraftIgn}</span>
+                          <span className="truncate max-w-[120px] font-bold">
+                            {bet.minecraftIgn}
+                          </span>
                         </button>
                       </td>
+
+                      {/* Bet Amount */}
                       <td className="py-3 px-3 text-center font-bold text-neutral-300">
-                        <span>{formatCash(b.betAmount)}</span>
+                        {formatCash(bet.betAmount)}
                       </td>
+
+                      {/* Multiplier */}
                       <td className="py-3 px-3 text-center">
                         <span
-                          className={`font-black ${
-                            isWin ? 'text-emerald-400' : 'text-neutral-500'
+                          className={`px-2 py-0.5 rounded font-black text-[11px] ${
+                            isWin
+                              ? 'bg-cyan-500/15 text-cyan-400 border border-cyan-500/30'
+                              : 'text-neutral-500'
                           }`}
                         >
-                          {isWin ? `${b.multiplier.toFixed(2)}x` : '0.00x'}
+                          {bet.multiplier.toFixed(2)}x
                         </span>
                       </td>
-                      <td className="py-3 px-3 text-right">
-                        {isWin ? (
-                          <span className="text-amber-400 font-black">
-                            {formatCash(b.payout, { showPlus: true })}
-                          </span>
-                        ) : (
-                          <span className="text-neutral-500 font-medium">
-                            {formatCash(-b.betAmount)}
-                          </span>
-                        )}
+
+                      {/* Payout */}
+                      <td className="py-3 px-3 text-right font-black">
+                        <span
+                          className={
+                            isWin
+                              ? 'text-amber-300 font-bold drop-shadow-sm'
+                              : 'text-neutral-500'
+                          }
+                        >
+                          {isWin ? formatCash(bet.payout, { showPlus: true }) : '$0'}
+                        </span>
                       </td>
                     </tr>
                   );

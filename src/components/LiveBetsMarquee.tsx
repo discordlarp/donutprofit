@@ -3,7 +3,7 @@
 import React from 'react';
 import { useGame } from '@/context/GameContext';
 import { formatCash } from '@/lib/format';
-import { Sparkles, TrendingUp } from 'lucide-react';
+import { Sparkles, Zap } from 'lucide-react';
 
 const FALLBACK_WINS = [
   { id: 'fw-1', minecraftIgn: 'cartisneakz', game: 'mines', multiplier: 4.85, payout: 24250000 },
@@ -23,12 +23,12 @@ export default function LiveBetsMarquee() {
   const displayItems = [...items, ...items]; // Duplicate for seamless infinite marquee scroll
 
   return (
-    <div className="w-full bg-[#08090f]/95 border-b border-white/5 overflow-hidden py-2 select-none backdrop-blur-md">
-      <div className="w-full px-4 sm:px-6 flex items-center gap-3">
+    <div className="w-full bg-[#080912]/95 border-b border-white/[0.06] overflow-hidden py-2 select-none backdrop-blur-md">
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 flex items-center gap-3">
         {/* Ticker Tag */}
-        <div className="flex items-center gap-1.5 text-[11px] font-black text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-1 rounded-lg shrink-0 shadow-sm shadow-emerald-500/10">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-          <span className="tracking-wider uppercase">LIVE WINS</span>
+        <div className="flex items-center gap-1.5 text-[11px] font-black text-violet-300 bg-violet-600/15 border border-violet-500/30 px-2.5 py-1 rounded-lg shrink-0 shadow-sm shadow-violet-500/10">
+          <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
+          <span className="tracking-wider uppercase">LIVE DROPS</span>
         </div>
 
         {/* Marquee Ticker Track */}
@@ -37,12 +37,12 @@ export default function LiveBetsMarquee() {
             {displayItems.map((bet, i) => (
               <div
                 key={`${bet.id}-${i}`}
-                className="flex items-center gap-2 bg-[#10131d] border border-white/5 hover:border-emerald-500/40 px-2.5 py-1 rounded-xl text-xs transition duration-200 shrink-0 group shadow-sm"
+                className="flex items-center gap-2 bg-[#101322] border border-white/5 hover:border-violet-500/40 px-2.5 py-1 rounded-xl text-xs transition duration-200 shrink-0 group shadow-sm"
               >
                 {/* Minecraft Avatar */}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={`https://mc-heads.net/avatar/${bet.minecraftIgn}/24`}
+                  src={`https://mc-heads.net/avatar/${encodeURIComponent(bet.minecraftIgn)}/24`}
                   alt={bet.minecraftIgn}
                   className="w-5 h-5 rounded-md bg-neutral-800 border border-white/10 shrink-0"
                   onError={(e) => {
@@ -55,10 +55,10 @@ export default function LiveBetsMarquee() {
                 <span className="text-[9px] uppercase font-black text-neutral-400 px-1.5 py-0.5 bg-white/5 border border-white/5 rounded">
                   {bet.game}
                 </span>
-                <span className="text-emerald-400 font-mono font-black text-[11px]">
+                <span className="text-cyan-400 font-mono font-black text-[11px]">
                   {bet.multiplier.toFixed(2)}x
                 </span>
-                <span className="text-amber-400 font-mono font-black text-[11px] flex items-center">
+                <span className="text-amber-300 font-mono font-black text-[11px] flex items-center">
                   {formatCash(bet.payout, { showPlus: true })}
                 </span>
               </div>
