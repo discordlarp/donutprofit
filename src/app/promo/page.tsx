@@ -19,9 +19,14 @@ export default function PromoPage() {
           </div>
         </div>
 
-        {/* Empty container ready for user content */}
-        <div className="min-h-[220px] flex flex-col items-center justify-center py-10 text-center">
-          {/* Content will be added here per user instructions */}
+        {/* Promo Content */}
+        <div className="min-h-[220px] flex flex-col items-center justify-center py-10 px-4 text-center gap-3">
+          <p className="text-sm sm:text-base text-neutral-300 font-medium">
+            promotion codes will be added next month
+          </p>
+          <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-orange-400 to-amber-300 drop-shadow-sm">
+            Thank You For Using Donut Profit
+          </h2>
         </div>
       </div>
     </div>
