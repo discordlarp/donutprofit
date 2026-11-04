@@ -7,6 +7,7 @@ import { useGame } from '@/context/GameContext';
 import { formatCash } from '@/lib/format';
 import AuthModal from '@/components/AuthModal';
 import DonutLogo from '@/components/DonutLogo';
+import PromoModal from '@/components/PromoModal';
 import { 
   Coins, 
   ShieldAlert, 
@@ -26,7 +27,8 @@ import {
   ChevronDown,
   X,
   Swords,
-  Gamepad2
+  Gamepad2,
+  Star
 } from 'lucide-react';
 
 interface NavbarProps {
@@ -53,6 +55,7 @@ export default function Navbar({ onToggleChat: propOnToggle, isChatOpen: propIsO
   const [authModalTab, setAuthModalTab] = useState<'minecraft' | 'discord' | 'staff'>('minecraft');
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [isPassModalOpen, setIsPassModalOpen] = useState(false);
+  const [isPromoModalOpen, setIsPromoModalOpen] = useState(false);
   const [newPass, setNewPass] = useState('');
   const [passMsg, setPassMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -82,6 +85,11 @@ export default function Navbar({ onToggleChat: propOnToggle, isChatOpen: propIsO
         isOpen={authModalOpen} 
         onClose={() => setAuthModalOpen(false)} 
         initialTab={authModalTab}
+      />
+
+      <PromoModal
+        isOpen={isPromoModalOpen}
+        onClose={() => setIsPromoModalOpen(false)}
       />
 
       {/* Change Password Modal */}
@@ -182,6 +190,16 @@ export default function Navbar({ onToggleChat: propOnToggle, isChatOpen: propIsO
                 <Gift className="w-3.5 h-3.5 text-amber-400" />
                 <span>AFFILIATES</span>
               </Link>
+
+              <button
+                type="button"
+                onClick={() => setIsPromoModalOpen(true)}
+                className="text-amber-300 hover:text-amber-200 font-black transition flex items-center gap-1.5 bg-gradient-to-r from-amber-500/15 to-yellow-500/15 border border-amber-400/40 px-2.5 py-1 rounded-lg shadow-sm cursor-pointer"
+                title="Promo"
+              >
+                <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+                <span>Promo</span>
+              </button>
 
               <Link
                 href="/leaderboard"
@@ -310,6 +328,18 @@ export default function Navbar({ onToggleChat: propOnToggle, isChatOpen: propIsO
                         <Gift className="w-3.5 h-3.5 text-amber-400" />
                         <span>Affiliates</span>
                       </Link>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setProfileDropdownOpen(false);
+                          setIsPromoModalOpen(true);
+                        }}
+                        className="px-3 py-2 rounded-xl text-amber-300 hover:text-white hover:bg-amber-500/10 flex items-center gap-2 font-bold transition w-full text-left cursor-pointer"
+                      >
+                        <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+                        <span>Promo</span>
+                      </button>
 
                       <Link
                         href="/profile?tab=bets"

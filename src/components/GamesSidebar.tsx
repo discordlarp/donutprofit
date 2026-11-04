@@ -21,7 +21,8 @@ import {
   Gamepad2,
   Sparkles,
   Layers,
-  X
+  X,
+  Star
 } from 'lucide-react';
 
 interface GamesSidebarProps {
@@ -144,7 +145,7 @@ export default function GamesSidebar({ activeGame: propActiveGame, onSelectGame 
 
         {/* Scrollable Navigation Body */}
         <div className="flex-1 overflow-y-auto px-2 py-3 flex flex-col gap-4 scrollbar-none">
-          {/* Quick Highlight Links (Affiliates) */}
+          {/* Quick Highlight Links (Affiliates & Promo) */}
           <div className="flex flex-col gap-1">
             <Link
               href="/referral"
@@ -163,6 +164,28 @@ export default function GamesSidebar({ activeGame: propActiveGame, onSelectGame 
                   <span className="truncate">Affiliates</span>
                   <span className="text-[9px] text-emerald-400/80 font-mono font-bold leading-none mt-0.5">
                     Referral Rewards
+                  </span>
+                </div>
+              )}
+            </Link>
+
+            <Link
+              href="/promo"
+              className={`flex items-center gap-3 px-2.5 py-2 rounded-xl text-xs font-black transition group ${
+                pathname === '/promo'
+                  ? 'bg-gradient-to-r from-amber-500/20 to-yellow-500/10 border border-amber-500/40 text-amber-300'
+                  : 'text-neutral-300 hover:text-amber-300 hover:bg-amber-500/10'
+              }`}
+              title="Promo"
+            >
+              <div className="w-7 h-7 rounded-lg bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
+                <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+              </div>
+              {!isSidebarCollapsed && (
+                <div className="flex flex-col min-w-0">
+                  <span className="truncate">Promo</span>
+                  <span className="text-[9px] text-amber-400/80 font-mono font-bold leading-none mt-0.5">
+                    Promotions
                   </span>
                 </div>
               )}
