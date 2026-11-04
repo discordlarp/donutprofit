@@ -137,7 +137,7 @@ export default function WalletModal({ isOpen, onClose, initialTab = 'deposit' }:
 
     const clean = promoInput.trim();
     if (!clean) {
-      setPromoMsg({ type: 'error', text: 'Please enter a promo code.' });
+      setPromoMsg({ type: 'error', text: 'Please enter a promotion code.' });
       return;
     }
 
@@ -153,7 +153,7 @@ export default function WalletModal({ isOpen, onClose, initialTab = 'deposit' }:
         setPromoMsg({ type: 'error', text: res.message });
       }
     } catch {
-      setPromoMsg({ type: 'error', text: 'Failed to redeem promo code.' });
+      setPromoMsg({ type: 'error', text: 'Failed to redeem promotion code.' });
     } finally {
       setIsRedeeming(false);
     }
@@ -293,17 +293,17 @@ export default function WalletModal({ isOpen, onClose, initialTab = 'deposit' }:
               </div>
             )}
 
-            {/* Have a promo code? */}
+            {/* Have a promotion code? */}
             <div className="mt-4">
               <label className="text-xs font-bold text-neutral-400 block mb-2">
-                Have a referral code?
+                Have a promotion code?
               </label>
               <form onSubmit={handleRedeemPromo} className="flex items-center justify-between bg-[#090b14] border border-white/10 focus-within:border-violet-500 rounded-xl pl-4 pr-2 py-1 transition">
                 <input
                   type="text"
                   value={promoInput}
                   onChange={(e) => setPromoInput(e.target.value)}
-                  placeholder="Enter referral code"
+                  placeholder="Enter promotion code"
                   className="bg-transparent text-white placeholder-neutral-500 text-xs font-medium outline-none flex-1 font-mono"
                 />
                 <button
