@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
-import { UserProfile, ChatMessage } from '@/types';
+import { UserProfile, ChatMessage, BetRecord } from '@/types';
 import { MOCK_USERS } from '@/lib/store';
 
 export interface MemberLogEntry {
@@ -65,6 +65,130 @@ const SEED_CHAT_MESSAGES: ChatMessage[] = [
   }
 ];
 
+// Initial seed global live bets
+const SEED_GLOBAL_BETS: BetRecord[] = [
+  {
+    id: 'seed-bet-1',
+    userId: 'user-mc-cartisneakz',
+    username: 'cartisneakz',
+    minecraftIgn: 'cartisneakz',
+    game: 'mines',
+    betAmount: 5000000,
+    multiplier: 4.85,
+    payout: 24250000,
+    result: 'win',
+    timestamp: new Date(Date.now() - 1000 * 60 * 2).toISOString(),
+  },
+  {
+    id: 'seed-bet-2',
+    userId: 'user-mc-vortexsmp',
+    username: 'VortexSMP',
+    minecraftIgn: 'VortexSMP',
+    game: 'crash',
+    betAmount: 4000000,
+    multiplier: 4.50,
+    payout: 18000000,
+    result: 'win',
+    timestamp: new Date(Date.now() - 1000 * 60 * 5).toISOString(),
+  },
+  {
+    id: 'seed-bet-3',
+    userId: 'user-mc-donutwhale',
+    username: 'DonutWhale',
+    minecraftIgn: 'DonutWhale',
+    game: 'plinko',
+    betAmount: 5000000,
+    multiplier: 5.00,
+    payout: 25000000,
+    result: 'win',
+    timestamp: new Date(Date.now() - 1000 * 60 * 8).toISOString(),
+  },
+  {
+    id: 'seed-bet-4',
+    userId: 'user-mc-hyperglitch',
+    username: 'HyperGlitch',
+    minecraftIgn: 'HyperGlitch',
+    game: 'roulette',
+    betAmount: 3000000,
+    multiplier: 5.00,
+    payout: 15000000,
+    result: 'win',
+    timestamp: new Date(Date.now() - 1000 * 60 * 12).toISOString(),
+  },
+  {
+    id: 'seed-bet-5',
+    userId: 'user-mc-netherlord',
+    username: 'NetherLord',
+    minecraftIgn: 'NetherLord',
+    game: 'coinflip',
+    betAmount: 10000000,
+    multiplier: 2.00,
+    payout: 20000000,
+    result: 'win',
+    timestamp: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
+  },
+  {
+    id: 'seed-bet-6',
+    userId: 'user-mc-shadowstrike',
+    username: 'ShadowStrike',
+    minecraftIgn: 'ShadowStrike',
+    game: 'towers',
+    betAmount: 3000000,
+    multiplier: 3.75,
+    payout: 11250000,
+    result: 'win',
+    timestamp: new Date(Date.now() - 1000 * 60 * 18).toISOString(),
+  },
+  {
+    id: 'seed-bet-7',
+    userId: 'user-mc-enderblade',
+    username: 'EnderBlade',
+    minecraftIgn: 'EnderBlade',
+    game: 'blackjack',
+    betAmount: 5000000,
+    multiplier: 2.50,
+    payout: 12500000,
+    result: 'win',
+    timestamp: new Date(Date.now() - 1000 * 60 * 22).toISOString(),
+  },
+  {
+    id: 'seed-bet-8',
+    userId: 'user-mc-xynfnagsss',
+    username: 'xynfnagsss',
+    minecraftIgn: 'xynfnagsss',
+    game: 'slots',
+    betAmount: 2000000,
+    multiplier: 5.00,
+    payout: 10000000,
+    result: 'win',
+    timestamp: new Date(Date.now() - 1000 * 60 * 25).toISOString(),
+  },
+  {
+    id: 'seed-bet-9',
+    userId: 'user-mc-wonderflows',
+    username: 'wonderflows',
+    minecraftIgn: 'wonderflows',
+    game: 'limbo',
+    betAmount: 1000000,
+    multiplier: 3.20,
+    payout: 3200000,
+    result: 'win',
+    timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
+  },
+  {
+    id: 'seed-bet-10',
+    userId: 'user-mc-cartisneakz',
+    username: 'cartisneakz',
+    minecraftIgn: 'cartisneakz',
+    game: 'dice',
+    betAmount: 2500000,
+    multiplier: 2.00,
+    payout: 5000000,
+    result: 'win',
+    timestamp: new Date(Date.now() - 1000 * 60 * 35).toISOString(),
+  }
+];
+
 // Determine writable data directory safely (works on local dev & serverless/Vercel)
 let activeDataDir: string | null = null;
 
@@ -102,6 +226,7 @@ function getDataDir(): string {
 let memoryUsers: Map<string, UserProfile> = new Map();
 let memoryChat: ChatMessage[] = [...SEED_CHAT_MESSAGES];
 let memoryMemberLogs: MemberLogEntry[] = [];
+let memoryBets: BetRecord[] = [...SEED_GLOBAL_BETS];
 let isStoreInitialized = false;
 
 export function getCanonicalUserId(ignOrUsername: string): string {
@@ -209,8 +334,38 @@ function loadStoreFromDisk() {
     console.error('[ServerStore] Failed to load member_logs.json:', err);
   }
 
+  // Load bets.json
+  try {
+    const betsFile = path.join(dir, 'bets.json');
+    if (fs.existsSync(betsFile)) {
+      const raw = fs.readFileSync(betsFile, 'utf-8');
+      const list: BetRecord[] = JSON.parse(raw);
+      if (Array.isArray(list) && list.length > 0) {
+        memoryBets = list.filter(
+          b => !isAccountRemoved(b.minecraftIgn) && !isAccountRemoved(b.username) && !isAccountRemoved(b.userId)
+        );
+      }
+    }
+  } catch (err) {
+    console.error('[ServerStore] Failed to load bets.json:', err);
+  }
+
   // Save cleaned state
   persistUsersToDisk();
+  persistBetsToDisk();
+}
+
+function persistBetsToDisk() {
+  try {
+    const dir = getDataDir();
+    const betsFile = path.join(dir, 'bets.json');
+    const filtered = memoryBets
+      .filter(b => !isAccountRemoved(b.minecraftIgn) && !isAccountRemoved(b.username) && !isAccountRemoved(b.userId))
+      .slice(0, 100);
+    fs.writeFileSync(betsFile, JSON.stringify(filtered, null, 2), 'utf-8');
+  } catch (err) {
+    console.error('[ServerStore] Error saving bets to disk:', err);
+  }
 }
 
 function persistUsersToDisk() {
@@ -377,8 +532,14 @@ export function deleteUser(userIdOrIgn: string): boolean {
     (l) => !isAccountRemoved(l.minecraftIgn) && !isAccountRemoved(l.username) && !isAccountRemoved(l.userId)
   );
 
+  // Filter bets
+  memoryBets = memoryBets.filter(
+    (b) => !isAccountRemoved(b.minecraftIgn) && !isAccountRemoved(b.username) && !isAccountRemoved(b.userId)
+  );
+
   persistUsersToDisk();
   persistMemberLogsToDisk();
+  persistBetsToDisk();
   return true;
 }
 
@@ -420,4 +581,26 @@ export function addChatMessage(msg: ChatMessage): ChatMessage {
 export function getMemberLogs(limit: number = 100): MemberLogEntry[] {
   loadStoreFromDisk();
   return memoryMemberLogs.slice(0, limit);
+}
+
+export function getGlobalBets(limit: number = 50): BetRecord[] {
+  loadStoreFromDisk();
+  return memoryBets
+    .filter(b => !isAccountRemoved(b.minecraftIgn) && !isAccountRemoved(b.username) && !isAccountRemoved(b.userId))
+    .slice(0, limit);
+}
+
+export function addGlobalBet(bet: BetRecord): BetRecord {
+  loadStoreFromDisk();
+  if (isAccountRemoved(bet.minecraftIgn) || isAccountRemoved(bet.username) || isAccountRemoved(bet.userId)) {
+    return bet;
+  }
+  // Remove if exists to prevent duplicates
+  memoryBets = memoryBets.filter(b => b.id !== bet.id);
+  memoryBets.unshift(bet);
+  if (memoryBets.length > 100) {
+    memoryBets = memoryBets.slice(0, 100);
+  }
+  persistBetsToDisk();
+  return bet;
 }

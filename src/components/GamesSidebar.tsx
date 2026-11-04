@@ -319,7 +319,7 @@ export default function GamesSidebar({ activeGame: propActiveGame, onSelectGame 
             </Link>
 
             <a
-              href="https://discord.gg/WMPqShACpW"
+              href="https://discord.gg/qEHzmKNAv"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-bold text-[#858ffc] hover:text-white hover:bg-[#5865F2]/15 transition"

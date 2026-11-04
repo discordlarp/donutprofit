@@ -36,7 +36,7 @@ export default function Footer() {
               <li><Link href="/deposit" className="hover:text-emerald-400 transition">Deposit In-Game Currency</Link></li>
               <li><Link href="/withdraw" className="hover:text-amber-400 transition">Withdrawal Requests</Link></li>
               <li><Link href="/leaderboard" className="hover:text-emerald-400 transition">Top Player Leaderboard</Link></li>
-              <li><a href="https://discord.gg/WMPqShACpW" target="_blank" rel="noopener noreferrer" className="text-[#5865F2] hover:underline font-bold flex items-center gap-1"><span>💬</span> Official Discord</a></li>
+              <li><a href="https://discord.gg/qEHzmKNAv" target="_blank" rel="noopener noreferrer" className="text-[#5865F2] hover:underline font-bold flex items-center gap-1"><span>💬</span> Official Discord</a></li>
             </ul>
           </div>
 

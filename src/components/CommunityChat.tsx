@@ -587,7 +587,7 @@ export default function CommunityChat({ isOpen: propIsOpen, onToggle: propOnTogg
       {/* Discord Community Banner */}
       <div className="p-2.5 border-b border-white/5 shrink-0 bg-[#10121a]">
         <a
-          href="https://discord.gg/WMPqShACpW"
+          href="https://discord.gg/qEHzmKNAv"
           target="_blank"
           rel="noopener noreferrer"
           className="w-full py-1.5 px-3 rounded-xl bg-[#5865F2] hover:bg-[#4752c4] text-white text-[11px] font-black flex items-center justify-center gap-2 transition shadow-md shadow-[#5865F2]/20"

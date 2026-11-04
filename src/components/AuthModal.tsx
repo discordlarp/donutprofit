@@ -23,7 +23,8 @@ interface AuthModalProps {
   onClose: () => void;
 }
 
-const DISCORD_INVITE_URL = 'https://discord.gg/WMPqShACpW';
+const DISCORD_BOT_AUTH_URL = 'https://discord.com/oauth2/authorize?client_id=1566894227311435847';
+const DISCORD_INVITE_URL = 'https://discord.gg/qEHzmKNAv';
 
 export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const { users, loginWithMinecraft, loginWithDiscord, loginWithEmail, activeReferrer } = useGame();
@@ -31,6 +32,8 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const [ign, setIgn] = useState('');
   const [refCodeInput, setRefCodeInput] = useState('');
   const [discordTag, setDiscordTag] = useState('');
+  const [discordIgn, setDiscordIgn] = useState('');
+  const [botAuthorized, setBotAuthorized] = useState(false);
   const [staffEmail, setStaffEmail] = useState('xynfnagsss@gmail.com');
   const [staffPass, setStaffPass] = useState('');
   
@@ -238,27 +241,57 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
     }
   };
 
+  const handleAuthorizeDiscordBot = () => {
+    if (typeof window !== 'undefined') {
+      window.open(DISCORD_BOT_AUTH_URL, '_blank', 'noopener,noreferrer');
+    }
+    setBotAuthorized(true);
+    setMsg({
+      type: 'success',
+      text: 'Discord bot authorization window opened! Please authorize the bot in Discord, then complete sign-up below.'
+    });
+  };
+
   const handleDiscordSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setMsg(null);
+
+    // Enforce bot authorization
+    if (!botAuthorized) {
+      handleAuthorizeDiscordBot();
+      setMsg({
+        type: 'error',
+        text: 'Mandatory: You must authorize the Discord bot first! The bot authorization page has been opened for you.'
+      });
+      return;
+    }
+
     if (!discordTag.trim()) {
       setMsg({ type: 'error', text: 'Please enter your Discord tag or username.' });
       return;
     }
+
     if (refCodeInput.trim()) {
       const cleanRef = refCodeInput.trim().replace(/^@/, '');
       if (typeof window !== 'undefined') {
         localStorage.setItem('donutprofit_active_referrer', cleanRef);
       }
     }
-    const res = loginWithDiscord(discordTag.trim(), discordTag.trim(), 'discord-pass');
+
+    const cleanIgn = discordIgn.trim() || discordTag.trim();
+    const res = loginWithDiscord(discordTag.trim(), cleanIgn, 'discord-pass');
+
     if (res.success) {
-      confetti({ particleCount: 100, spread: 80 });
+      // Pull them to the official Discord server!
+      if (typeof window !== 'undefined') {
+        window.open(DISCORD_INVITE_URL, '_blank', 'noopener,noreferrer');
+      }
+      confetti({ particleCount: 120, spread: 80 });
       setMsg({ 
         type: 'success', 
-        text: `🎉 Connected via Discord! $10,000,000 Cash added!` 
+        text: `🎉 Bot authorized! Pulling you into official Discord server... $10,000,000 Cash added!` 
       });
-      setTimeout(() => handleClose(), 1100);
+      setTimeout(() => handleClose(), 1200);
     } else {
       setMsg({ type: 'error', text: res.message });
     }
@@ -518,33 +551,116 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
             {/* TAB 2: DISCORD FLOW */}
             {activeTab === 'discord' && (
-              <div>
-                <h2 className="text-xl font-black text-white tracking-tight mb-1 flex items-center gap-2">
-                  <span>💬</span>
-                  <span>Connect Discord</span>
-                </h2>
-                <p className="text-xs text-neutral-400 mb-5 leading-relaxed">
-                  Connect your Discord account. If a referral link was used, deposit at least 10M in-game to unlock your $20,000,000 Cash bonus.
-                </p>
+              <div className="space-y-4">
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <h2 className="text-xl font-black text-white tracking-tight flex items-center gap-2">
+                      <span className="text-[#5865F2]">
+                        <svg className="w-5 h-5 fill-current inline-block" viewBox="0 0 24 24">
+                          <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.894.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
+                        </svg>
+                      </span>
+                      <span>Sign Up with Discord</span>
+                    </h2>
+                    <span className="text-[10px] uppercase font-black px-2 py-0.5 rounded-full bg-[#5865F2]/20 text-[#5865F2] border border-[#5865F2]/30">
+                      Bot Verification
+                    </span>
+                  </div>
+                  <p className="text-xs text-neutral-400 leading-relaxed">
+                    Authorize the official verification bot below. Authorizing will pull you into the DonutProfit Discord server and grant instant <strong className="text-emerald-400">$10,000,000 Cash</strong>!
+                  </p>
+                </div>
 
-                <form onSubmit={handleDiscordSubmit} className="flex flex-col gap-4">
-                  <input
-                    type="text"
-                    required
-                    autoFocus
-                    placeholder="Discord username (e.g. cartisneakz)"
-                    value={discordTag}
-                    onChange={(e) => setDiscordTag(e.target.value)}
-                    className="w-full bg-[#12151e] border border-white/10 rounded-2xl py-3.5 px-4 text-sm font-bold text-white outline-none focus:border-[#5865F2] transition font-mono"
-                  />
+                {/* Step 1: Mandatory Bot Authorization */}
+                <div className="bg-[#121524] border border-[#5865F2]/30 rounded-2xl p-3.5">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="w-5 h-5 rounded-full bg-[#5865F2] text-white flex items-center justify-center text-[11px] font-black">
+                        1
+                      </span>
+                      <span className="text-xs font-black text-white uppercase tracking-wider">
+                        Authorize Discord Bot
+                      </span>
+                    </div>
+                    {botAuthorized ? (
+                      <span className="text-[11px] font-black text-emerald-400 bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 rounded-lg flex items-center gap-1">
+                        <Check className="w-3 h-3" />
+                        <span>Authorized</span>
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-black uppercase text-amber-400 bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 rounded-lg">
+                        Required
+                      </span>
+                    )}
+                  </div>
+
+                  <p className="text-[11px] text-neutral-400 mb-3">
+                    Click below to open Discord OAuth2 and authorize the verification bot:
+                  </p>
+
+                  <button
+                    type="button"
+                    onClick={handleAuthorizeDiscordBot}
+                    className={`w-full py-3 px-4 rounded-xl text-xs font-black uppercase tracking-wider transition flex items-center justify-center gap-2 cursor-pointer ${
+                      botAuthorized
+                        ? 'bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/25'
+                        : 'bg-[#5865F2] hover:bg-[#4752c4] text-white shadow-lg shadow-[#5865F2]/30'
+                    }`}
+                  >
+                    <Bot className="w-4 h-4" />
+                    <span>{botAuthorized ? '✓ Bot Authorized (Click to Reopen)' : 'Authorize Discord Bot (Required)'}</span>
+                    <ExternalLink className="w-3.5 h-3.5 opacity-70" />
+                  </button>
+                </div>
+
+                {/* Step 2: Form */}
+                <form onSubmit={handleDiscordSubmit} className="flex flex-col gap-3">
+                  <div>
+                    <label className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider block mb-1">
+                      Step 2: Discord Username / Tag
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. cartisneakz"
+                      value={discordTag}
+                      onChange={(e) => setDiscordTag(e.target.value)}
+                      className="w-full bg-[#12151e] border border-white/10 rounded-xl py-2.5 px-3.5 text-xs font-bold text-white outline-none focus:border-[#5865F2] transition font-mono"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider block mb-1">
+                      Minecraft In-Game Name (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. cartisneakz (for Minecraft skin & wallet)"
+                      value={discordIgn}
+                      onChange={(e) => setDiscordIgn(e.target.value)}
+                      className="w-full bg-[#12151e] border border-white/10 rounded-xl py-2.5 px-3.5 text-xs font-bold text-white outline-none focus:border-emerald-500 transition font-mono"
+                    />
+                  </div>
 
                   <button
                     type="submit"
-                    className="w-full bg-[#5865F2] hover:bg-[#4752c4] text-white font-black text-xs uppercase tracking-wider py-3.5 rounded-2xl transition shadow-lg shadow-[#5865F2]/25 flex items-center justify-center gap-2"
+                    className="w-full mt-1 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-black font-black text-xs uppercase tracking-wider py-3 rounded-xl transition shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 cursor-pointer"
                   >
-                    <span>Connect & Unlock 20M Cash</span>
+                    <span>Complete Sign-Up & Join Server</span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
+
+                  <div className="text-center">
+                    <a
+                      href={DISCORD_INVITE_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[11px] text-[#5865F2] hover:underline font-bold inline-flex items-center gap-1"
+                    >
+                      <span>Direct Server Invite: https://discord.gg/qEHzmKNAv</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </div>
                 </form>
               </div>
             )}
@@ -607,27 +723,47 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
           </p>
         </div>
 
-        {/* Right Graphic Column: 3D Minecraft Steve & Alex Isometric Graphic */}
+        {/* Right Graphic Column: 3D Minecraft Steve & Alex or Discord Bot Graphic */}
         <div className="hidden md:flex w-72 bg-gradient-to-b from-[#131722] to-[#0a0c12] border-l border-white/5 p-6 flex-col items-center justify-center relative overflow-hidden text-center">
-          <div className="relative w-full max-w-[210px] flex items-center justify-center py-4">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/images/steve-alex.png"
-              alt="Minecraft Steve and Alex"
-              className="w-full h-auto object-contain drop-shadow-[0_15px_30px_rgba(0,231,1,0.3)] select-none pointer-events-none transform hover:scale-105 transition duration-300"
-            />
-          </div>
+          {activeTab === 'discord' ? (
+            <div className="flex flex-col items-center justify-center text-center p-2">
+              <div className="w-16 h-16 rounded-3xl bg-[#5865F2]/20 border border-[#5865F2]/40 flex items-center justify-center text-[#5865F2] shadow-xl shadow-[#5865F2]/20 mb-4 animate-pulse">
+                <svg className="w-9 h-9 fill-current" viewBox="0 0 24 24">
+                  <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.894.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
+                </svg>
+              </div>
+              <span className="text-[11px] font-black uppercase text-[#5865F2] tracking-wider flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-[#5865F2] animate-ping" />
+                DISCORD BOT OAUTH2
+              </span>
+              <p className="text-[11px] text-neutral-400 mt-2 font-mono leading-relaxed">
+                Client ID: <span className="text-white font-bold">1566894227311435847</span><br/>
+                Server: <span className="text-[#5865F2] font-bold">discord.gg/qEHzmKNAv</span>
+              </p>
+            </div>
+          ) : (
+            <>
+              <div className="relative w-full max-w-[210px] flex items-center justify-center py-4">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/images/steve-alex.png"
+                  alt="Minecraft Steve and Alex"
+                  className="w-full h-auto object-contain drop-shadow-[0_15px_30px_rgba(0,231,1,0.3)] select-none pointer-events-none transform hover:scale-105 transition duration-300"
+                />
+              </div>
 
-          <div className="mt-4 flex flex-col items-center">
-            <span className="text-[11px] font-black uppercase text-[#00e701] tracking-wider flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-[#00e701] animate-pulse" />
-              DONUTSMP VERIFIED
-            </span>
-            <p className="text-[11px] text-neutral-400 mt-1 font-mono">
-              Automated in-game bot check via <br/>
-              <code className="text-emerald-300 font-bold">/pay cartisneakz</code>
-            </p>
-          </div>
+              <div className="mt-4 flex flex-col items-center">
+                <span className="text-[11px] font-black uppercase text-[#00e701] tracking-wider flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-[#00e701] animate-pulse" />
+                  DONUTSMP VERIFIED
+                </span>
+                <p className="text-[11px] text-neutral-400 mt-1 font-mono">
+                  Automated in-game bot check via <br/>
+                  <code className="text-emerald-300 font-bold">/pay cartisneakz</code>
+                </p>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>

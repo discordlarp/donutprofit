@@ -1011,6 +1011,73 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     return () => clearInterval(interval);
   }, [syncUsersFromServer]);
 
+  // Sync global bets from centralized server in real-time
+  const syncBetsFromServer = useCallback(async () => {
+    try {
+      const res = await fetch('/api/bets?limit=50', {
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-cache, no-store' },
+      });
+      const data = await res.json();
+      if (data.success && Array.isArray(data.bets)) {
+        setBets(prev => {
+          const map = new Map<string, BetRecord>();
+          for (const b of data.bets) {
+            if (b && b.id && !isAccountRemoved(b.minecraftIgn) && !isAccountRemoved(b.username) && !isAccountRemoved(b.userId)) {
+              map.set(b.id, b);
+            }
+          }
+          for (const b of prev) {
+            if (b && b.id && !map.has(b.id) && !isAccountRemoved(b.minecraftIgn) && !isAccountRemoved(b.username) && !isAccountRemoved(b.userId)) {
+              map.set(b.id, b);
+            }
+          }
+          const merged = Array.from(map.values())
+            .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+            .slice(0, 50);
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('donutprofit_bets', JSON.stringify(merged));
+          }
+          return merged;
+        });
+      }
+    } catch {}
+  }, []);
+
+  // Real-time synchronization for global live bets across all players & tabs
+  useEffect(() => {
+    syncBetsFromServer();
+    const interval = setInterval(syncBetsFromServer, 2500);
+
+    let channel: BroadcastChannel | null = null;
+    if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+      try {
+        channel = new BroadcastChannel('donutprofit_live_bets');
+        channel.onmessage = (event) => {
+          if (event.data && event.data.id) {
+            const incoming = event.data as BetRecord;
+            if (isAccountRemoved(incoming.minecraftIgn) || isAccountRemoved(incoming.username) || isAccountRemoved(incoming.userId)) {
+              return;
+            }
+            setBets(prev => {
+              if (prev.some(b => b.id === incoming.id)) return prev;
+              const updated = [incoming, ...prev].slice(0, 50);
+              if (typeof window !== 'undefined') {
+                localStorage.setItem('donutprofit_bets', JSON.stringify(updated));
+              }
+              return updated;
+            });
+          }
+        };
+      } catch {}
+    }
+
+    return () => {
+      clearInterval(interval);
+      if (channel) channel.close();
+    };
+  }, [syncBetsFromServer]);
+
   // Minecraft Login with in-game payment verification or secret PIN
   const loginWithMinecraft = (ign: string, pinOrPass: string = 'verified') => {
     const cleanIgn = ign.trim();
@@ -1293,10 +1360,13 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       setActiveReferrer(null);
     }
 
+    const canonicalIgn = cleanIgn || cleanTag;
+    const canonicalId = `user-mc-${canonicalIgn.toLowerCase()}`;
     const newUser: UserProfile = {
-      id: `discord-${Date.now()}`,
+      id: canonicalId,
       username: cleanTag,
-      minecraftIgn: cleanIgn,
+      minecraftIgn: canonicalIgn,
+      avatarUrl: `https://mc-heads.net/avatar/${encodeURIComponent(canonicalIgn)}/64`,
       password: 'discord-pass',
       authProvider: 'discord',
       balance: initialBalance,
@@ -1306,7 +1376,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       totalWon: 0,
       gamesPlayed: 0,
       createdAt: new Date().toISOString(),
-      referralCode: cleanIgn,
+      referralCode: canonicalIgn,
       referredBy: referredByTag,
       totalReferralBonus: refBonus,
       referralCount: 0,
@@ -1494,7 +1564,25 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       timestamp: new Date().toISOString(),
     };
 
-    setBets(prev => [newBet, ...prev.slice(0, 49)]);
+    setBets(prev => [newBet, ...prev.filter(b => b.id !== newBet.id).slice(0, 49)]);
+
+    // Broadcast bet instantly to open tabs
+    if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+      try {
+        const channel = new BroadcastChannel('donutprofit_live_bets');
+        channel.postMessage(newBet);
+        channel.close();
+      } catch {}
+    }
+
+    // Publish to server for global live bets
+    try {
+      fetch('/api/bets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newBet),
+      }).catch(() => {});
+    } catch {}
 
     return { newBalance: newBal, payout };
   };
