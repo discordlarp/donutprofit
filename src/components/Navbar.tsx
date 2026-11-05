@@ -27,8 +27,6 @@ import {
   ExternalLink,
   ChevronDown,
   X,
-  Swords,
-  Gamepad2,
   Star,
   Plus,
   Wallet
@@ -181,74 +179,47 @@ export default function Navbar({ onToggleChat: propOnToggle, isChatOpen: propIsO
             </Link>
 
             {/* Central Navigation Dock (Desktop) */}
-            <nav className="hidden lg:flex items-center gap-1 ml-4 p-1 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
-              <Link
-                href="/"
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
-                  pathname === '/' 
-                    ? 'bg-white/10 text-white' 
-                    : 'text-neutral-400 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                <Gamepad2 className="w-3.5 h-3.5 text-emerald-400" />
-                <span>ARCADE</span>
-              </Link>
-
-              <button
-                type="button"
-                onClick={() => {
-                  if (pathname !== '/') {
-                    window.location.href = '/#play-arena';
-                  } else {
-                    document.getElementById('play-arena')?.scrollIntoView({ behavior: 'smooth' });
-                  }
-                }}
-                className="px-3 py-1.5 rounded-xl text-xs font-black text-neutral-400 hover:text-white hover:bg-white/5 transition flex items-center gap-1.5 cursor-pointer"
-              >
-                <Swords className="w-3.5 h-3.5 text-rose-400" />
-                <span>PVP DUELS</span>
-              </button>
-
+            <nav className="hidden lg:flex items-center gap-2.5 ml-6 p-1.5 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
               <Link
                 href="/referral"
-                className={`px-3 py-1.5 rounded-xl text-xs font-black transition flex items-center gap-1.5 ${
+                className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 ${
                   pathname === '/referral'
                     ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
                     : 'text-neutral-400 hover:text-amber-300 hover:bg-amber-500/10'
                 }`}
               >
-                <Gift className="w-3.5 h-3.5 text-amber-400" />
+                <Gift className="w-4 h-4 text-amber-400" />
                 <span>AFFILIATES</span>
               </Link>
 
               <button
                 type="button"
                 onClick={() => setIsPromoModalOpen(true)}
-                className="px-3 py-1.5 rounded-xl text-xs font-black transition flex items-center gap-1.5 bg-gradient-to-r from-amber-500/15 via-yellow-500/10 to-amber-500/15 text-amber-300 hover:text-amber-200 border border-amber-400/40 shadow-sm cursor-pointer"
+                className="px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 bg-gradient-to-r from-amber-500/15 via-yellow-500/10 to-amber-500/15 text-amber-300 hover:text-amber-200 border border-amber-400/40 shadow-sm cursor-pointer active:scale-95"
                 title="Promo"
               >
-                <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+                <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
                 <span>PROMO</span>
               </button>
 
               <Link
                 href="/leaderboard"
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 ${
                   pathname === '/leaderboard'
                     ? 'bg-white/10 text-white'
                     : 'text-neutral-400 hover:text-white hover:bg-white/5'
                 }`}
               >
-                <Trophy className="w-3.5 h-3.5 text-amber-400" />
+                <Trophy className="w-4 h-4 text-amber-400" />
                 <span>LEADERBOARD</span>
               </Link>
 
               {user?.role === 'admin' && (
                 <Link
                   href="/admin"
-                  className="px-3 py-1.5 rounded-xl text-xs font-bold text-rose-400 hover:text-rose-300 bg-rose-500/10 border border-rose-500/25 flex items-center gap-1.5"
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-rose-400 hover:text-rose-300 bg-rose-500/10 border border-rose-500/25 flex items-center gap-2"
                 >
-                  <ShieldAlert className="w-3.5 h-3.5" />
+                  <ShieldAlert className="w-4 h-4" />
                   <span>STAFF</span>
                 </Link>
               )}
