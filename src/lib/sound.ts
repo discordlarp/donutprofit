@@ -86,6 +86,11 @@ class SoundFX {
     } catch {}
   }
 
+  // Lose / bust sound
+  playLose() {
+    this.playBomb();
+  }
+
   // Click / tick sound
   playClick() {
     try {

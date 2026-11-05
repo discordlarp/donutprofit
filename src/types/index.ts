@@ -75,7 +75,8 @@ export type GameType =
   | 'chicken'
   | 'keno'
   | 'coinflip'
-  | 'crash';
+  | 'crash'
+  | 'wheel';
 
 export interface BetRecord {
   id: string;

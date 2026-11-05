@@ -16,6 +16,12 @@ import CasesGame from '@/components/games/CasesGame';
 import TowersGame from '@/components/games/TowersGame';
 import LimboGame from '@/components/games/LimboGame';
 import HiloGame from '@/components/games/HiloGame';
+import ChickenGame from '@/components/games/ChickenGame';
+import KenoGame from '@/components/games/KenoGame';
+import SlideGame from '@/components/games/SlideGame';
+import CaseBattlesGame from '@/components/games/CaseBattlesGame';
+import WheelGame from '@/components/games/WheelGame';
+import ServerStatusBar from '@/components/ServerStatusBar';
 import RecentBetsTable from '@/components/RecentBetsTable';
 import AuthModal from '@/components/AuthModal';
 import GameArtwork from '@/components/GameArtwork';
@@ -56,31 +62,36 @@ interface GamePoster {
 }
 
 const POSTER_GAMES: GamePoster[] = [
-  { id: 'mines', title: 'Mines', category: 'originals', players: 38, multiplier: '4.95x', tag: 'FEATURED', description: 'Uncover gems, dodge hidden explosives.' },
-  { id: 'crash', title: 'Crash', category: 'high_multiplier', players: 42, multiplier: '100x', tag: 'HOT', description: 'Cash out before the rocket explodes.' },
-  { id: 'plinko', title: 'Plinko', category: 'high_multiplier', players: 35, multiplier: '1000x', tag: 'HIGH VOLATILITY', description: 'Drop pegs down the pyramid for high multipliers.' },
-  { id: 'slots', title: 'Slots', category: 'originals', players: 28, multiplier: '5.00x', tag: 'JACKPOT', description: 'Match Donut SMP symbols to hit jackpots.' },
-  { id: 'casebattles', title: 'Case Battles', category: 'pvp', players: 31, multiplier: 'PVP', tag: '1V1 DUELS', description: 'Open mystery cases against other players in real-time.' },
+  { id: 'mines', title: 'Mines', category: 'originals', players: 38, multiplier: '2.00x', tag: 'FEATURED', description: 'Uncover gems, dodge hidden explosives.' },
+  { id: 'chicken', title: 'Chicken', category: 'originals', players: 32, multiplier: '2.00x', tag: 'NEW', description: 'Cross nether lava lanes safely for cashouts.' },
+  { id: 'crash', title: 'Crash', category: 'high_multiplier', players: 42, multiplier: '2.00x', tag: 'HOT', description: 'Cash out before the rocket explodes.' },
+  { id: 'slide', title: 'Slide', category: 'high_multiplier', players: 30, multiplier: '2.00x', tag: 'NEW', description: 'Continuous horizontal multiplier slide.' },
+  { id: 'casebattles', title: 'Case Battles', category: 'pvp', players: 31, multiplier: '2.00x', tag: '1V1 PVP', description: 'Open mystery cases against rivals in real-time.' },
+  { id: 'keno', title: 'Keno', category: 'originals', players: 27, multiplier: '2.00x', tag: 'NEW', description: 'Pick your lucky numbers for instant payout matches.' },
+  { id: 'wheel', title: 'Wheel', category: 'originals', players: 29, multiplier: '2.00x', tag: 'NEW', description: 'Spin the Donut prize wheel for multipliers.' },
+  { id: 'plinko', title: 'Plinko', category: 'high_multiplier', players: 35, multiplier: '2.00x', tag: 'ORIGINAL', description: 'Drop pegs down the pyramid for multipliers.' },
+  { id: 'slots', title: 'Slots', category: 'originals', players: 28, multiplier: '2.00x', tag: 'JACKPOT', description: 'Match Donut SMP symbols to hit jackpots.' },
   { id: 'coinflip', title: 'Coinflip', category: 'pvp', players: 29, multiplier: '2.00x', tag: 'INSTANT PVP', description: '50/50 heads or tails against rivals.' },
-  { id: 'roulette', title: 'Roulette', category: 'cards', players: 24, multiplier: '14.00x', tag: 'CLASSIC', description: 'Bet on Red, Black, or the elusive Golden 14x.' },
-  { id: 'blackjack', title: 'Blackjack', category: 'cards', players: 22, multiplier: '2.50x', tag: 'CARDS', description: 'Hit, stand, double down. Beat the dealer to 21.' },
-  { id: 'towers', title: 'Towers', category: 'originals', players: 18, multiplier: '4.00x', tag: 'ORIGINAL', description: 'Climb the skyscraper floor by floor.' },
-  { id: 'limbo', title: 'Limbo', category: 'high_multiplier', players: 19, multiplier: '5.00x', tag: 'LIGHTNING', description: 'Target multipliers with ultra-fast rolls.' },
-  { id: 'dice', title: 'Dice', category: 'originals', players: 16, multiplier: '5.00x', tag: 'FAIR', description: 'Roll over or under with adjustable win chances.' },
-  { id: 'cases', title: 'Cases', category: 'originals', players: 15, multiplier: '4.50x', tag: 'LOOT', description: 'Unbox rare Minecraft tools, armor, and cash.' },
+  { id: 'roulette', title: 'Roulette', category: 'cards', players: 24, multiplier: '2.00x', tag: 'CLASSIC', description: 'Bet on Red, Black, or the Golden Donut.' },
+  { id: 'blackjack', title: 'Blackjack', category: 'cards', players: 22, multiplier: '2.00x', tag: 'CARDS', description: 'Hit, stand, double down. Beat the dealer to 21.' },
+  { id: 'towers', title: 'Towers', category: 'originals', players: 18, multiplier: '2.00x', tag: 'ORIGINAL', description: 'Climb the skyscraper floor by floor.' },
+  { id: 'limbo', title: 'Limbo', category: 'high_multiplier', players: 19, multiplier: '2.00x', tag: 'LIGHTNING', description: 'Target multipliers with ultra-fast rolls.' },
+  { id: 'dice', title: 'Dice', category: 'originals', players: 16, multiplier: '2.00x', tag: 'FAIR', description: 'Roll over or under with adjustable win chances.' },
+  { id: 'cases', title: 'Cases', category: 'originals', players: 15, multiplier: '2.00x', tag: 'LOOT', description: 'Unbox rare Minecraft tools, armor, and cash.' },
   { id: 'hilo', title: 'Hilo', category: 'cards', players: 14, multiplier: '1.92x', tag: 'PROBABILITY', description: 'Guess higher or lower on sequential cards.' },
-  { id: 'chicken', title: 'Chicken', category: 'originals', players: 12, multiplier: '5.00x', tag: 'ORIGINAL', description: 'Guide the chicken across the street without frying.' },
-  { id: 'rabbits', title: 'Rabbits', category: 'high_multiplier', players: 15, multiplier: '5.00x', tag: 'BONUS', description: 'Collect lucky carrots for wild multi triggers.' },
-  { id: 'slide', title: 'Slide', category: 'high_multiplier', players: 13, multiplier: '5.00x', tag: 'SPEED', description: 'Ride the continuous multiplier slide.' },
-  { id: 'keno', title: 'Keno', category: 'originals', players: 11, multiplier: '5.00x', tag: 'NUMBERS', description: 'Pick your lucky numbers for instant payout matches.' },
+  { id: 'rabbits', title: 'Rabbits', category: 'high_multiplier', players: 15, multiplier: '2.00x', tag: 'BONUS', description: 'Collect lucky carrots for wild multi triggers.' },
 ];
 
 const QUICK_SWITCH_GAMES: { id: GameType; name: string; emoji: string }[] = [
   { id: 'mines', name: 'Mines', emoji: '💣' },
+  { id: 'chicken', name: 'Chicken', emoji: '🐔' },
   { id: 'crash', name: 'Crash', emoji: '🚀' },
+  { id: 'slide', name: 'Slide', emoji: '⚡' },
+  { id: 'casebattles', name: 'Case Battles', emoji: '⚔️' },
+  { id: 'keno', name: 'Keno', emoji: '🎱' },
+  { id: 'wheel', name: 'Wheel', emoji: '🎡' },
   { id: 'plinko', name: 'Plinko', emoji: '🟢' },
   { id: 'slots', name: 'Slots', emoji: '🎰' },
-  { id: 'casebattles', name: 'Case Battles', emoji: '⚔️' },
   { id: 'coinflip', name: 'Coinflip', emoji: '🪙' },
   { id: 'roulette', name: 'Roulette', emoji: '🎯' },
   { id: 'blackjack', name: 'Blackjack', emoji: '🃏' },
@@ -247,19 +258,26 @@ export default function HomePage() {
               {activeGame === 'towers' && <TowersGame />}
               {activeGame === 'limbo' && <LimboGame />}
               {activeGame === 'plinko' && <PlinkoGame />}
-              {(activeGame === 'cases' || activeGame === 'casebattles') && <CasesGame />}
+              {activeGame === 'cases' && <CasesGame />}
+              {activeGame === 'casebattles' && <CaseBattlesGame />}
               {activeGame === 'hilo' && <HiloGame />}
-              {(activeGame === 'mines' || activeGame === 'chicken') && <MinesGame />}
+              {activeGame === 'mines' && <MinesGame />}
+              {activeGame === 'chicken' && <ChickenGame />}
+              {activeGame === 'keno' && <KenoGame />}
+              {activeGame === 'slide' && <SlideGame />}
+              {activeGame === 'wheel' && <WheelGame />}
               {activeGame === 'roulette' && <RouletteGame />}
               {activeGame === 'blackjack' && <BlackjackGame />}
-              {(activeGame === 'slots' || activeGame === 'rabbits' || activeGame === 'slide' || activeGame === 'keno') && <SlotsGame />}
+              {(activeGame === 'slots' || activeGame === 'rabbits') && <SlotsGame />}
               {activeGame === 'dice' && <DiceGame />}
             </div>
           </div>
         </div>
       )}
 
-      {/* Main Page Layout: 1. Sliding Game Showcase, 2. All The Games, 3. Live Bets */}
+      {/* Main Page Layout: Live Server Status Bar, 1. Sliding Game Showcase, 2. All The Games, 3. Live Bets */}
+      <ServerStatusBar />
+
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 flex flex-col gap-8">
         {/* Active Referrer Banner */}
         {activeReferrer && !user && (
@@ -298,14 +316,14 @@ export default function HomePage() {
                 <span>EXPLORE ALL GAMES</span>
               </h2>
               <p className="text-xs text-neutral-400 mt-0.5">
-                17 Provably Fair games with high multipliers and verified random seeds
+                18 Provably Fair games with high multipliers and verified random seeds
               </p>
             </div>
 
             {/* Category Filter Pills */}
             <div className="flex items-center gap-1.5 bg-[#090b14] border border-white/10 p-1 rounded-2xl overflow-x-auto scrollbar-none w-full sm:w-auto">
               {[
-                { id: 'all', label: 'All Games (17)' },
+                { id: 'all', label: `All Games (${POSTER_GAMES.length})` },
                 { id: 'originals', label: '⚡ Originals' },
                 { id: 'pvp', label: '⚔️ PvP Duels' },
                 { id: 'cards', label: '🃏 Tables' },
