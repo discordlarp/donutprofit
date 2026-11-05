@@ -21,6 +21,7 @@ import { ChatMessage } from '@/types';
 import confetti from 'canvas-confetti';
 import { sound } from '@/lib/sound';
 import { formatCash } from '@/lib/format';
+import { calculateUserLevel } from '@/lib/levels';
 import UserProfileModal from '@/components/UserProfileModal';
 
 interface CommunityChatProps {
@@ -670,6 +671,23 @@ export default function CommunityChat({ isOpen: propIsOpen, onToggle: propOnTogg
                   >
                     {msg.minecraftIgn}
                   </button>
+                  {(() => {
+                    const msgUser = users.find(u => u.minecraftIgn.toLowerCase() === msg.minecraftIgn.toLowerCase());
+                    const msgWager = msgUser ? msgUser.totalWagered : (isCarti ? 250000000 : 2500000);
+                    const msgLvl = calculateUserLevel(msgWager);
+                    return (
+                      <span 
+                        className="text-[9px] font-black uppercase font-mono px-1 py-0.2 rounded border shrink-0 leading-none"
+                        style={{
+                          backgroundColor: `${msgLvl.tier.color}18`,
+                          color: msgLvl.tier.color,
+                          borderColor: `${msgLvl.tier.color}40`,
+                        }}
+                      >
+                        {msgLvl.level}
+                      </span>
+                    );
+                  })()}
                   {(msg.isStaff || isCarti) && (
                     <span className="text-[9px] bg-amber-500/20 text-amber-400 border border-amber-500/30 px-1 py-0.2 rounded font-black">
                       {isCarti ? 'OWNER' : 'STAFF'}

@@ -23,6 +23,7 @@ import {
   INITIAL_CHAT 
 } from '@/lib/store';
 import { formatCash } from '@/lib/format';
+import { calculateUserLevel, LEVEL_REWARDS } from '@/lib/levels';
 
 interface GameContextType {
   activeGame: GameType;
@@ -85,6 +86,9 @@ interface GameContextType {
   openWallet: (tab?: 'deposit' | 'withdraw') => void;
   closeWallet: () => void;
   walletInitialTab: 'deposit' | 'withdraw';
+  claimLevelReward: (level: number) => { success: boolean; message: string; amount?: number };
+  isLevelModalOpen: boolean;
+  setIsLevelModalOpen: (open: boolean) => void;
 }
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
@@ -174,6 +178,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
   const [isWalletOpen, setIsWalletOpen] = useState(false);
   const [walletInitialTab, setWalletInitialTab] = useState<'deposit' | 'withdraw'>('deposit');
+  const [isLevelModalOpen, setIsLevelModalOpen] = useState(false);
   const openWallet = (tab: 'deposit' | 'withdraw' = 'deposit') => {
     setWalletInitialTab(tab);
     setIsWalletOpen(true);
@@ -2675,6 +2680,40 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     return true;
   };
 
+  const claimLevelReward = (level: number) => {
+    if (!currentUser) return { success: false, message: 'Please sign in first!' };
+    const reward = LEVEL_REWARDS.find(r => r.level === level);
+    if (!reward) return { success: false, message: 'Invalid milestone reward.' };
+
+    const { level: currentLevel } = calculateUserLevel(currentUser.totalWagered);
+    if (currentLevel < level) {
+      return { success: false, message: `Reach Level ${level} to unlock this reward!` };
+    }
+
+    const claimed = currentUser.claimedMilestones || [];
+    if (claimed.includes(level)) {
+      return { success: false, message: `Level ${level} reward already claimed!` };
+    }
+
+    const updatedClaimed = [...claimed, level];
+    const newBal = Number((currentUser.balance + reward.rewardCash).toFixed(2));
+    const updatedStats = {
+      balance: newBal,
+      claimedMilestones: updatedClaimed,
+    };
+
+    setCurrentUser(prev => prev ? { ...prev, ...updatedStats } : null);
+    setUsers(prev => prev.map(u => u.id === currentUser.id ? { ...u, ...updatedStats } : u));
+    patchUserOnServer(currentUser.id, updatedStats);
+    patchUserOnServer(currentUser.minecraftIgn, updatedStats);
+
+    return { 
+      success: true, 
+      message: `Claimed ${formatCash(reward.rewardCash)} Cash for reaching Level ${level}!`, 
+      amount: reward.rewardCash 
+    };
+  };
+
   return (
     <GameContext.Provider value={{
       activeGame,
@@ -2690,6 +2729,9 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       activeReferrer,
       getReferralLink,
       claimReferralCode,
+      claimLevelReward,
+      isLevelModalOpen,
+      setIsLevelModalOpen,
       updateReferrer,
       claimInstant10MEventBonus,
       verifyMinecraftPayment,

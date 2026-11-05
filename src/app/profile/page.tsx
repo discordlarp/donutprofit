@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useGame } from '@/context/GameContext';
 import { formatCash, formatCompactNumber } from '@/lib/format';
+import { calculateUserLevel } from '@/lib/levels';
 import AuthModal from '@/components/AuthModal';
 import { sound } from '@/lib/sound';
 import confetti from 'canvas-confetti';
@@ -37,7 +38,7 @@ import {
 } from 'lucide-react';
 
 function ProfileContent() {
-  const { user, users, bets, deposits, withdrawals, changePassword } = useGame();
+  const { user, users, bets, deposits, withdrawals, changePassword, setIsLevelModalOpen } = useGame();
   const searchParams = useSearchParams();
   const targetParamIgn = searchParams.get('ign');
 
@@ -144,99 +145,127 @@ function ProfileContent() {
     );
   }
 
+  const profileLevel = calculateUserLevel(activeProfileUser.totalWagered);
+
   return (
     <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-6">
       <AuthModal isOpen={authModalOpen} onClose={() => setAuthModalOpen(false)} />
 
       {/* 1. Donut Stake Hero Profile Banner */}
       <div className="relative rounded-3xl overflow-hidden border border-white/10 bg-gradient-to-br from-[#121626] via-[#0d101c] to-[#080912] p-6 sm:p-8 shadow-2xl">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-1/3 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute bottom-0 left-1/3 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-          {/* Avatar & Player Info */}
-          <div className="flex items-center gap-5">
-            <div className="relative group shrink-0">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={`https://mc-heads.net/avatar/${encodeURIComponent(ign)}/80`}
-                alt={ign}
-                className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-neutral-900 border-2 border-emerald-500/40 shadow-xl shadow-emerald-500/20 object-cover"
-                onError={(e) => {
-                  (e.target as HTMLElement).style.display = 'none';
-                }}
-              />
-              <span className="absolute -bottom-2 -right-2 text-xl filter drop-shadow">
-                🍩
-              </span>
-            </div>
+            <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+              {/* Avatar & Player Info */}
+              <div className="flex items-center gap-5">
+                <div className="relative group shrink-0">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={`https://mc-heads.net/avatar/${encodeURIComponent(ign)}/80`}
+                    alt={ign}
+                    className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-neutral-900 border-2 shadow-xl object-cover"
+                    style={{ borderColor: profileLevel.tier.color }}
+                    onError={(e) => {
+                      (e.target as HTMLElement).style.display = 'none';
+                    }}
+                  />
+                  <span className="absolute -bottom-2 -right-2 text-xl filter drop-shadow">
+                    {profileLevel.tier.icon}
+                  </span>
+                </div>
 
-            <div className="flex flex-col gap-1.5 min-w-0">
-              <div className="flex items-center gap-2.5 flex-wrap">
-                <h1 className="text-2xl sm:text-3xl font-black text-white font-mono tracking-tight">
-                  {ign}
-                </h1>
+                <div className="flex flex-col gap-1.5 min-w-0">
+                  <div className="flex items-center gap-2.5 flex-wrap">
+                    <h1 className="text-2xl sm:text-3xl font-black text-white font-mono tracking-tight">
+                      {ign}
+                    </h1>
+                    <button
+                      onClick={handleCopyIgn}
+                      title="Copy Minecraft IGN"
+                      className="p-1 rounded-lg bg-white/5 hover:bg-white/10 text-neutral-400 hover:text-white transition"
+                    >
+                      {copiedIgn ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                    </button>
+
+                    {/* Level Pill */}
+                    <button
+                      type="button"
+                      onClick={() => setIsLevelModalOpen(true)}
+                      className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase font-mono flex items-center gap-1 border transition cursor-pointer hover:scale-105 shadow-sm"
+                      style={{
+                        backgroundColor: `${profileLevel.tier.color}20`,
+                        color: profileLevel.tier.color,
+                        borderColor: `${profileLevel.tier.color}50`
+                      }}
+                      title="Open VIP Level Pass & Rewards"
+                    >
+                      <span>{profileLevel.tier.icon}</span>
+                      <span>Level {profileLevel.level} &bull; {profileLevel.tier.name}</span>
+                    </button>
+                  </div>
+
+                  {/* Badges Bar */}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full border bg-emerald-500/10 border-emerald-500/30 text-emerald-400">
+                      CASINO MEMBER
+                    </span>
+
+                    {isOwner ? (
+                      <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-amber-500 text-black shadow-md flex items-center gap-1 font-mono">
+                        <Crown className="w-3 h-3 fill-current" /> OWNER
+                      </span>
+                    ) : isStaff ? (
+                      <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/40 flex items-center gap-1 font-mono">
+                        <ShieldAlert className="w-3 h-3" /> STAFF
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-white/5 text-neutral-300 border border-white/10">
+                        PLAYER
+                      </span>
+                    )}
+
+                    <span className="text-[10px] text-neutral-400 flex items-center gap-1">
+                      <ShieldCheck className="w-3 h-3 text-emerald-400" />
+                      Verified
+                    </span>
+                  </div>
+
+                  <p className="text-xs text-neutral-400 mt-0.5">
+                    DonutSMP Casino Member • Cash: <span className="text-emerald-400 font-mono font-black">{formatCash(activeProfileUser.balance)}</span>
+                  </p>
+                </div>
+              </div>
+
+              {/* Quick Action Shortcuts */}
+              <div className="flex items-center gap-2.5 w-full md:w-auto flex-wrap">
                 <button
-                  onClick={handleCopyIgn}
-                  title="Copy Minecraft IGN"
-                  className="p-1 rounded-lg bg-white/5 hover:bg-white/10 text-neutral-400 hover:text-white transition"
+                  type="button"
+                  onClick={() => setIsLevelModalOpen(true)}
+                  className="flex-1 md:flex-none px-4 py-2.5 rounded-2xl bg-[#161a2e] hover:bg-[#1e233d] text-amber-300 border border-amber-500/30 font-black text-xs uppercase tracking-wider transition flex items-center justify-center gap-1.5 cursor-pointer shadow-md"
                 >
-                  {copiedIgn ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                  <Crown className="w-4 h-4 text-amber-400" />
+                  <span>VIP Pass</span>
                 </button>
+
+                <Link
+                  href="/deposit"
+                  className="flex-1 md:flex-none px-5 py-2.5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-black font-black text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/20 transition flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <ArrowDownCircle className="w-4 h-4" />
+                  <span>Deposit</span>
+                </Link>
+
+                <Link
+                  href="/withdraw"
+                  className="flex-1 md:flex-none px-5 py-2.5 rounded-2xl bg-[#141824] hover:bg-[#1a2030] text-amber-400 border border-amber-400/40 font-black text-xs uppercase tracking-wider transition flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <ArrowUpCircle className="w-4 h-4" />
+                  <span>Withdraw</span>
+                </Link>
               </div>
-
-              {/* Badges Bar */}
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full border bg-emerald-500/10 border-emerald-500/30 text-emerald-400">
-                  CASINO MEMBER
-                </span>
-
-                {isOwner ? (
-                  <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-amber-500 text-black shadow-md flex items-center gap-1 font-mono">
-                    <Crown className="w-3 h-3 fill-current" /> OWNER
-                  </span>
-                ) : isStaff ? (
-                  <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/40 flex items-center gap-1 font-mono">
-                    <ShieldAlert className="w-3 h-3" /> STAFF
-                  </span>
-                ) : (
-                  <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-white/5 text-neutral-300 border border-white/10">
-                    PLAYER
-                  </span>
-                )}
-
-                <span className="text-[10px] text-neutral-400 flex items-center gap-1">
-                  <ShieldCheck className="w-3 h-3 text-emerald-400" />
-                  Verified
-                </span>
-              </div>
-
-              <p className="text-xs text-neutral-400 mt-0.5">
-                DonutSMP Casino Member • Cash: <span className="text-emerald-400 font-mono font-black">{formatCash(activeProfileUser.balance)}</span>
-              </p>
             </div>
           </div>
-
-          {/* Quick Action Shortcuts */}
-          <div className="flex items-center gap-3 w-full md:w-auto">
-            <Link
-              href="/deposit"
-              className="flex-1 md:flex-none px-5 py-2.5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-black font-black text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/20 transition flex items-center justify-center gap-2 cursor-pointer"
-            >
-              <ArrowDownCircle className="w-4 h-4" />
-              <span>Deposit</span>
-            </Link>
-
-            <Link
-              href="/withdraw"
-              className="flex-1 md:flex-none px-5 py-2.5 rounded-2xl bg-[#141824] hover:bg-[#1a2030] text-amber-400 border border-amber-400/40 font-black text-xs uppercase tracking-wider transition flex items-center justify-center gap-2 cursor-pointer"
-            >
-              <ArrowUpCircle className="w-4 h-4" />
-              <span>Withdraw</span>
-            </Link>
-          </div>
-        </div>
-      </div>
 
       {/* 2. Navigation Tabs */}
       <div className="flex items-center gap-2 border-b border-white/10 pb-2 overflow-x-auto scrollbar-none text-xs font-black select-none">
@@ -343,6 +372,73 @@ function ProfileContent() {
                 {formatCompactNumber(gamesPlayed)}
               </span>
               <span className="text-[10px] text-neutral-500 mt-1">Total Bets Settled</span>
+            </div>
+          </div>
+
+          {/* VIP Level & Rewards Progression Card */}
+          <div className="p-6 rounded-3xl bg-gradient-to-r from-[#12162a] via-[#0f1322] to-[#0c0e1a] border border-white/10 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden">
+            <div
+              className="absolute -right-12 -top-12 w-48 h-48 rounded-full blur-3xl pointer-events-none opacity-20"
+              style={{ backgroundColor: profileLevel.tier.color }}
+            />
+            <div className="flex-1 w-full space-y-3 z-10">
+              <div className="flex items-center justify-between flex-wrap gap-3">
+                <div className="flex items-center gap-3">
+                  <span className="text-3xl">{profileLevel.tier.icon}</span>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs uppercase font-black tracking-wider text-neutral-400">VIP Club Status</span>
+                      <span
+                        className="text-xs font-black uppercase px-2 py-0.5 rounded-full border"
+                        style={{
+                          color: profileLevel.tier.color,
+                          borderColor: `${profileLevel.tier.color}40`,
+                          backgroundColor: `${profileLevel.tier.color}15`,
+                        }}
+                      >
+                        {profileLevel.tier.name} Tier
+                      </span>
+                    </div>
+                    <h3 className="text-xl font-black text-white flex items-center gap-2 mt-0.5">
+                      Level {profileLevel.level} Member
+                      <span className="text-xs text-neutral-500 font-mono font-normal">
+                        ({formatCash(profileLevel.totalWagered)} wagered)
+                      </span>
+                    </h3>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setIsLevelModalOpen(true)}
+                  className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-black text-xs uppercase tracking-wider shadow-lg shadow-amber-500/20 transition flex items-center gap-2 cursor-pointer"
+                >
+                  <Crown className="w-4 h-4" />
+                  <span>Claim Level Rewards</span>
+                </button>
+              </div>
+
+              {/* Progress bar */}
+              <div className="space-y-1.5 pt-1">
+                <div className="flex items-center justify-between text-xs font-mono">
+                  <span className="text-neutral-400">
+                    Next Level: <span className="text-white font-bold">Level {profileLevel.nextLevel}</span>
+                  </span>
+                  <span className="text-emerald-400 font-black">
+                    {formatCash(profileLevel.xpInCurrentLevel)} / {formatCash(profileLevel.xpNeededForNext)} ({profileLevel.progress}%)
+                  </span>
+                </div>
+                <div className="w-full h-3 rounded-full bg-black/50 border border-white/5 overflow-hidden p-0.5">
+                  <div
+                    className="h-full rounded-full transition-all duration-500"
+                    style={{
+                      width: `${profileLevel.progress}%`,
+                      background: `linear-gradient(90deg, ${profileLevel.tier.color}, #10b981)`,
+                      boxShadow: `0 0 12px ${profileLevel.tier.color}80`,
+                    }}
+                  />
+                </div>
+              </div>
             </div>
           </div>
 

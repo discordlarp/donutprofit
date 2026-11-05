@@ -14,6 +14,7 @@ import {
 import confetti from 'canvas-confetti';
 import { sound } from '@/lib/sound';
 import { formatCompactNumber, formatCash } from '@/lib/format';
+import { calculateUserLevel } from '@/lib/levels';
 
 interface UserProfileModalProps {
   isOpen: boolean;
@@ -110,7 +111,8 @@ export default function UserProfileModal({
     .reduce((sum, w) => sum + (w.amountCoins || 0), 0);
   const withdrawnAmount = userWithdrawn > 0 ? userWithdrawn : fallback.withdrawn;
 
-  const playerLevel = fallback.level;
+  const lvlInfo = calculateUserLevel(totalWagered);
+  const playerLevel = lvlInfo.level;
   const playerRank = fallback.rank;
 
   const handleSendTip = async () => {
@@ -264,28 +266,40 @@ export default function UserProfileModal({
         </h3>
 
         {/* Level & Rank Badges */}
-        <div className="flex items-center justify-center gap-1.5 mt-1.5 mb-3">
-          <span className="px-2 py-0.5 rounded-md bg-[#7c1d2e] text-white font-mono font-black text-xs shadow-sm">
-            {playerLevel}
+        <div className="flex items-center justify-center gap-2 mt-1.5 mb-3">
+          <span 
+            className="px-2.5 py-1 rounded-lg font-mono font-black text-xs shadow-sm flex items-center gap-1.5 border"
+            style={{ 
+              backgroundColor: `${lvlInfo.tier.color}20`, 
+              color: lvlInfo.tier.color, 
+              borderColor: `${lvlInfo.tier.color}45` 
+            }}
+          >
+            <span>{lvlInfo.tier.icon}</span>
+            <span>Level {lvlInfo.level}</span>
           </span>
-          <span className="px-2.5 py-0.5 rounded-md bg-[#132a58] text-[#5b95ff] font-mono font-black text-xs shadow-sm">
+          <span 
+            className="px-2.5 py-1 rounded-lg font-mono font-black text-xs shadow-sm border border-white/10"
+            style={{ backgroundColor: `${lvlInfo.tier.color}15`, color: lvlInfo.tier.color }}
+          >
+            {lvlInfo.tier.name} Tier
+          </span>
+          <span className="px-2.5 py-1 rounded-lg bg-[#132a58] text-[#5b95ff] font-mono font-black text-xs shadow-sm border border-blue-500/30">
             #{playerRank}
           </span>
         </div>
 
-        {/* Verified / OG / Level 50 Badges Row */}
-        <div className="flex items-center justify-center gap-2 mb-4 flex-wrap">
-          <div className="px-3 py-1 rounded-lg bg-[#11192e] border border-[#1c2a4d] text-xs font-bold text-neutral-300 flex items-center gap-1.5">
-            <Check className="w-3.5 h-3.5 text-blue-400 stroke-[3]" />
-            <span>Verified</span>
+        {/* Level Progress Bar */}
+        <div className="mb-4 px-2">
+          <div className="flex items-center justify-between text-[11px] font-mono font-bold text-neutral-400 mb-1">
+            <span>VIP Progress</span>
+            <span style={{ color: lvlInfo.tier.color }}>{lvlInfo.progress}%</span>
           </div>
-          <div className="px-3 py-1 rounded-lg bg-[#11192e] border border-[#1c2a4d] text-xs font-bold text-neutral-300 flex items-center gap-1.5">
-            <Star className="w-3.5 h-3.5 text-neutral-300 fill-neutral-300" />
-            <span>OG</span>
-          </div>
-          <div className="px-3 py-1 rounded-lg bg-[#11192e] border border-[#1c2a4d] text-xs font-bold text-neutral-300 flex items-center gap-1.5">
-            <Hexagon className="w-3.5 h-3.5 text-neutral-300" />
-            <span>Level 50</span>
+          <div className="h-2 w-full bg-[#080912] rounded-full overflow-hidden p-0.5 border border-white/10 shadow-inner">
+            <div 
+              className="h-full rounded-full transition-all duration-300" 
+              style={{ width: `${lvlInfo.progress}%`, backgroundColor: lvlInfo.tier.color }} 
+            />
           </div>
         </div>
 

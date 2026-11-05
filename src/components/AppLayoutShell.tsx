@@ -6,6 +6,7 @@ import GamesSidebar from '@/components/GamesSidebar';
 import CommunityChat from '@/components/CommunityChat';
 import Footer from '@/components/Footer';
 import WalletModal from '@/components/WalletModal';
+import LevelModal from '@/components/LevelModal';
 
 export default function AppLayoutShell({ children }: { children: React.ReactNode }) {
   const { isWalletOpen, closeWallet, walletInitialTab } = useGame();
@@ -18,6 +19,9 @@ export default function AppLayoutShell({ children }: { children: React.ReactNode
         onClose={closeWallet}
         initialTab={walletInitialTab}
       />
+
+      {/* VIP Level & Milestone Rewards Modal */}
+      <LevelModal />
 
       {/* Slide-out Game Vault Drawer */}
       <GamesSidebar />

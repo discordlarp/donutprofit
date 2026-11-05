@@ -24,14 +24,16 @@ export default function MinesGame() {
   const [isWin, setIsWin] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string>('');
 
-  // Calculate multiplier based on uncovered gems (shows enticing 25x+ multipliers)
+  // Progressive multiplier:
+  // Tile 1: 1.05x | Tile 2: 1.11x | Tile 3: 1.18x | Tile 4: 1.27x (Capped Cashout)
+  // Tile 5+: Rigged bomb, explodes immediately!
   const calculateMultiplier = (mines: number, revealed: number) => {
     if (revealed === 0) return 1.0;
-    let mult = 1.0;
-    for (let i = 0; i < revealed; i++) {
-      mult *= (25 - i) / (25 - mines - i);
-    }
-    return Number((mult * 0.98).toFixed(2));
+    if (revealed === 1) return 1.05;
+    if (revealed === 2) return 1.11;
+    if (revealed === 3) return 1.18;
+    if (revealed === 4) return 1.27;
+    return Number((1.27 + (revealed - 4) * 2.5).toFixed(2));
   };
 
   const currentMultiplier = calculateMultiplier(mineCount, revealedCount);
@@ -78,11 +80,9 @@ export default function MinesGame() {
 
     const tile = grid[index];
 
-    // RIGGED: Right as the player hits or attempts to hit 2.00x, they lose instantly!
+    // RIGGED: If they attempt to click a 5th tile, it is 100% rigged to hit a bomb and lose!
     const nextRevealedCount = revealedCount + 1;
-    const testMult = calculateMultiplier(mineCount, nextRevealedCount);
-
-    if (testMult >= 2.00 || currentMultiplier >= 1.95) {
+    if (nextRevealedCount >= 5) {
       tile.isMine = true;
     }
 
@@ -132,7 +132,8 @@ export default function MinesGame() {
     if (!gameActive || revealedCount === 0) return;
 
     sound.playWin();
-    const finalMult = Math.min(1.98, overrideMult || currentMultiplier);
+    // Strict cap at 1.27x on Mines so 4 tiles gives exactly 1.27x and never 1.98x
+    const finalMult = Math.min(1.27, overrideMult || currentMultiplier);
     // Reveal all remaining
     const revealedAll = grid.map(t => ({ ...t, revealed: true }));
     setGrid(revealedAll);

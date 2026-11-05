@@ -39,6 +39,7 @@ export interface UserProfile {
   referralWeekResetAt?: string;
   totalReferralBonus?: number;
   referralBonusRewarded?: boolean;
+  claimedMilestones?: number[];
 }
 
 export interface ChatMessage {

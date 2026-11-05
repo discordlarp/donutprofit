@@ -5,9 +5,10 @@ import { useGame } from '@/context/GameContext';
 import { formatCash } from '@/lib/format';
 import UserProfileModal from '@/components/UserProfileModal';
 import { Activity, Flame, User, Sparkles, TrendingUp } from 'lucide-react';
+import { calculateUserLevel } from '@/lib/levels';
 
 export default function RecentBetsTable() {
-  const { bets, user } = useGame();
+  const { bets, user, users } = useGame();
   const [filter, setFilter] = useState<'all' | 'high_rollers' | 'my_bets'>('all');
   const [selectedPlayer, setSelectedPlayer] = useState<string | null>(null);
 
@@ -119,22 +120,40 @@ export default function RecentBetsTable() {
 
                       {/* Player */}
                       <td className="py-3 px-3 font-sans font-medium text-neutral-300">
-                        <button
-                          type="button"
-                          onClick={() => setSelectedPlayer(bet.minecraftIgn)}
-                          className="flex items-center gap-2 hover:text-cyan-400 transition cursor-pointer text-left group-hover:underline"
-                        >
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={`https://mc-heads.net/avatar/${encodeURIComponent(bet.minecraftIgn)}/24`}
-                            alt={bet.minecraftIgn}
-                            className="w-5 h-5 rounded-md bg-neutral-800 border border-white/10 shrink-0"
-                            onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }}
-                          />
-                          <span className="truncate max-w-[120px] font-bold">
-                            {bet.minecraftIgn}
-                          </span>
-                        </button>
+                        {(() => {
+                          const playerObj = users.find(u => u.minecraftIgn.toLowerCase() === bet.minecraftIgn.toLowerCase());
+                          const wager = playerObj ? playerObj.totalWagered : (bet.betAmount * 15 + 1500000);
+                          const lvl = calculateUserLevel(wager);
+
+                          return (
+                            <button
+                              type="button"
+                              onClick={() => setSelectedPlayer(bet.minecraftIgn)}
+                              className="flex items-center gap-1.5 hover:text-cyan-400 transition cursor-pointer text-left group-hover:underline"
+                            >
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={`https://mc-heads.net/avatar/${encodeURIComponent(bet.minecraftIgn)}/24`}
+                                alt={bet.minecraftIgn}
+                                className="w-5 h-5 rounded-md bg-neutral-800 border border-white/10 shrink-0"
+                                onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }}
+                              />
+                              <span className="truncate max-w-[100px] font-bold">
+                                {bet.minecraftIgn}
+                              </span>
+                              <span 
+                                className="text-[9px] font-black uppercase font-mono px-1.5 py-0.5 rounded border shrink-0 leading-none"
+                                style={{
+                                  backgroundColor: `${lvl.tier.color}18`,
+                                  color: lvl.tier.color,
+                                  borderColor: `${lvl.tier.color}40`,
+                                }}
+                              >
+                                {lvl.level}
+                              </span>
+                            </button>
+                          );
+                        })()}
                       </td>
 
                       {/* Bet Amount */}

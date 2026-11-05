@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useGame } from '@/context/GameContext';
 import { formatCash } from '@/lib/format';
+import { calculateUserLevel } from '@/lib/levels';
 import AuthModal from '@/components/AuthModal';
 import DonutLogo from '@/components/DonutLogo';
 import PromoModal from '@/components/PromoModal';
@@ -47,7 +48,8 @@ export default function Navbar({ onToggleChat: propOnToggle, isChatOpen: propIsO
     isChatOpen, 
     toggleChat,
     toggleSidebar,
-    openWallet
+    openWallet,
+    setIsLevelModalOpen
   } = useGame();
 
   const chatOpen = propIsOpen !== undefined ? propIsOpen : isChatOpen;
@@ -58,6 +60,8 @@ export default function Navbar({ onToggleChat: propOnToggle, isChatOpen: propIsO
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [isPassModalOpen, setIsPassModalOpen] = useState(false);
   const [isPromoModalOpen, setIsPromoModalOpen] = useState(false);
+
+  const userLevel = calculateUserLevel(user?.totalWagered ?? 0);
   const [newPass, setNewPass] = useState('');
   const [passMsg, setPassMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -299,6 +303,48 @@ export default function Navbar({ onToggleChat: propOnToggle, isChatOpen: propIsO
                   </button>
                 </div>
 
+                {/* Level / VIP Pass Pill */}
+                <button
+                  type="button"
+                  onClick={() => setIsLevelModalOpen(true)}
+                  className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-2xl bg-[#111320] hover:bg-[#161a2b] border border-white/10 hover:border-violet-500/40 transition cursor-pointer shadow-md group"
+                  title="Open VIP Level Pass & Rewards"
+                >
+                  <div 
+                    className="w-6 h-6 rounded-lg flex items-center justify-center text-xs font-black shadow-inner border shrink-0"
+                    style={{ 
+                      backgroundColor: `${userLevel.tier.color}20`, 
+                      borderColor: `${userLevel.tier.color}40`,
+                      color: userLevel.tier.color 
+                    }}
+                  >
+                    <span>{userLevel.tier.icon}</span>
+                  </div>
+                  <div className="flex flex-col text-left leading-none">
+                    <div className="flex items-center gap-1">
+                      <span className="text-[10px] font-black uppercase text-white font-mono">
+                        Lv. {userLevel.level}
+                      </span>
+                      <span 
+                        className="text-[9px] font-black uppercase"
+                        style={{ color: userLevel.tier.color }}
+                      >
+                        {userLevel.tier.name}
+                      </span>
+                    </div>
+                    {/* Mini progress bar */}
+                    <div className="w-14 h-1 bg-[#080912] rounded-full overflow-hidden mt-1 border border-white/10">
+                      <div 
+                        className="h-full rounded-full transition-all duration-300" 
+                        style={{ 
+                          width: `${userLevel.progress}%`,
+                          backgroundColor: userLevel.tier.color 
+                        }} 
+                      />
+                    </div>
+                  </div>
+                </button>
+
                 {/* Profile Pill & Dropdown */}
                 <div className="relative">
                   <button
@@ -338,6 +384,26 @@ export default function Navbar({ onToggleChat: propOnToggle, isChatOpen: propIsO
                           Balance: {formatCash(user.balance)}
                         </span>
                       </div>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setProfileDropdownOpen(false);
+                          setIsLevelModalOpen(true);
+                        }}
+                        className="px-3 py-2 rounded-xl text-neutral-300 hover:text-white hover:bg-white/5 flex items-center gap-2 font-bold transition w-full text-left cursor-pointer"
+                      >
+                        <Crown className="w-3.5 h-3.5 text-amber-400" />
+                        <div className="flex items-center justify-between w-full">
+                          <span>VIP Level Pass</span>
+                          <span 
+                            className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded font-mono"
+                            style={{ backgroundColor: `${userLevel.tier.color}20`, color: userLevel.tier.color }}
+                          >
+                            Lv. {userLevel.level} {userLevel.tier.name}
+                          </span>
+                        </div>
+                      </button>
 
                       <button
                         onClick={() => {
