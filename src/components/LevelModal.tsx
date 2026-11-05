@@ -85,7 +85,7 @@ export default function LevelModal() {
                 </span>
               </div>
               <p className="text-xs text-neutral-400">
-                Wager coins in any game to level up and unlock exclusive Cash rewards!
+                Wager coins in any game to level up, advance VIP tiers, and unlock exclusive prestige perks!
               </p>
             </div>
           </div>
@@ -188,7 +188,7 @@ export default function LevelModal() {
             }`}
           >
             <Trophy className="w-3.5 h-3.5" />
-            <span>Milestone Cash Rewards</span>
+            <span>Milestone Badges &amp; Perks</span>
           </button>
           <button
             type="button"
@@ -236,7 +236,7 @@ export default function LevelModal() {
                         </span>
                         {isUnlocked && !isClaimed && (
                           <span className="text-[9px] bg-amber-500/20 text-amber-300 border border-amber-500/40 px-1.5 py-0.5 rounded font-black uppercase animate-pulse">
-                            READY TO CLAIM
+                            READY TO UNLOCK
                           </span>
                         )}
                       </div>
@@ -246,15 +246,11 @@ export default function LevelModal() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3 shrink-0">
-                    <span className="font-mono font-black text-sm text-amber-300">
-                      +{formatCash(reward.rewardCash)}
-                    </span>
-
+                  <div className="flex items-center gap-2.5 shrink-0">
                     {isClaimed ? (
                       <span className="px-3 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-black flex items-center gap-1">
                         <Check className="w-3.5 h-3.5" />
-                        <span>CLAIMED</span>
+                        <span>UNLOCKED</span>
                       </span>
                     ) : isUnlocked ? (
                       <button
@@ -263,7 +259,7 @@ export default function LevelModal() {
                         className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-300 hover:to-yellow-400 text-black font-black text-xs uppercase tracking-wider shadow-lg shadow-amber-500/25 active:scale-95 transition cursor-pointer flex items-center gap-1"
                       >
                         <Sparkles className="w-3.5 h-3.5" />
-                        <span>CLAIM</span>
+                        <span>UNLOCK</span>
                       </button>
                     ) : (
                       <span className="px-3 py-1.5 rounded-xl bg-white/5 border border-white/5 text-neutral-500 text-xs font-bold flex items-center gap-1">
@@ -334,7 +330,7 @@ export default function LevelModal() {
                     </li>
                     <li className="flex items-center gap-1.5">
                       <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                      <span>Exclusive Milestone Level Cash drops</span>
+                      <span>Exclusive Milestone Badges &amp; VIP Perks</span>
                     </li>
                   </ul>
                 </div>

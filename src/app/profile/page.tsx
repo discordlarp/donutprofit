@@ -414,7 +414,7 @@ function ProfileContent() {
                   className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-black text-xs uppercase tracking-wider shadow-lg shadow-amber-500/20 transition flex items-center gap-2 cursor-pointer"
                 >
                   <Crown className="w-4 h-4" />
-                  <span>Claim Level Rewards</span>
+                  <span>View VIP Level Pass</span>
                 </button>
               </div>
 

@@ -109,23 +109,22 @@ export const LEVEL_TIERS: LevelTier[] = [
 export interface LevelReward {
   level: number;
   title: string;
-  rewardCash: number;
   perk: string;
   icon: string;
 }
 
 export const LEVEL_REWARDS: LevelReward[] = [
-  { level: 2, title: 'First Steps', rewardCash: 50000, perk: 'Novice Bettor Badge', icon: '🥉' },
-  { level: 5, title: 'Apprentice High Roller', rewardCash: 250000, perk: '+0.5% Rakeback Bonus', icon: '⭐' },
-  { level: 10, title: 'Silver Veteran', rewardCash: 1000000, perk: 'Silver VIP Chat Glow', icon: '🥈' },
-  { level: 15, title: 'Elite Grinder', rewardCash: 2500000, perk: '+1.0% Rakeback Bonus', icon: '🔥' },
-  { level: 20, title: 'Gold Champion', rewardCash: 5000000, perk: 'Gold Nickname & VIP Priority', icon: '🥇' },
-  { level: 25, title: 'High Stakes Master', rewardCash: 10000000, perk: 'Custom Chat Emoji Pack', icon: '⚡' },
-  { level: 30, title: 'Platinum Titan', rewardCash: 25000000, perk: '+2.0% Rakeback & Platinum Border', icon: '💠' },
-  { level: 40, title: 'Diamond Legend', rewardCash: 50000000, perk: 'Diamond Nametag in Bets Feed', icon: '💎' },
-  { level: 50, title: 'Netherite Monarch', rewardCash: 150000000, perk: 'Netherite Crown & Staff Recognition', icon: '👑' },
-  { level: 75, title: 'Mythic Donut King', rewardCash: 350000000, perk: 'Legendary Sound FX & Trophy', icon: '🌟' },
-  { level: 100, title: 'Donut SMP Overlord', rewardCash: 1000000000, perk: 'Permanent Hall of Fame Plaque', icon: '🍩' },
+  { level: 2, title: 'First Steps', perk: 'Novice Bettor Badge', icon: '🥉' },
+  { level: 5, title: 'Apprentice High Roller', perk: '+0.5% Rakeback Bonus', icon: '⭐' },
+  { level: 10, title: 'Silver Veteran', perk: 'Silver VIP Chat Glow', icon: '🥈' },
+  { level: 15, title: 'Elite Grinder', perk: '+1.0% Rakeback Bonus', icon: '🔥' },
+  { level: 20, title: 'Gold Champion', perk: 'Gold Nickname & VIP Priority', icon: '🥇' },
+  { level: 25, title: 'High Stakes Master', perk: 'Custom Chat Emoji Pack', icon: '⚡' },
+  { level: 30, title: 'Platinum Titan', perk: '+2.0% Rakeback & Platinum Border', icon: '💠' },
+  { level: 40, title: 'Diamond Legend', perk: 'Diamond Nametag in Bets Feed', icon: '💎' },
+  { level: 50, title: 'Netherite Monarch', perk: 'Netherite Crown & Staff Recognition', icon: '👑' },
+  { level: 75, title: 'Mythic Donut King', perk: 'Legendary Sound FX & Trophy', icon: '🌟' },
+  { level: 100, title: 'Donut SMP Overlord', perk: 'Permanent Hall of Fame Plaque', icon: '🍩' },
 ];
 
 /**

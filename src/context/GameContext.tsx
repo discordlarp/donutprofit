@@ -2696,9 +2696,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     }
 
     const updatedClaimed = [...claimed, level];
-    const newBal = Number((currentUser.balance + reward.rewardCash).toFixed(2));
     const updatedStats = {
-      balance: newBal,
       claimedMilestones: updatedClaimed,
     };
 
@@ -2709,8 +2707,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
     return { 
       success: true, 
-      message: `Claimed ${formatCash(reward.rewardCash)} Cash for reaching Level ${level}!`, 
-      amount: reward.rewardCash 
+      message: `Unlocked Level ${level} Badge: ${reward.title} (${reward.perk})!`,
     };
   };
 
