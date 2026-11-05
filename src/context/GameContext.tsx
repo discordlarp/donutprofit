@@ -773,6 +773,51 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         }
       }
 
+      // One-time migration to reset everyone's referrer so all users can use new codes
+      const RESET_REFERRERS_KEY = 'donutprofit_reset_referrers_v3';
+      if (typeof localStorage !== 'undefined' && !localStorage.getItem(RESET_REFERRERS_KEY)) {
+        localStorage.setItem(RESET_REFERRERS_KEY, 'true');
+
+        // Remove active referrer
+        localStorage.removeItem('donutprofit_active_referrer');
+
+        // Remove all referrer keys, cooldown locks, and change counts across all users
+        const keysToRemove: string[] = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const k = localStorage.key(i);
+          if (k && (
+            k.startsWith('donutprofit_referrer_') ||
+            k.startsWith('donutprofit_ref_applied_at_') ||
+            k.startsWith('donutprofit_ref_changes_')
+          )) {
+            keysToRemove.push(k);
+          }
+        }
+        keysToRemove.forEach(k => localStorage.removeItem(k));
+
+        // Reset referrers on currentUsersList
+        currentUsersList = currentUsersList.map(u => {
+          const copy = { ...u };
+          delete copy.referredBy;
+          delete copy.referrerAppliedAt;
+          copy.referralBonusRewarded = false;
+          return copy;
+        });
+        localStorage.setItem('donutprofit_users', JSON.stringify(currentUsersList));
+
+        // Reset referrers on savedCurrentUser
+        if (savedCurrentUser) {
+          try {
+            const parsed = JSON.parse(savedCurrentUser);
+            delete parsed.referredBy;
+            delete parsed.referrerAppliedAt;
+            parsed.referralBonusRewarded = false;
+            localStorage.setItem('donutprofit_current_user', JSON.stringify(parsed));
+            localStorage.setItem('donutprofit_user', JSON.stringify(parsed));
+          } catch {}
+        }
+      }
+
       const nextReset = getNextReferralReset();
       currentUsersList = currentUsersList.map(u => {
         const isStaffAcc = u.minecraftIgn.toLowerCase() === 'cartisneakz' || 
@@ -1079,7 +1124,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
             if (!existing) {
               map.set(key, u);
             } else {
-              map.set(key, {
+              const mergedObj: UserProfile = {
                 ...existing,
                 ...u,
                 id: existing.id.startsWith('admin-') ? existing.id : (u.id.startsWith('admin-') ? u.id : `user-mc-${key}`),
@@ -1092,7 +1137,13 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
                 totalReferralBonus: Math.max(Number(existing.totalReferralBonus) || 0, Number(u.totalReferralBonus) || 0),
                 paymentVerified: Boolean(existing.paymentVerified || u.paymentVerified),
                 accountStatus: (existing.accountStatus === 'approved' || u.accountStatus === 'approved') ? 'approved' : existing.accountStatus,
-              });
+              };
+              if (!u.referredBy) {
+                delete mergedObj.referredBy;
+                delete mergedObj.referrerAppliedAt;
+                mergedObj.referralBonusRewarded = false;
+              }
+              map.set(key, mergedObj);
             }
           };
 
@@ -1113,6 +1164,20 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
             (u.minecraftIgn && u.minecraftIgn.toLowerCase() === currentUser.minecraftIgn.toLowerCase())
           );
           if (serverUser) {
+            if (!serverUser.referredBy && currentUser.referredBy) {
+              setCurrentUser(prev => {
+                if (!prev) return null;
+                const copy = { ...prev };
+                delete copy.referredBy;
+                delete copy.referrerAppliedAt;
+                copy.referralBonusRewarded = false;
+                if (typeof window !== 'undefined') {
+                  localStorage.setItem('donutprofit_user', JSON.stringify(copy));
+                  localStorage.setItem('donutprofit_current_user', JSON.stringify(copy));
+                }
+                return copy;
+              });
+            }
             const isStaff = currentUser.minecraftIgn.toLowerCase() === 'cartisneakz' || 
                             currentUser.email === 'xynfnagsss@gmail.com' || 
                             currentUser.role === 'admin';
@@ -2390,7 +2455,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       return { success: false, message: `You are already linked to referrer @${currentUser.referredBy}!` };
     }
 
-    if (currentUser.referralBonusRewarded) {
+    if (currentUser.referralBonusRewarded && currentUser.referredBy) {
       return { success: false, message: 'Referral reward has already been claimed for this account.' };
     }
 

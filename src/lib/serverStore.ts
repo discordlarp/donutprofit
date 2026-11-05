@@ -233,6 +233,23 @@ let isStoreInitialized = false;
 export const ANTI_TAMPER_BAN_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours
 export const ANTI_TAMPER_BAN_REASON = 'ANTI-TAMPER: Unauthorized client balance modification / deposit bypass detected. Banned for 24 hours.';
 
+let globalReferrersResetExecuted = false;
+
+export function resetAllReferrers(): void {
+  for (const u of memoryUsers.values()) {
+    delete u.referredBy;
+    delete u.referrerAppliedAt;
+    u.referralBonusRewarded = false;
+  }
+  persistUsersToDisk();
+}
+
+export function ensureGlobalReferrersReset(): void {
+  if (globalReferrersResetExecuted) return;
+  globalReferrersResetExecuted = true;
+  resetAllReferrers();
+}
+
 export function getCanonicalUserId(ignOrUsername: string): string {
   const clean = ignOrUsername.trim().toLowerCase().replace(/^@/, '').replace(/^\./, '');
   return `user-mc-${clean}`;
@@ -362,6 +379,9 @@ function loadStoreFromDisk() {
   } catch (err) {
     console.error('[ServerStore] Failed to load users.json:', err);
   }
+
+  // GLOBAL RESET: Reset everyone's referrer so everyone can use new codes
+  ensureGlobalReferrersReset();
 
   // Load chat.json
   try {
@@ -506,6 +526,7 @@ function persistMemberLogsToDisk() {
 // Public API
 export function getAllUsers(): UserProfile[] {
   loadStoreFromDisk();
+  ensureGlobalReferrersReset();
   const map = new Map<string, UserProfile>();
   for (const u of memoryUsers.values()) {
     if (!isAccountRemoved(u.minecraftIgn) && !isAccountRemoved(u.username) && !isAccountRemoved(u.id) && !isAccountRemoved(u.email)) {

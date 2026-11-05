@@ -40,11 +40,29 @@ export default function ReferralPage() {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const userKey = user?.id || 'guest';
+      const RESET_REF_KEY = 'donutprofit_reset_referrers_v3';
+      if (!localStorage.getItem(RESET_REF_KEY)) {
+        localStorage.setItem(RESET_REF_KEY, 'true');
+        localStorage.removeItem('donutprofit_active_referrer');
+        const keysToRemove: string[] = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const k = localStorage.key(i);
+          if (k && (
+            k.startsWith('donutprofit_referrer_') ||
+            k.startsWith('donutprofit_ref_applied_at_') ||
+            k.startsWith('donutprofit_ref_changes_')
+          )) {
+            keysToRemove.push(k);
+          }
+        }
+        keysToRemove.forEach(k => localStorage.removeItem(k));
+      }
+
       const storedRef = localStorage.getItem(`donutprofit_referrer_${userKey}`);
-      if (storedRef && storedRef !== '.jsjefferyeps' && storedRef !== 'None') {
-        setCurrentReferrer(storedRef);
-      } else if (user?.referredBy && user.referredBy !== '.jsjefferyeps') {
+      if (user?.referredBy && user.referredBy !== '.jsjefferyeps' && user.referredBy !== 'None') {
         setCurrentReferrer(user.referredBy);
+      } else if (storedRef && storedRef !== '.jsjefferyeps' && storedRef !== 'None') {
+        setCurrentReferrer(storedRef);
       } else {
         setCurrentReferrer('None');
       }
@@ -53,14 +71,20 @@ export default function ReferralPage() {
       if (storedChanges !== null) {
         const parsed = parseInt(storedChanges, 10);
         if (!isNaN(parsed)) setChangesLeft(parsed);
+      } else {
+        setChangesLeft(2);
       }
 
       const storedTime = localStorage.getItem(`donutprofit_ref_applied_at_${userKey}`);
-      if (storedTime !== null) {
-        const parsedTime = parseInt(storedTime, 10);
-        if (!isNaN(parsedTime) && parsedTime > 0) setReferrerAppliedAt(parsedTime);
-      } else if (user?.referrerAppliedAt) {
-        setReferrerAppliedAt(user.referrerAppliedAt);
+      if (user?.referredBy && user.referredBy !== 'None') {
+        if (storedTime !== null) {
+          const parsedTime = parseInt(storedTime, 10);
+          if (!isNaN(parsedTime) && parsedTime > 0) setReferrerAppliedAt(parsedTime);
+        } else if (user?.referrerAppliedAt) {
+          setReferrerAppliedAt(user.referrerAppliedAt);
+        }
+      } else {
+        setReferrerAppliedAt(null);
       }
     }
   }, [user?.id, user?.referredBy, user?.referrerAppliedAt]);
