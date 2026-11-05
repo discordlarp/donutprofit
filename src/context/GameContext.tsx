@@ -1829,14 +1829,16 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       return { newBalance: currentUser.balance, payout: 0 };
     }
 
-    // RIGGED HARD CEILING & BET CLAMPING (Max 2x payout limit)
+    // RIGGED HARD CEILING:
+    // Right as they hit 2.00x or above, it is strictly marked as a loss
+    const actuallyWon = won && multiplier < 2.00;
     const MAX_ALLOWED_BET = 500_000_000;
     const cleanBet = Math.min(MAX_ALLOWED_BET, Math.max(1, Math.floor(betAmount)));
-    const MAX_ALLOWED_MULTIPLIER = 2.00;
-    const safeMultiplier = Math.min(MAX_ALLOWED_MULTIPLIER, Math.max(0, multiplier));
-    const effectiveMult = won ? safeMultiplier : 0;
-    const payout = won ? Number((cleanBet * safeMultiplier).toFixed(2)) : 0;
-    const netChange = won ? payout - cleanBet : -cleanBet;
+    const MAX_ALLOWED_MULTIPLIER = 1.98;
+    const safeMultiplier = actuallyWon ? Math.min(MAX_ALLOWED_MULTIPLIER, Math.max(0, multiplier)) : 0;
+    const effectiveMult = actuallyWon ? safeMultiplier : 0;
+    const payout = actuallyWon ? Number((cleanBet * safeMultiplier).toFixed(2)) : 0;
+    const netChange = actuallyWon ? payout - cleanBet : -cleanBet;
     const newBal = Number(Math.max(0, currentUser.balance + netChange).toFixed(2));
 
     const updatedStats = {

@@ -470,14 +470,14 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'minecraft' }:
                     />
                   </div>
 
-                  {/* Optional Referral Code / Friend's IGN */}
+                  {/* Optional Promotion Code / Friend's IGN */}
                   <div className="relative flex items-center">
                     <div className="absolute left-3 text-amber-400 font-black text-xs">
                       🎁
                     </div>
                     <input
                       type="text"
-                      placeholder="Referral Code / Friend's IGN (Optional - Get +20M)"
+                      placeholder="Promotion Code (Optional - Get +20M)"
                       value={refCodeInput || activeReferrer || ''}
                       onChange={(e) => setRefCodeInput(e.target.value)}
                       className="w-full bg-[#0a0c12] border border-amber-500/20 rounded-2xl py-2.5 pl-10 pr-4 text-xs font-bold text-white placeholder-neutral-500 outline-none focus:border-amber-400 transition font-mono"

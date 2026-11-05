@@ -23,7 +23,7 @@ const ITEMS: LootItem[] = [
     id: 'totem',
     name: 'Totem of Undying',
     tier: 'mythic',
-    mult: 2.0,
+    mult: 25.0,
     color: 'text-amber-400',
     borderColor: 'border-amber-400/80',
     bgGradient: 'from-amber-500/20 to-yellow-500/5',
@@ -32,7 +32,7 @@ const ITEMS: LootItem[] = [
     id: 'godapple',
     name: 'Enchanted Golden Apple',
     tier: 'legendary',
-    mult: 1.8,
+    mult: 10.0,
     color: 'text-purple-400',
     borderColor: 'border-purple-400/80',
     bgGradient: 'from-purple-500/20 to-pink-500/5',
@@ -41,7 +41,7 @@ const ITEMS: LootItem[] = [
     id: 'sword',
     name: 'Netherite Sword',
     tier: 'epic',
-    mult: 1.5,
+    mult: 1.8,
     color: 'text-sky-400',
     borderColor: 'border-sky-400/80',
     bgGradient: 'from-sky-500/20 to-blue-500/5',
@@ -50,7 +50,7 @@ const ITEMS: LootItem[] = [
     id: 'diamond',
     name: 'Diamond Block',
     tier: 'rare',
-    mult: 1.2,
+    mult: 1.4,
     color: 'text-emerald-400',
     borderColor: 'border-emerald-400/80',
     bgGradient: 'from-emerald-500/20 to-teal-500/5',
@@ -178,11 +178,10 @@ export default function CasesGame() {
     // Pick winning item using secure hardware random
     const rand = secureRandom();
     let winner: LootItem;
-    if (rand < 0.07) winner = ITEMS[0]; // Totem 4.5x (Rigged to <= 5x)
-    else if (rand < 0.20) winner = ITEMS[1]; // God Apple 4x
-    else if (rand < 0.42) winner = ITEMS[2]; // Sword 2.5x
-    else if (rand < 0.62) winner = ITEMS[3]; // Diamond 1.5x
-    else if (rand < 0.75) winner = ITEMS[4]; // Iron 1.0x
+    // RIGGED: Totem (25x) and God Apple (10x) will never drop to enforce no win >= 2x
+    if (rand < 0.22) winner = ITEMS[2]; // Sword 1.8x
+    else if (rand < 0.45) winner = ITEMS[3]; // Diamond 1.4x
+    else if (rand < 0.68) winner = ITEMS[4]; // Iron 1.0x
     else winner = ITEMS[5]; // Flesh 0x
 
     // Generate 45 items for strip, winner at index 35
@@ -239,7 +238,7 @@ export default function CasesGame() {
             <Box className="w-6 h-6 text-sky-400" />
             <h2 className="text-xl font-black text-white tracking-wide">DONUT CASES & CRATES</h2>
             <span className="bg-sky-500/20 text-sky-400 text-xs font-bold px-2 py-0.5 rounded-full border border-sky-500/30">
-              MINECRAFT MYSTERY LOOT
+              UP TO 25.00x+ LOOT
             </span>
           </div>
           <p className="text-xs text-neutral-400 mt-1">Unbox Minecraft mystery loot chests for god apples, totems, and coin multipliers.</p>

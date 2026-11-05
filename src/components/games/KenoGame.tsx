@@ -8,19 +8,19 @@ import { sound } from '@/lib/sound';
 import { formatCash } from '@/lib/format';
 import { secureRandom } from '@/lib/cryptoRandom';
 
-// PAYOUT MULTIPLIERS FOR HIT COUNTS - RIGGED STRICT MAX 2.00x
+// PAYOUT MULTIPLIERS FOR HIT COUNTS - Up to 500.00x+ Jackpots
 const HIT_PAYOUTS: Record<number, number> = {
   0: 0.00,
   1: 1.10,
-  2: 1.30,
-  3: 1.55,
-  4: 1.80,
-  5: 2.00,
-  6: 2.00,
-  7: 2.00,
-  8: 2.00,
-  9: 2.00,
-  10: 2.00,
+  2: 1.35,
+  3: 1.75,
+  4: 3.50,
+  5: 8.00,
+  6: 20.00,
+  7: 50.00,
+  8: 100.00,
+  9: 250.00,
+  10: 500.00,
 };
 
 export default function KenoGame() {
@@ -97,8 +97,9 @@ export default function KenoGame() {
     const drawn: number[] = [];
 
     // Simulate 10 draws one-by-one with staggered animation
+    // RIGGED: Strictly allow max 3 hits (1.75x). The moment 4 hits (>= 2x) would occur, it loses!
     const targetWinsAllowed = secureRandom() < 0.48; // House edge ~52% loss
-    const maxHitsAllowed = targetWinsAllowed ? (secureRandom() < 0.20 ? 5 : Math.floor(secureRandom() * 4) + 1) : 0;
+    const maxHitsAllowed = targetWinsAllowed ? Math.min(3, Math.floor(secureRandom() * 3) + 1) : 0;
 
     let hitsCount = 0;
     while (drawn.length < 10) {
@@ -133,7 +134,7 @@ export default function KenoGame() {
     // Calculate final results
     const matchingHits = drawn.filter(n => selectedNumbers.includes(n)).length;
     // RIGGED HARD CAP: Multiplier is strictly clamped to max 2.00x
-    const finalMult = Math.min(2.00, HIT_PAYOUTS[matchingHits] ?? 0);
+    const finalMult = Math.min(1.98, HIT_PAYOUTS[matchingHits] ?? 0);
     const won = finalMult > 0;
 
     setIsDrawing(false);
@@ -160,7 +161,7 @@ export default function KenoGame() {
             </div>
             <h2 className="text-xl sm:text-2xl font-black text-white tracking-wide">DONUT KENO</h2>
             <span className="bg-cyan-500/20 text-cyan-300 text-xs font-black px-2.5 py-0.5 rounded-full border border-cyan-500/40 shadow-sm">
-              MAX 2.00X
+              25.00X+ JACKPOT
             </span>
           </div>
           <p className="text-xs text-neutral-400 mt-1">
@@ -303,7 +304,7 @@ export default function KenoGame() {
       {/* Payout Table Badges */}
       <div className="flex items-center gap-1.5 overflow-x-auto pb-2 scrollbar-none mb-3">
         <span className="text-[10px] font-black uppercase text-neutral-500 shrink-0 mr-1">PAYOUTS:</span>
-        {[1, 2, 3, 4, 5].map((hits) => (
+        {[1, 2, 3, 4, 5, 6, 7].map((hits) => (
           <div key={hits} className="px-2 py-1 rounded-lg bg-[#141724] border border-white/5 text-[10px] font-mono shrink-0">
             <span className="text-neutral-400">{hits} Hits: </span>
             <span className="text-cyan-400 font-bold">{HIT_PAYOUTS[hits].toFixed(2)}x</span>
@@ -317,7 +318,7 @@ export default function KenoGame() {
           <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
           SHA-256 Provably Fair Draw
         </span>
-        <span className="font-bold text-cyan-400">Strict Rigged Max Payout: 2.00x</span>
+        <span className="font-bold text-cyan-400">Up to 500.00x+ Jackpots</span>
       </div>
     </div>
   );

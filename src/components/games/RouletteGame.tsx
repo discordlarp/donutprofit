@@ -86,7 +86,7 @@ export default function RouletteGame() {
     setSpinOffset(prev => prev + targetOffset);
 
     const isWin = winningItem.color === selectedBet;
-    const multiplier = 2.0;
+    const multiplier = selectedBet === 'gold' ? 20.0 : 1.98;
 
     setTimeout(() => {
       setIsSpinning(false);
@@ -208,7 +208,7 @@ export default function RouletteGame() {
           }`}
         >
           <span className="text-xl font-black text-amber-400">GOLDEN DONUT (0)</span>
-          <span className="text-xs font-bold text-amber-300 mt-1">PAYS 14x</span>
+          <span className="text-xs font-bold text-amber-300 mt-1">PAYS 20x+ JACKPOT</span>
         </button>
 
         <button

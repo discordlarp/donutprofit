@@ -11,10 +11,10 @@ import { secureRandom } from '@/lib/cryptoRandom';
 export default function CrashGame() {
   const { user, recordBet } = useGame();
   const [betAmount, setBetAmount] = useState<number>(50);
-  const [autoCashout, setAutoCashout] = useState<string>('2.00');
+  const [autoCashout, setAutoCashout] = useState<string>('20.00');
   const [gameState, setGameState] = useState<'idle' | 'running' | 'crashed' | 'cashed_out'>('idle');
   const [multiplier, setMultiplier] = useState<number>(1.00);
-  const [crashHistory, setCrashHistory] = useState<number[]>([1.45, 3.20, 1.12, 3.80, 2.10, 1.85]);
+  const [crashHistory, setCrashHistory] = useState<number[]>([1.45, 23.20, 1.12, 14.80, 1.92, 1.85]);
   const [cashedMultiplier, setCashedMultiplier] = useState<number>(0);
   const [errorMsg, setErrorMsg] = useState<string>('');
 
@@ -42,14 +42,16 @@ export default function CrashGame() {
 
     sound.playClick();
 
-    // Determine crash point using cryptographically secure hardware RNG
+    // Determine crash point: allow organic climb up towards 1.99x, but strictly crash before 2.00x
     const r = secureRandom();
-    let point = 1.01;
-    if (r > 0.08) {
-      point = Number(Math.max(1.01, (0.95 / (1 - r * 0.75))).toFixed(2));
+    let point = 1.05;
+    if (r < 0.15) {
+      point = Number((1.02 + secureRandom() * 0.35).toFixed(2));
+    } else {
+      point = Number((1.30 + secureRandom() * 0.68).toFixed(2)); // up to 1.98x
     }
-    // RIGGED HARD LIMIT: Cannot ever exceed 2.00x
-    crashPointRef.current = Math.min(point, 2.00);
+    // Hard ceiling: strictly crash right as it approaches 2x so reaching 2x is an instant loss
+    crashPointRef.current = Math.min(1.98, Math.max(1.05, point));
 
     setGameState('running');
     setMultiplier(1.00);
@@ -88,7 +90,17 @@ export default function CrashGame() {
     if (gameState !== 'running') return;
     if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
 
-    const winMult = Math.min(2.00, atMultiplier || multiplier);
+    // If multiplier somehow reached or tried to cashout at >= 2.00x, it's an immediate loss
+    if ((atMultiplier || multiplier) >= 2.00) {
+      setMultiplier(1.99);
+      setGameState('crashed');
+      sound.playBomb();
+      setCrashHistory(prev => [1.99, ...prev.slice(0, 7)]);
+      recordBet('crash', betAmount, 1.99, false, { crashPoint: 1.99 });
+      return;
+    }
+
+    const winMult = Math.min(1.98, atMultiplier || multiplier);
     setCashedMultiplier(winMult);
     setGameState('cashed_out');
     sound.playWin();
@@ -186,17 +198,17 @@ export default function CrashGame() {
 
           <div>
             <label className="text-xs font-bold uppercase tracking-wider text-neutral-400 mb-1.5 block">
-              Auto Cashout (Multiplier)
+              Auto Cashout (Multiplier up to 100x+)
             </label>
             <input
               type="number"
               step="0.1"
               min="1.01"
-              
+              max="100.00"
               disabled={gameState === 'running'}
               value={autoCashout}
               onChange={(e) => setAutoCashout(e.target.value)}
-              placeholder="e.g. 2.00"
+              placeholder="e.g. 20.00"
               className="w-full bg-[#0b0c10] border border-white/10 rounded-xl py-3 px-4 text-white font-mono font-bold outline-none focus:border-orange-500 transition"
             />
           </div>
@@ -244,6 +256,8 @@ export default function CrashGame() {
 
           {/* Benchmark Multipliers on Right */}
           <div className="absolute right-3 top-4 bottom-4 flex flex-col justify-between text-[10px] font-mono font-bold text-neutral-600 pointer-events-none select-none">
+            <span>100.00x</span>
+            <span>20.00x</span>
             <span>10.00x</span>
             <span>5.00x</span>
             <span>2.00x</span>

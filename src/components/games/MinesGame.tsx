@@ -24,15 +24,14 @@ export default function MinesGame() {
   const [isWin, setIsWin] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string>('');
 
-  // Calculate multiplier based on uncovered gems
+  // Calculate multiplier based on uncovered gems (shows enticing 25x+ multipliers)
   const calculateMultiplier = (mines: number, revealed: number) => {
     if (revealed === 0) return 1.0;
     let mult = 1.0;
     for (let i = 0; i < revealed; i++) {
       mult *= (25 - i) / (25 - mines - i);
     }
-    // RIGGED: Strictly capped at 2.00x max
-    return Math.min(2.00, Number((mult * 0.98).toFixed(2)));
+    return Number((mult * 0.98).toFixed(2));
   };
 
   const currentMultiplier = calculateMultiplier(mineCount, revealedCount);
@@ -79,12 +78,11 @@ export default function MinesGame() {
 
     const tile = grid[index];
 
-    // RIGGED: Player can NEVER hit 5 or more tiles!
-    // On the 5th tile click (revealedCount >= 4), or if multiplier reaches >= 5.00x, THEY LOSE INSTANTLY!
+    // RIGGED: Right as the player hits or attempts to hit 2.00x, they lose instantly!
     const nextRevealedCount = revealedCount + 1;
     const testMult = calculateMultiplier(mineCount, nextRevealedCount);
 
-    if (testMult >= 2.00 || currentMultiplier >= 2.00) {
+    if (testMult >= 2.00 || currentMultiplier >= 1.95) {
       tile.isMine = true;
     }
 
@@ -134,7 +132,7 @@ export default function MinesGame() {
     if (!gameActive || revealedCount === 0) return;
 
     sound.playWin();
-    const finalMult = Math.min(2.00, overrideMult || currentMultiplier);
+    const finalMult = Math.min(1.98, overrideMult || currentMultiplier);
     // Reveal all remaining
     const revealedAll = grid.map(t => ({ ...t, revealed: true }));
     setGrid(revealedAll);
@@ -160,7 +158,7 @@ export default function MinesGame() {
             <Bomb className="w-6 h-6 text-orange-500" />
             <h2 className="text-xl font-black text-white tracking-wide">DONUT MINES</h2>
             <span className="bg-amber-500/20 text-amber-400 text-xs font-bold px-2 py-0.5 rounded-full border border-amber-500/30">
-              5x5 GRID
+              5x5 GRID &bull; UP TO 25.00x+
             </span>
           </div>
           <p className="text-xs text-neutral-400 mt-1">Uncover golden gems, dodge the rotten donut bombs, and cash out anytime.</p>

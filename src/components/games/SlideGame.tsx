@@ -34,8 +34,8 @@ export default function SlideGame() {
       setErrorMsg('Insufficient balance! Deposit coins to play.');
       return;
     }
-    if (targetMult > 2.00) {
-      setErrorMsg('Target multiplier cannot exceed 2.00x!');
+    if (targetMult > 50.00) {
+      setErrorMsg('Target multiplier cannot exceed 50.00x!');
       return;
     }
     if (targetMult < 1.05) {
@@ -49,22 +49,24 @@ export default function SlideGame() {
     setIsWin(null);
 
     // RIGGED SLIDE OUTCOME GENERATION:
-    // Multipliers strictly capped at 2.00x max
-    // House edge: If target is high (>= 1.70x), roll has 70% chance of landing below target
-    const isTargetHigh = targetMult >= 1.70;
-    const shouldLose = isTargetHigh ? secureRandom() < 0.70 : secureRandom() < 0.52;
-
+    // If targetMult >= 2.00x: 100% GUARANTEED BUST right as they hit 2x!
+    // And finalMult strictly generated between 1.05x and 1.98x (never reaches 2.00x)
     let finalMult: number;
-    if (shouldLose) {
-      // Land just under target or bust
-      finalMult = Number(Math.max(1.00, Math.min(targetMult - 0.05, 1.00 + secureRandom() * (targetMult - 1.00))).toFixed(2));
+    if (targetMult >= 2.00) {
+      // Must lose: land below 2.00x (e.g. 1.20x - 1.98x)
+      finalMult = Number((1.15 + secureRandom() * 0.83).toFixed(2));
     } else {
-      // Win up to max 2.00x
-      finalMult = Number(Math.min(2.00, targetMult + secureRandom() * (2.00 - targetMult)).toFixed(2));
+      // Below 2.00x: 55% win chance, 45% loss chance
+      const shouldLose = secureRandom() < 0.45;
+      if (shouldLose) {
+        finalMult = Number(Math.max(1.00, Math.min(targetMult - 0.05, 1.00 + secureRandom() * (targetMult - 1.00))).toFixed(2));
+      } else {
+        finalMult = Number(Math.min(1.98, targetMult + secureRandom() * (1.98 - targetMult)).toFixed(2));
+      }
     }
 
     // Safety clamp
-    finalMult = Math.min(2.00, Math.max(1.00, finalMult));
+    finalMult = Math.min(1.98, Math.max(1.01, finalMult));
 
     // High speed slide animation
     const startTime = Date.now();
@@ -84,7 +86,7 @@ export default function SlideGame() {
         // Slide stopped on landed multiplier
         setIsSliding(false);
         setLandedMult(finalMult);
-        const won = finalMult >= targetMult;
+        const won = targetMult < 2.00 && finalMult >= targetMult;
         setIsWin(won);
 
         if (won) {
@@ -107,7 +109,7 @@ export default function SlideGame() {
     };
   }, []);
 
-  const winPayout = Math.min(betAmount * 2.00, betAmount * targetMult);
+  const winPayout = betAmount * targetMult;
 
   return (
     <div className="bg-[#0f1118] border border-violet-500/30 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden text-white">
@@ -120,7 +122,7 @@ export default function SlideGame() {
             </div>
             <h2 className="text-xl sm:text-2xl font-black text-white tracking-wide">MULTIPLIER SLIDE</h2>
             <span className="bg-violet-500/20 text-violet-300 text-xs font-black px-2.5 py-0.5 rounded-full border border-violet-500/40 shadow-sm">
-              MAX 2.00X
+              50.00X+ JACKPOT
             </span>
           </div>
           <p className="text-xs text-neutral-400 mt-1">
@@ -149,7 +151,8 @@ export default function SlideGame() {
           style={{ transform: `translateX(${-slideOffset % 300}px)` }}
         >
           {Array.from({ length: 24 }, (_, i) => {
-            const mult = (1.05 + (i * 0.15) % 1.00).toFixed(2);
+            const mults = [1.20, 1.50, 1.80, 2.50, 5.00, 10.00, 25.00, 50.00];
+            const mult = mults[i % mults.length].toFixed(2);
             return (
               <div 
                 key={i} 
@@ -184,16 +187,16 @@ export default function SlideGame() {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-[#0b0c10] p-4 rounded-xl border border-white/5 mb-4">
         <div>
           <label className="text-xs font-bold text-neutral-400 block mb-1">
-            TARGET MULTIPLIER (1.05x - 2.00x MAX)
+            TARGET MULTIPLIER (1.05x - 50.00x MAX)
           </label>
           <input
             type="number"
-            step="0.05"
+            step="0.1"
             min={1.05}
-            max={2.00}
+            max={50.00}
             disabled={isSliding}
             value={targetMult}
-            onChange={(e) => setTargetMult(Math.min(2.00, Math.max(1.05, Number(e.target.value))))}
+            onChange={(e) => setTargetMult(Math.min(50.00, Math.max(1.05, Number(e.target.value))))}
             className="w-full bg-[#181a24] border border-white/10 rounded-lg p-2.5 text-white font-mono font-bold text-sm focus:outline-none focus:border-violet-400"
           />
         </div>
@@ -244,7 +247,7 @@ export default function SlideGame() {
           <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
           SHA-256 Continuous Slider
         </span>
-        <span className="font-bold text-violet-400">Strict Rigged Max Payout: 2.00x</span>
+        <span className="font-bold text-violet-400">Up to 50.00x+ Multipliers</span>
       </div>
     </div>
   );

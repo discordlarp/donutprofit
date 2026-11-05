@@ -77,7 +77,7 @@ export default function HiloGame() {
             <TrendingUp className="w-6 h-6 text-green-400" />
             <h2 className="text-xl font-black text-white tracking-wide">DONUT HILO</h2>
             <span className="bg-green-500/20 text-green-400 text-xs font-bold px-2 py-0.5 rounded-full border border-green-500/30">
-              HIGH / LOW CARDS
+              UP TO 20.00x+
             </span>
           </div>
           <p className="text-xs text-neutral-400 mt-1">Guess whether the next dealt card is higher or lower.</p>

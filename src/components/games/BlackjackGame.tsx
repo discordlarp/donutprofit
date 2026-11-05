@@ -164,17 +164,17 @@ export default function BlackjackGame() {
 
     if (outcome === 'blackjack') {
       won = true;
-      multiplier = 2.0; // Max 2.0x payout cap
-      msg = '🎉 BLACKJACK! 2x Payout!';
+      multiplier = 1.98;
+      msg = '🎉 BLACKJACK! Winner!';
       confetti({ particleCount: 80, spread: 60 });
     } else if (outcome === 'dealer_bust') {
       won = true;
-      multiplier = 2.0;
+      multiplier = 1.98;
       msg = '🎉 Dealer Busted! You Win!';
       confetti({ particleCount: 70, spread: 60 });
     } else if (outcome === 'win') {
       won = true;
-      multiplier = 2.0;
+      multiplier = 1.98;
       msg = '🎉 You beat the dealer!';
       confetti({ particleCount: 70, spread: 60 });
     } else if (outcome === 'push') {

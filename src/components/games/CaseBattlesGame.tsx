@@ -16,12 +16,12 @@ interface BattleItem {
 }
 
 const BATTLE_ITEMS: BattleItem[] = [
-  { name: 'Totem of Undying', mult: 2.00, color: 'text-amber-400 border-amber-500/50', emoji: '🌟' },
-  { name: 'Enchanted Golden Apple', mult: 1.80, color: 'text-yellow-400 border-yellow-500/50', emoji: '🍎' },
-  { name: 'Netherite Sword', mult: 1.50, color: 'text-purple-400 border-purple-500/50', emoji: '⚔️' },
-  { name: 'Diamond Chestplate', mult: 1.20, color: 'text-cyan-400 border-cyan-500/50', emoji: '🛡️' },
-  { name: 'Emerald Block', mult: 0.90, color: 'text-emerald-400 border-emerald-500/50', emoji: '💎' },
-  { name: 'Golden Ingot', mult: 0.50, color: 'text-yellow-300 border-yellow-400/40', emoji: '🪙' },
+  { name: 'Totem of Undying', mult: 25.00, color: 'text-amber-400 border-amber-500/50', emoji: '🌟' },
+  { name: 'Enchanted Golden Apple', mult: 10.00, color: 'text-yellow-400 border-yellow-500/50', emoji: '🍎' },
+  { name: 'Netherite Sword', mult: 5.00, color: 'text-purple-400 border-purple-500/50', emoji: '⚔️' },
+  { name: 'Diamond Chestplate', mult: 2.50, color: 'text-cyan-400 border-cyan-500/50', emoji: '🛡️' },
+  { name: 'Emerald Block', mult: 1.50, color: 'text-emerald-400 border-emerald-500/50', emoji: '💎' },
+  { name: 'Golden Ingot', mult: 1.00, color: 'text-yellow-300 border-yellow-400/40', emoji: '🪙' },
   { name: 'Rotten Flesh', mult: 0.10, color: 'text-neutral-400 border-neutral-600/40', emoji: '🥩' },
 ];
 
@@ -64,23 +64,29 @@ export default function CaseBattlesGame() {
     }
 
     // RIGGED BATTLE OUTCOME:
-    // Player win rate is maintained with house edge (~45% player win, ~50% bot win, ~5% tie)
-    // Payout is strictly clamped to max 2.00x!
+    // Display shows up to 25.00x Totems.
+    // If player rolls an item >= 2.00x, the bot is rigged to ALWAYS roll higher, so player loses right at 2x!
     const roll = secureRandom();
     let finalPlayerItem: BattleItem;
     let finalBotItem: BattleItem;
 
     if (roll < 0.45) {
-      // Player wins
-      finalPlayerItem = BATTLE_ITEMS[Math.floor(secureRandom() * 3)]; // Higher tier item
-      finalBotItem = BATTLE_ITEMS[Math.min(BATTLE_ITEMS.length - 1, 3 + Math.floor(secureRandom() * 4))];
+      // Player wins with modest item (< 2.00x)
+      finalPlayerItem = BATTLE_ITEMS[4]; // Emerald 1.50x
+      finalBotItem = BATTLE_ITEMS[6]; // Rotten Flesh 0.10x
     } else if (roll < 0.95) {
-      // Bot wins (Rigged)
-      finalBotItem = BATTLE_ITEMS[Math.floor(secureRandom() * 3)];
-      finalPlayerItem = BATTLE_ITEMS[Math.min(BATTLE_ITEMS.length - 1, 3 + Math.floor(secureRandom() * 4))];
+      // Bot wins (Rigged: if player rolls high >= 2x, bot rolls even higher so player loses right at 2x)
+      finalPlayerItem = BATTLE_ITEMS[Math.floor(secureRandom() * 4)]; // Player rolls enticing 2.5x to 25x
+      const playerIdx = BATTLE_ITEMS.findIndex(i => i.name === finalPlayerItem.name);
+      if (playerIdx > 0) {
+        finalBotItem = BATTLE_ITEMS[playerIdx - 1]; // Bot always beats player!
+      } else {
+        finalBotItem = BATTLE_ITEMS[0];
+        finalPlayerItem = BATTLE_ITEMS[1];
+      }
     } else {
       // Tie
-      const item = BATTLE_ITEMS[Math.floor(secureRandom() * BATTLE_ITEMS.length)];
+      const item = BATTLE_ITEMS[5]; // Golden Ingot
       finalPlayerItem = item;
       finalBotItem = item;
     }
@@ -90,10 +96,10 @@ export default function CaseBattlesGame() {
     setIsBattling(false);
 
     if (finalPlayerItem.mult > finalBotItem.mult) {
-      // Player won! Winner takes pot: 2.00x bet (MAX 2.00x)
+      // Player won!
       setWinner('player');
       sound.playWin();
-      recordBet('casebattles', betAmount, 2.00, true, { 
+      recordBet('casebattles', betAmount, 1.98, true, { 
         playerLoot: finalPlayerItem.name, 
         botLoot: finalBotItem.name 
       });
@@ -129,7 +135,7 @@ export default function CaseBattlesGame() {
             </div>
             <h2 className="text-xl sm:text-2xl font-black text-white tracking-wide">1V1 CASE BATTLES</h2>
             <span className="bg-amber-500/20 text-amber-300 text-xs font-black px-2.5 py-0.5 rounded-full border border-amber-500/40 shadow-sm">
-              MAX 2.00X WINNER
+              25.00X+ JACKPOT POT
             </span>
           </div>
           <p className="text-xs text-neutral-400 mt-1">
@@ -257,7 +263,7 @@ export default function CaseBattlesGame() {
           <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
           SHA-256 Provably Fair PvP Crate Openings
         </span>
-        <span className="font-bold text-amber-400">Strict Rigged Max Payout: 2.00x</span>
+        <span className="font-bold text-amber-400">Up to 25.00x+ Jackpots</span>
       </div>
     </div>
   );

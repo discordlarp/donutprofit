@@ -43,22 +43,22 @@ const SIDEBAR_GAMES: SidebarGameItem[] = [
   { id: 'mines', name: 'Mines', badge: 'POPULAR', category: 'originals', isHot: true, emoji: '💣' },
   { id: 'crash', name: 'Crash', badge: 'HOT', category: 'originals', isHot: true, emoji: '🚀' },
   { id: 'chicken', name: 'Chicken', badge: 'NEW', category: 'originals', isHot: true, emoji: '🐔' },
-  { id: 'plinko', name: 'Plinko', badge: '2.00X', category: 'originals', isHot: true, emoji: '🟢' },
+  { id: 'plinko', name: 'Plinko', badge: '1000X', category: 'originals', isHot: true, emoji: '🟢' },
   { id: 'slots', name: 'Slots', badge: 'JACKPOT', category: 'originals', isHot: true, emoji: '🎰' },
-  { id: 'slide', name: 'Slide', badge: 'NEW', category: 'originals', isHot: true, emoji: '⚡' },
-  { id: 'wheel', name: 'Wheel', badge: 'NEW', category: 'originals', emoji: '🎡' },
-  { id: 'towers', name: 'Towers', badge: 'ORIGINAL', category: 'originals', emoji: '🏰' },
-  { id: 'limbo', name: 'Limbo', badge: 'FAST', category: 'originals', emoji: '📈' },
-  { id: 'dice', name: 'Dice', badge: 'FAIR', category: 'originals', emoji: '🎲' },
+  { id: 'slide', name: 'Slide', badge: '50X+', category: 'originals', isHot: true, emoji: '⚡' },
+  { id: 'wheel', name: 'Wheel', badge: '20X+', category: 'originals', emoji: '🎡' },
+  { id: 'towers', name: 'Towers', badge: '25X+', category: 'originals', emoji: '🏰' },
+  { id: 'limbo', name: 'Limbo', badge: '100X', category: 'originals', emoji: '📈' },
+  { id: 'dice', name: 'Dice', badge: '50X', category: 'originals', emoji: '🎲' },
   { id: 'cases', name: 'Cases', badge: 'LOOT', category: 'originals', emoji: '📦' },
-  { id: 'hilo', name: 'Hilo', badge: 'CLASSIC', category: 'originals', emoji: '🃏' },
-  { id: 'keno', name: 'Keno', badge: 'NUMBERS', category: 'originals', emoji: '🎱' },
+  { id: 'hilo', name: 'Hilo', badge: '20X+', category: 'originals', emoji: '🃏' },
+  { id: 'keno', name: 'Keno', badge: '25X+', category: 'originals', emoji: '🎱' },
   // PvP Battles
   { id: 'casebattles', name: 'Case Battles', badge: '1V1 PVP', category: 'pvp', isHot: true, emoji: '⚔️' },
   { id: 'coinflip', name: 'Coinflip', badge: '1V1', category: 'pvp', isHot: true, emoji: '🪙' },
   // Tables
   { id: 'blackjack', name: 'Blackjack', badge: 'LIVE', category: 'tables', emoji: '🂡' },
-  { id: 'roulette', name: 'Roulette', badge: '2.00X', category: 'tables', emoji: '🎯' },
+  { id: 'roulette', name: 'Roulette', badge: '20X+', category: 'tables', emoji: '🎯' },
 ];
 
 export default function GamesSidebar({ activeGame: propActiveGame, onSelectGame }: GamesSidebarProps) {

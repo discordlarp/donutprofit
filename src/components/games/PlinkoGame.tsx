@@ -16,19 +16,19 @@ interface RiskConfig {
 
 const RISK_CONFIGS: Record<RiskLevel, RiskConfig> = {
   low: {
-    multipliers: [2.0, 1.6, 1.2, 0.9, 0.7, 0.9, 1.2, 1.6, 2.0],
+    multipliers: [16.0, 4.0, 1.5, 1.0, 0.5, 1.0, 1.5, 4.0, 16.0],
     colors: [
       '#EF4444', '#F97316', '#F59E0B', '#10B981', '#059669', '#10B981', '#F59E0B', '#F97316', '#EF4444'
     ]
   },
   medium: {
-    multipliers: [2.0, 1.7, 1.3, 0.6, 0.4, 0.6, 1.3, 1.7, 2.0],
+    multipliers: [33.0, 6.0, 1.6, 0.7, 0.4, 0.7, 1.6, 6.0, 33.0],
     colors: [
       '#DC2626', '#EA580C', '#D97706', '#10B981', '#047857', '#10B981', '#D97706', '#EA580C', '#DC2626'
     ]
   },
   high: {
-    multipliers: [2.0, 1.8, 1.4, 0.5, 0.2, 0.5, 1.4, 1.8, 2.0],
+    multipliers: [100.0, 10.0, 1.8, 0.4, 0.2, 0.4, 1.8, 10.0, 100.0],
     colors: [
       '#B91C1C', '#C2410C', '#B45309', '#10B981', '#065F46', '#10B981', '#B45309', '#C2410C', '#B91C1C'
     ]
@@ -306,11 +306,11 @@ export default function PlinkoGame() {
           let landedBin = Math.floor((ball.x - binStartX) / binWidth);
           landedBin = Math.max(0, Math.min(BIN_COUNT - 1, landedBin));
 
-          // RIGGED: Outer edge bins (5x) are deflected inward so nobody exceeds safe limits
-          if (landedBin === 0) landedBin = 1;
-          if (landedBin === BIN_COUNT - 1) landedBin = BIN_COUNT - 2;
+          // RIGGED: Outer edge bins (>= 2x) are deflected inward so nobody exceeds safe limits
+          if (landedBin <= 1) landedBin = 2;
+          if (landedBin >= BIN_COUNT - 2) landedBin = BIN_COUNT - 3;
 
-          const finalMult = Math.min(2.00, config.multipliers[landedBin]);
+          const finalMult = Math.min(1.98, config.multipliers[landedBin]);
           const isWin = finalMult >= 1.0;
 
           // Visual Bin Bounce Flash
@@ -388,7 +388,7 @@ export default function PlinkoGame() {
             </div>
             <h2 className="text-xl font-black text-white tracking-wide">DONUT PLINKO</h2>
             <span className="bg-purple-500/20 text-purple-400 text-xs font-bold px-2.5 py-0.5 rounded-full border border-purple-500/30 flex items-center gap-1 font-mono">
-              <Sparkles className="w-3.5 h-3.5" /> PROVABLY FAIR
+              <Sparkles className="w-3.5 h-3.5" /> UP TO 100x+ JACKPOTS
             </span>
           </div>
           <p className="text-xs text-neutral-400 mt-1">

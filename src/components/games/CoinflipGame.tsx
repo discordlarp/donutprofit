@@ -80,7 +80,7 @@ export default function CoinflipGame() {
             <span className="text-2xl">🪙</span>
             <h2 className="text-xl font-black text-white tracking-wide">DONUT COINFLIP</h2>
             <span className="bg-orange-500/20 text-orange-400 text-xs font-bold px-2.5 py-0.5 rounded-full border border-orange-500/30 font-mono">
-              1.96x PAYOUT
+              DOUBLE OR NOTHING &bull; 1V1 PVP
             </span>
           </div>
           <p className="text-xs text-neutral-400 mt-1">Pick your side, flip the 3D Donut coin, and double your coins instantly.</p>

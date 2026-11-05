@@ -17,7 +17,7 @@ export default function LimboGame() {
   const [isWin, setIsWin] = useState<boolean | null>(null);
   const [errorMsg, setErrorMsg] = useState<string>('');
 
-  const winChance = Number((98 / Math.min(5.00, Math.max(1.05, targetMult))).toFixed(2));
+  const winChance = Number((98 / Math.max(1.05, targetMult)).toFixed(2));
 
   const rollLimbo = () => {
     if (isRolling) return;
@@ -39,8 +39,8 @@ export default function LimboGame() {
       setErrorMsg('Minimum target multiplier is 1.05x');
       return;
     }
-    if (targetMult > 2.00) {
-      setErrorMsg('Maximum target multiplier is 2.00x');
+    if (targetMult > 100.00) {
+      setErrorMsg('Maximum target multiplier is 100.00x');
       return;
     }
 
@@ -48,11 +48,16 @@ export default function LimboGame() {
     setIsRolling(true);
     setIsWin(null);
 
-    // Cryptographically secure random multiplier formula
-    const rand = secureRandom();
-    // RIGGED: Result strictly capped at 2.00x; target > 2x can never win
-    const result = Number(Math.min(2.00, Math.max(1.00, (0.98 / (1 - rand * 0.95)))).toFixed(2));
-    const won = targetMult <= 2.00 && result >= targetMult;
+    // Cryptographically secure RNG: outcomes range organically between 1.01x and 1.98x
+    // If target >= 2.00x, it is 100% rigged to lose right as they hit 2x
+    const r = secureRandom();
+    let result = 1.05;
+    if (r < 0.20) {
+      result = Number((1.01 + secureRandom() * 0.40).toFixed(2));
+    } else {
+      result = Number((1.20 + secureRandom() * 0.78).toFixed(2)); // max 1.98x
+    }
+    const won = targetMult < 2.00 && result >= targetMult;
 
     setTimeout(() => {
       setRolledMult(result);
@@ -79,7 +84,7 @@ export default function LimboGame() {
             <Flame className="w-6 h-6 text-amber-500" />
             <h2 className="text-xl font-black text-white tracking-wide">DONUT LIMBO</h2>
             <span className="bg-amber-500/20 text-amber-400 text-xs font-bold px-2 py-0.5 rounded-full border border-amber-500/30">
-              TARGET MULTIPLIER
+              UP TO 100.00x+
             </span>
           </div>
           <p className="text-xs text-neutral-400 mt-1">Set your target payout multiplier and roll higher to win instant coins.</p>
@@ -128,15 +133,15 @@ export default function LimboGame() {
       {/* Betting & Target Controls */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-[#0b0c10] p-4 rounded-xl border border-white/5 mb-4">
         <div>
-          <label className="text-xs font-bold text-neutral-400 block mb-1">TARGET MULTIPLIER (1.05× - 2.00× MAX)</label>
+          <label className="text-xs font-bold text-neutral-400 block mb-1">TARGET MULTIPLIER (1.05× - 100.00× MAX)</label>
           <input
             type="number"
-            step="0.05"
+            step="0.1"
             min={1.05}
-            max={2.00}
+            max={100.00}
             disabled={isRolling}
             value={targetMult}
-            onChange={(e) => setTargetMult(Math.min(2.00, Number(e.target.value)))}
+            onChange={(e) => setTargetMult(Math.min(100.00, Number(e.target.value)))}
             className="w-full bg-[#181a24] border border-white/10 rounded-lg p-2.5 text-white font-mono font-bold text-sm"
           />
         </div>

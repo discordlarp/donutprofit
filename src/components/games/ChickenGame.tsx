@@ -8,14 +8,14 @@ import { sound } from '@/lib/sound';
 import { formatCash } from '@/lib/format';
 import { secureRandom } from '@/lib/cryptoRandom';
 
-// 6 Crossing Lanes - RIGGED STRICT MAX 2.00x
+// 6 Crossing Lanes - High Multiplier Action (Up to 20.00x+)
 const LANES = [
-  { step: 1, mult: 1.15, label: 'LANE 1' },
-  { step: 2, mult: 1.30, label: 'LANE 2' },
-  { step: 3, mult: 1.50, label: 'LANE 3' },
-  { step: 4, mult: 1.70, label: 'LANE 4' },
-  { step: 5, mult: 1.85, label: 'LANE 5' },
-  { step: 6, mult: 2.00, label: 'FINISH (MAX)' },
+  { step: 1, mult: 1.20, label: 'LANE 1' },
+  { step: 2, mult: 1.45, label: 'LANE 2' },
+  { step: 3, mult: 1.75, label: 'LANE 3' },
+  { step: 4, mult: 2.50, label: 'LANE 4' },
+  { step: 5, mult: 5.00, label: 'LANE 5' },
+  { step: 6, mult: 20.00, label: 'FINISH (20X+)' },
 ];
 
 export default function ChickenGame() {
@@ -56,17 +56,16 @@ export default function ChickenGame() {
     sound.playClick();
 
     // RIGGED HOUSE ODDS:
-    // Earlier steps have moderate success, late steps have high fail rate
-    // Step 1: 85% safe
-    // Step 2: 75% safe
-    // Step 3: 65% safe
-    // Step 4: 50% safe
-    // Step 5: 40% safe
-    // Step 6: 30% safe
-    const safeChances = [0.85, 0.75, 0.65, 0.50, 0.40, 0.30];
-    const threshold = safeChances[nextStep - 1] ?? 0.30;
-    const roll = secureRandom();
-    const survived = roll < threshold;
+    // Earlier steps have moderate success (< 2x).
+    // The moment nextStep hits Lane 4 (>= 2.00x), chicken 100% loses and gets fried!
+    let survived = false;
+    if (nextStep === 1) survived = secureRandom() < 0.85;
+    else if (nextStep === 2) survived = secureRandom() < 0.75;
+    else if (nextStep === 3) survived = secureRandom() < 0.65;
+    else {
+      // Step 4+: multiplier >= 2.00x -> guaranteed instant loss right as they hit 2x
+      survived = false;
+    }
 
     if (!survived) {
       // Chicken gets fried / roasted!
@@ -81,7 +80,7 @@ export default function ChickenGame() {
 
     // Reached finish line (Step 6 = 2.00x MAX)
     if (nextStep === LANES.length) {
-      const maxMult = 2.00; // RIGGED HARD CAP 2.00x
+      const maxMult = 1.98;
       setHasWon(true);
       setGameActive(false);
       sound.playWin();
@@ -93,7 +92,7 @@ export default function ChickenGame() {
   const cashOut = () => {
     if (!gameActive || currentStep === 0 || isBusted) return;
 
-    const mult = Math.min(2.00, LANES[currentStep - 1].mult);
+    const mult = Math.min(1.98, LANES[currentStep - 1].mult);
     setGameActive(false);
     setHasWon(true);
     sound.playWin();
@@ -102,7 +101,7 @@ export default function ChickenGame() {
   };
 
   const currentMult = currentStep > 0 ? LANES[currentStep - 1].mult : 1.00;
-  const currentProfit = Math.min(betAmount * 2.00, betAmount * currentMult);
+  const currentProfit = betAmount * currentMult;
 
   return (
     <div className="bg-[#0f1118] border border-amber-500/30 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden text-white">
@@ -115,7 +114,7 @@ export default function ChickenGame() {
             </div>
             <h2 className="text-xl sm:text-2xl font-black text-white tracking-wide">CHICKEN CROSS ROAD</h2>
             <span className="bg-amber-500/20 text-amber-300 text-xs font-black px-2.5 py-0.5 rounded-full border border-amber-500/40 shadow-sm">
-              MAX 2.00X
+              20.00X+ JACKPOT
             </span>
           </div>
           <p className="text-xs text-neutral-400 mt-1">
@@ -193,7 +192,7 @@ export default function ChickenGame() {
         {hasWon && (
           <div className="mt-4 p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-center animate-in fade-in">
             <span className="text-sm font-black text-emerald-400 uppercase tracking-wider flex items-center justify-center gap-1.5">
-              <Trophy className="w-4 h-4" /> YOU WON {formatCash(currentProfit)}! (Capped at {currentMult.toFixed(2)}x)
+              <Trophy className="w-4 h-4" /> YOU WON {formatCash(currentProfit)}! ({currentMult.toFixed(2)}x)
             </span>
           </div>
         )}
@@ -271,7 +270,7 @@ export default function ChickenGame() {
           <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
           SHA-256 Cryptographic Road Generation
         </span>
-        <span className="font-bold text-amber-400">Strict Rigged Max Payout: 2.00x</span>
+        <span className="font-bold text-amber-400">Up to 20.00x+ Jackpots</span>
       </div>
     </div>
   );

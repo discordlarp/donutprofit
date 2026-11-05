@@ -15,17 +15,17 @@ interface WheelSegment {
 }
 
 const SEGMENTS: WheelSegment[] = [
-  { label: '2.00x', mult: 2.00, color: '#f59e0b' },
+  { label: '20.00x', mult: 20.00, color: '#f59e0b' },
   { label: '0.00x', mult: 0.00, color: '#334155' },
-  { label: '1.20x', mult: 1.20, color: '#06b6d4' },
+  { label: '1.30x', mult: 1.30, color: '#06b6d4' },
   { label: '0.00x', mult: 0.00, color: '#1e293b' },
-  { label: '1.40x', mult: 1.40, color: '#10b981' },
-  { label: '0.00x', mult: 0.00, color: '#334155' },
-  { label: '1.60x', mult: 1.60, color: '#8b5cf6' },
-  { label: '0.00x', mult: 0.00, color: '#1e293b' },
-  { label: '1.80x', mult: 1.80, color: '#ec4899' },
-  { label: '0.00x', mult: 0.00, color: '#334155' },
   { label: '1.50x', mult: 1.50, color: '#10b981' },
+  { label: '0.00x', mult: 0.00, color: '#334155' },
+  { label: '10.00x', mult: 10.00, color: '#ec4899' },
+  { label: '0.00x', mult: 0.00, color: '#1e293b' },
+  { label: '1.80x', mult: 1.80, color: '#8b5cf6' },
+  { label: '0.00x', mult: 0.00, color: '#334155' },
+  { label: '5.00x', mult: 5.00, color: '#3b82f6' },
   { label: '0.00x', mult: 0.00, color: '#1e293b' },
 ];
 
@@ -59,21 +59,17 @@ export default function WheelGame() {
     setResultSegment(null);
 
     // RIGGED WHEEL OUTCOME:
-    // Strictly capped at 2.00x max!
-    // House edge: 55% chance of landing on a 0x segment, 45% chance of a winning segment (1.20x - 2.00x)
+    // Display shows up to 20.00x jackpot wedges.
+    // However, right as they hit or approach 2x+, it is 100% rigged to land on a 0x whammy or sub-2x win (1.30x-1.80x)!
     const shouldWin = secureRandom() < 0.45;
     let chosenIdx: number;
 
     if (shouldWin) {
-      const winIndices = [0, 2, 4, 6, 8, 10];
-      // 2.00x jackpot is rare (10% among wins)
-      if (secureRandom() < 0.10) {
-        chosenIdx = 0; // 2.00x
-      } else {
-        const otherWins = [2, 4, 6, 8, 10];
-        chosenIdx = otherWins[Math.floor(secureRandom() * otherWins.length)];
-      }
+      // Safe wins below 2.00x: indices 2 (1.30x), 4 (1.50x), 8 (1.80x)
+      const safeWins = [2, 4, 8];
+      chosenIdx = safeWins[Math.floor(secureRandom() * safeWins.length)];
     } else {
+      // 0x segments
       const loseIndices = [1, 3, 5, 7, 9, 11];
       chosenIdx = loseIndices[Math.floor(secureRandom() * loseIndices.length)];
     }
@@ -137,11 +133,11 @@ export default function WheelGame() {
             </div>
             <h2 className="text-xl sm:text-2xl font-black text-white tracking-wide">DONUT WHEEL</h2>
             <span className="bg-pink-500/20 text-pink-300 text-xs font-black px-2.5 py-0.5 rounded-full border border-pink-500/40 shadow-sm">
-              MAX 2.00X JACKPOT
+              20.00X+ JACKPOT
             </span>
           </div>
           <p className="text-xs text-neutral-400 mt-1">
-            Spin the high-roller wheel to hit multipliers up to 2.00x!
+            Spin the high-roller wheel to hit multipliers up to 20.00x+!
           </p>
         </div>
       </div>
@@ -231,7 +227,7 @@ export default function WheelGame() {
             onClick={spinWheel}
             className="w-full bg-gradient-to-r from-pink-500 via-rose-500 to-pink-500 hover:from-pink-400 hover:to-rose-400 text-white font-black py-3.5 rounded-xl shadow-lg shadow-pink-500/25 active:scale-95 transition cursor-pointer text-sm uppercase tracking-wider disabled:opacity-50"
           >
-            {isSpinning ? 'SPINNING WHEEL...' : `SPIN WHEEL FOR ${formatCash(betAmount * 2.00)}`}
+            {isSpinning ? 'SPINNING WHEEL...' : `SPIN WHEEL FOR ${formatCash(betAmount * 20.00)}`}
           </button>
         </div>
       </div>
@@ -242,7 +238,7 @@ export default function WheelGame() {
           <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
           SHA-256 Physics Engine
         </span>
-        <span className="font-bold text-pink-400">Strict Rigged Max Payout: 2.00x</span>
+        <span className="font-bold text-pink-400">Up to 20.00x+ Jackpots</span>
       </div>
     </div>
   );

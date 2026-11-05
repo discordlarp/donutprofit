@@ -15,11 +15,11 @@ interface SymbolInfo {
 }
 
 const SYMBOLS: SymbolInfo[] = [
-  { icon: '🍩', name: 'Glazed Donut', multiplier: 2.0 },
-  { icon: '👑', name: 'Netherite Crown', multiplier: 2.0 },
-  { icon: '💎', name: 'Diamond Block', multiplier: 1.8 },
-  { icon: '🍏', name: 'God Apple', multiplier: 1.5 },
-  { icon: '🥖', name: 'Bread', multiplier: 1.2 },
+  { icon: '🍩', name: 'Glazed Donut', multiplier: 50.0 },
+  { icon: '👑', name: 'Netherite Crown', multiplier: 25.0 },
+  { icon: '💎', name: 'Diamond Block', multiplier: 10.0 },
+  { icon: '🍏', name: 'God Apple', multiplier: 1.8 },
+  { icon: '🥖', name: 'Bread', multiplier: 1.4 },
   { icon: '🥩', name: 'Rotten Flesh', multiplier: 0 },
 ];
 
@@ -62,8 +62,8 @@ export default function SlotsGame() {
     let s2 = SYMBOLS[Math.floor(secureRandom() * SYMBOLS.length)];
     let s3 = SYMBOLS[Math.floor(secureRandom() * SYMBOLS.length)];
 
-    // RIGGED: If all 3 match with multiplier > 2.0x, break reel 3
-    if (s1.multiplier > 2.0 && s1.name === s2.name && s2.name === s3.name) {
+    // RIGGED: If reels 1 & 2 match on multiplier >= 2.0x, break reel 3 so they instantly lose right at 2x!
+    if (s1.multiplier >= 2.0 && s1.name === s2.name) {
       const others = SYMBOLS.filter(s => s.name !== s1.name);
       s3 = others[Math.floor(secureRandom() * others.length)];
     }
@@ -75,7 +75,7 @@ export default function SlotsGame() {
       // Payout logic
       let mult = 0;
       if (s1.name === s2.name && s2.name === s3.name && s1.multiplier > 0) {
-        mult = Math.min(2.00, s1.multiplier); // 3-of-a-kind jackpot! (Max 2x)
+        mult = Math.min(1.98, s1.multiplier); // 3-of-a-kind
       } else if ((s1.name === s2.name || s2.name === s3.name || s1.name === s3.name) && (s1.multiplier > 0 || s2.multiplier > 0)) {
         mult = 1.2; // 2-of-a-kind minor win
       }
@@ -104,7 +104,7 @@ export default function SlotsGame() {
             <span className="text-2xl">🎰</span>
             <h2 className="text-xl font-black text-white tracking-wide">DONUT SMP SLOTS</h2>
             <span className="bg-amber-500/20 text-amber-400 text-xs font-bold px-2 py-0.5 rounded-full border border-amber-500/30">
-              JACKPOT 5X
+              50.00X+ JACKPOT
             </span>
           </div>
           <p className="text-xs text-neutral-400 mt-1">Match 3 DonutSMP items across the payline to win big.</p>
@@ -112,13 +112,13 @@ export default function SlotsGame() {
 
         {/* Paytable snippet */}
         <div className="hidden md:flex items-center gap-2 text-[11px] font-bold text-neutral-400 bg-[#0b0c10] border border-white/5 px-3 py-1 rounded-xl">
-          <span>🍩 5x</span>
+          <span>🍩 50x</span>
           <span>&bull;</span>
-          <span>👑 4x</span>
+          <span>👑 25x</span>
           <span>&bull;</span>
-          <span>💎 3x</span>
+          <span>💎 10x</span>
           <span>&bull;</span>
-          <span>🍏 2x</span>
+          <span>🍏 1.8x</span>
         </div>
       </div>
 
