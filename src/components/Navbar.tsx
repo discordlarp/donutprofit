@@ -101,7 +101,7 @@ export default function Navbar({ onToggleChat: propOnToggle, isChatOpen: propIsO
       {/* Change Password Modal */}
       {isPassModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
-          <div className="relative w-full max-w-sm bg-[#111322] border border-violet-500/30 rounded-2xl p-6 shadow-2xl">
+          <div className="relative w-full max-w-sm bg-[#0b0e16] border border-white/10 rounded-2xl p-6 shadow-2xl">
             <button
               onClick={() => { setIsPassModalOpen(false); setPassMsg(null); }}
               className="absolute top-4 right-4 text-neutral-400 hover:text-white"
@@ -131,11 +131,11 @@ export default function Navbar({ onToggleChat: propOnToggle, isChatOpen: propIsO
                 placeholder="New password (min 4 chars)..."
                 value={newPass}
                 onChange={(e) => setNewPass(e.target.value)}
-                className="w-full bg-[#0a0c16] border border-white/10 rounded-xl p-3 text-white font-mono font-bold focus:border-violet-500 outline-none"
+                className="w-full bg-[#080a10] border border-white/10 rounded-xl p-3 text-white font-mono font-bold focus:border-emerald-500 outline-none"
               />
               <button
                 type="submit"
-                className="w-full py-2.5 rounded-xl font-black uppercase bg-gradient-to-r from-violet-600 via-indigo-600 to-violet-600 hover:from-violet-500 hover:to-indigo-500 text-white shadow-lg shadow-violet-500/20 transition cursor-pointer"
+                className="w-full py-2.5 rounded-xl font-black uppercase bg-emerald-500 hover:bg-emerald-400 text-black transition cursor-pointer"
               >
                 SAVE PASSWORD
               </button>
@@ -171,26 +171,26 @@ export default function Navbar({ onToggleChat: propOnToggle, isChatOpen: propIsO
             <Link href="/" className="flex items-center gap-2.5 group shrink-0">
               <DonutLogo size={34} className="w-7 h-7 sm:w-8 sm:h-8 group-hover:scale-105 transition-transform" />
               <div className="flex flex-col leading-none">
-                <span className="text-lg sm:text-xl font-black tracking-wider text-white">
-                  DONUT<span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 via-cyan-400 to-amber-300">PROFIT</span>
+                <span className="text-lg sm:text-xl font-black tracking-wide text-white">
+                  DONUT<span className="text-amber-400">PROFIT</span>
                 </span>
                 <span className="text-[8px] font-mono tracking-widest text-neutral-400 uppercase font-semibold">
-                  Arcade & Casino
+                  Arcade &amp; Casino
                 </span>
               </div>
             </Link>
 
             {/* Central Navigation Dock (Desktop) */}
-            <nav className="hidden lg:flex items-center gap-1.5 ml-4 p-1 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
+            <nav className="hidden lg:flex items-center gap-1 ml-4 p-1 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
               <Link
                 href="/"
-                className={`px-3 py-1.5 rounded-xl text-xs font-black transition flex items-center gap-1.5 ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
                   pathname === '/' 
-                    ? 'bg-violet-600/30 text-violet-300 border border-violet-500/40 shadow-sm' 
+                    ? 'bg-white/10 text-white' 
                     : 'text-neutral-400 hover:text-white hover:bg-white/5'
                 }`}
               >
-                <Gamepad2 className="w-3.5 h-3.5 text-violet-400" />
+                <Gamepad2 className="w-3.5 h-3.5 text-emerald-400" />
                 <span>ARCADE</span>
               </Link>
 
@@ -233,20 +233,20 @@ export default function Navbar({ onToggleChat: propOnToggle, isChatOpen: propIsO
 
               <Link
                 href="/leaderboard"
-                className={`px-3 py-1.5 rounded-xl text-xs font-black transition flex items-center gap-1.5 ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
                   pathname === '/leaderboard'
-                    ? 'bg-violet-600/30 text-violet-300 border border-violet-500/40 shadow-sm'
+                    ? 'bg-white/10 text-white'
                     : 'text-neutral-400 hover:text-white hover:bg-white/5'
                 }`}
               >
-                <Trophy className="w-3.5 h-3.5 text-cyan-400" />
+                <Trophy className="w-3.5 h-3.5 text-amber-400" />
                 <span>LEADERBOARD</span>
               </Link>
 
               {user?.role === 'admin' && (
                 <Link
                   href="/admin"
-                  className="px-3 py-1.5 rounded-xl text-xs font-black text-rose-400 hover:text-rose-300 bg-rose-500/10 border border-rose-500/30 flex items-center gap-1.5"
+                  className="px-3 py-1.5 rounded-xl text-xs font-bold text-rose-400 hover:text-rose-300 bg-rose-500/10 border border-rose-500/25 flex items-center gap-1.5"
                 >
                   <ShieldAlert className="w-3.5 h-3.5" />
                   <span>STAFF</span>
@@ -260,7 +260,7 @@ export default function Navbar({ onToggleChat: propOnToggle, isChatOpen: propIsO
             {user ? (
               /* Logged In State: Custom Financial Hub + Profile Pill */
               <>
-                <div className="flex items-center bg-[#111320] border border-violet-500/30 rounded-2xl p-1 pr-1.5 sm:pr-2 shadow-lg shadow-violet-500/5">
+                <div className="flex items-center bg-[#0d1017] border border-white/[0.08] rounded-2xl p-1 pr-1.5 sm:pr-2">
                   {/* Balance Display with Wallet Click */}
                   <button
                     type="button"
@@ -268,14 +268,14 @@ export default function Navbar({ onToggleChat: propOnToggle, isChatOpen: propIsO
                     className="flex items-center text-left hover:opacity-90 transition cursor-pointer px-1.5 py-0.5"
                     title="Open Financial Hub"
                   >
-                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-gradient-to-br from-amber-400 to-yellow-600 flex items-center justify-center text-black font-black mr-2 shrink-0 shadow-md shadow-amber-500/20">
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-amber-500 flex items-center justify-center text-black font-black mr-2 shrink-0">
                       <Coins className="w-4 h-4 text-black" />
                     </div>
                     <div className="flex flex-col min-w-0 mr-2 sm:mr-3">
                       <span className="text-[8px] sm:text-[9px] uppercase font-bold text-neutral-400 leading-none">
                         Cash Balance
                       </span>
-                      <span className="text-xs sm:text-sm font-black text-amber-300 font-mono truncate">
+                      <span className="text-xs sm:text-sm font-bold text-amber-400 font-mono truncate">
                         {formatCash(user.balance)}
                       </span>
                     </div>
@@ -286,7 +286,7 @@ export default function Navbar({ onToggleChat: propOnToggle, isChatOpen: propIsO
                     type="button"
                     onClick={() => openWallet('deposit')}
                     title="Deposit In-Game Currency"
-                    className="px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-black text-[11px] uppercase tracking-wider transition cursor-pointer active:scale-95 shadow-md shadow-violet-500/25 shrink-0 flex items-center gap-1"
+                    className="px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-black text-[11px] uppercase tracking-wider transition cursor-pointer active:scale-95 shadow-md shadow-emerald-500/20 shrink-0 flex items-center gap-1"
                   >
                     <Plus className="w-3 h-3 stroke-[3]" />
                     <span>Deposit</span>
@@ -297,7 +297,7 @@ export default function Navbar({ onToggleChat: propOnToggle, isChatOpen: propIsO
                     type="button"
                     onClick={() => openWallet('withdraw')}
                     title="Withdraw Cash"
-                    className="hidden sm:flex ml-1.5 px-2.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-neutral-300 hover:text-white border border-white/10 font-black text-[11px] uppercase tracking-wider transition cursor-pointer shrink-0"
+                    className="hidden sm:flex ml-1.5 px-2.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-neutral-300 hover:text-white border border-white/10 font-bold text-[11px] uppercase tracking-wider transition cursor-pointer shrink-0"
                   >
                     Cashout
                   </button>
@@ -307,7 +307,7 @@ export default function Navbar({ onToggleChat: propOnToggle, isChatOpen: propIsO
                 <button
                   type="button"
                   onClick={() => setIsLevelModalOpen(true)}
-                  className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-2xl bg-[#111320] hover:bg-[#161a2b] border border-white/10 hover:border-violet-500/40 transition cursor-pointer shadow-md group"
+                  className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-2xl bg-[#0b0e16] hover:bg-[#121622] border border-white/10 hover:border-white/20 transition cursor-pointer shadow-md group"
                   title="Open VIP Level Pass & Rewards"
                 >
                   <div 
@@ -349,14 +349,14 @@ export default function Navbar({ onToggleChat: propOnToggle, isChatOpen: propIsO
                 <div className="relative">
                   <button
                     onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-                    className="flex items-center gap-2 p-1 sm:px-2 sm:py-1 rounded-2xl bg-[#111320] hover:bg-[#161a2b] border border-white/10 transition cursor-pointer"
+                    className="flex items-center gap-2 p-1 sm:px-2 sm:py-1 rounded-2xl bg-[#0b0e16] hover:bg-[#121622] border border-white/10 transition cursor-pointer"
                   >
                     {/* Minecraft Skin Face */}
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={`https://mc-heads.net/avatar/${encodeURIComponent(user.minecraftIgn)}/32`}
                       alt={user.minecraftIgn}
-                      className="w-7 h-7 rounded-xl border border-violet-500/30 bg-neutral-800 object-cover shrink-0"
+                      className="w-7 h-7 rounded-xl border border-white/10 bg-neutral-800 object-cover shrink-0"
                       onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }}
                     />
 
@@ -364,7 +364,7 @@ export default function Navbar({ onToggleChat: propOnToggle, isChatOpen: propIsO
                       <span className="text-xs font-black text-white max-w-[85px] truncate">
                         {user.minecraftIgn}
                       </span>
-                      <span className="text-[9px] font-bold text-violet-400">
+                      <span className="text-[9px] font-bold text-emerald-400">
                         {user.role === 'admin' || user.minecraftIgn.toLowerCase() === 'cartisneakz' ? 'Staff' : 'Player'}
                       </span>
                     </div>
@@ -376,7 +376,7 @@ export default function Navbar({ onToggleChat: propOnToggle, isChatOpen: propIsO
                   {profileDropdownOpen && (
                     <div
                       onMouseLeave={() => setProfileDropdownOpen(false)}
-                      className="absolute right-0 mt-2 w-56 rounded-2xl bg-[#0f111e] border border-violet-500/30 p-2 shadow-2xl z-50 flex flex-col gap-1 text-xs animate-in fade-in duration-150"
+                      className="absolute right-0 mt-2 w-56 rounded-2xl bg-[#0b0e16] border border-white/10 p-2 shadow-2xl z-50 flex flex-col gap-1 text-xs animate-in fade-in duration-150"
                     >
                       <div className="px-3 py-2 border-b border-white/5 flex flex-col">
                         <span className="font-bold text-white text-xs">{user.minecraftIgn}</span>
@@ -412,7 +412,7 @@ export default function Navbar({ onToggleChat: propOnToggle, isChatOpen: propIsO
                         }}
                         className="px-3 py-2 rounded-xl text-neutral-300 hover:text-white hover:bg-white/5 flex items-center gap-2 font-bold transition w-full text-left cursor-pointer"
                       >
-                        <Wallet className="w-3.5 h-3.5 text-violet-400" />
+                        <Wallet className="w-3.5 h-3.5 text-emerald-400" />
                         <span>Wallet Hub</span>
                       </button>
 
@@ -421,7 +421,7 @@ export default function Navbar({ onToggleChat: propOnToggle, isChatOpen: propIsO
                         onClick={() => setProfileDropdownOpen(false)}
                         className="px-3 py-2 rounded-xl text-neutral-300 hover:text-white hover:bg-white/5 flex items-center gap-2 font-bold transition"
                       >
-                        <User className="w-3.5 h-3.5 text-cyan-400" />
+                        <User className="w-3.5 h-3.5 text-neutral-400" />
                         <span>Profile & Statistics</span>
                       </Link>
 
@@ -496,7 +496,7 @@ export default function Navbar({ onToggleChat: propOnToggle, isChatOpen: propIsO
                 </button>
                 <button
                   onClick={() => { setAuthModalTab('minecraft'); setAuthModalOpen(true); }}
-                  className="bg-gradient-to-r from-violet-600 via-indigo-600 to-violet-600 hover:from-violet-500 hover:to-indigo-500 text-white font-black text-xs px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl shadow-lg shadow-violet-500/25 transition transform active:scale-95 cursor-pointer"
+                  className="bg-emerald-500 hover:bg-emerald-400 text-black font-black text-xs px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl shadow-lg shadow-emerald-500/20 transition transform active:scale-95 cursor-pointer uppercase tracking-wider"
                 >
                   Sign In
                 </button>
@@ -510,13 +510,13 @@ export default function Navbar({ onToggleChat: propOnToggle, isChatOpen: propIsO
               title="Toggle Live Chat"
               className={`relative p-2 sm:p-2.5 rounded-xl border transition flex items-center justify-center cursor-pointer ${
                 chatOpen 
-                  ? 'bg-violet-600/30 text-violet-300 border-violet-500/50 shadow-md shadow-violet-500/20' 
+                  ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' 
                   : 'bg-white/5 hover:bg-white/10 text-neutral-300 border-white/10 hover:border-white/20'
               }`}
             >
               <MessageSquare className="w-4 h-4" />
-              <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
-              <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-cyan-400" />
+              <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+              <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-emerald-400" />
             </button>
           </div>
         </div>

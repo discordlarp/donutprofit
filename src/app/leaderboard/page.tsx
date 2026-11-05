@@ -76,12 +76,12 @@ export default function LeaderboardPage() {
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       <div className="text-center max-w-3xl mx-auto mb-10">
-        <div className="inline-flex items-center gap-2 bg-violet-600/15 border border-violet-500/30 px-3.5 py-1 rounded-full text-xs font-black text-violet-300 mb-3 shadow-sm">
-          <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+        <div className="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/25 px-3.5 py-1 rounded-full text-xs font-black text-emerald-400 mb-3 shadow-sm">
+          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
           <span>GLOBAL RANKINGS</span>
         </div>
         <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight uppercase">
-          DONUT<span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 via-cyan-400 to-amber-300">PROFIT</span> LEADERBOARD
+          DONUT<span className="text-amber-400">PROFIT</span> LEADERBOARD
         </h1>
         <p className="text-xs text-neutral-400 mt-2">
           Real-time high rollers, total wagers, and referral champions across DonutSMP.
@@ -185,11 +185,11 @@ export default function LeaderboardPage() {
           onClick={() => setTab('referrals')}
           className={`px-4 py-2.5 rounded-xl text-xs font-black transition flex items-center gap-2 ${
             tab === 'referrals'
-              ? 'bg-violet-500/20 text-violet-400 border border-violet-500/40 shadow-sm'
+              ? 'bg-amber-500 text-black shadow-sm'
               : 'text-neutral-400 hover:text-white hover:bg-white/5'
           }`}
         >
-          <Users className="w-4 h-4 text-violet-400" />
+          <Users className="w-4 h-4 text-inherit" />
           <span>Referrals</span>
         </button>
       </div>
@@ -200,10 +200,10 @@ export default function LeaderboardPage() {
           <div className="p-5 sm:p-7">
             <div className="mb-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-white/5 pb-4">
               <div>
-                <div className="text-[10px] font-black uppercase tracking-[0.22em] text-violet-400">Weekly referral race</div>
+                <div className="text-[10px] font-black uppercase tracking-[0.22em] text-amber-400">Weekly referral race</div>
                 <h2 className="text-2xl font-black text-white mt-1">Most signups this week</h2>
               </div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-violet-500/30 bg-violet-500/10 px-3 py-1.5 text-[10px] font-black uppercase text-violet-300">
+              <div className="inline-flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-[10px] font-black uppercase text-amber-300">
                 <Gift className="w-3.5 h-3.5" />
                 {totalReferralsThisWeek} total referrals
               </div>
@@ -219,10 +219,10 @@ export default function LeaderboardPage() {
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
                   {referralLeaders.slice(0, 3).map((userEntry, index) => (
-                    <div key={userEntry.id} className={`rounded-2xl border p-4 ${index === 0 ? 'border-violet-500/40 bg-violet-500/10' : 'border-white/10 bg-[#0d0f14]'}`}>
+                    <div key={userEntry.id} className={`rounded-2xl border p-4 ${index === 0 ? 'border-amber-500/40 bg-amber-500/10' : 'border-white/10 bg-[#0d0f14]'}`}>
                       <div className="flex items-center justify-between mb-3">
                         <span className="text-[10px] font-black uppercase tracking-wider text-neutral-400">#{index + 1}</span>
-                        <span className="text-xs font-black text-violet-300">{userEntry.referralCountThisWeek ?? userEntry.referralCount ?? 0} refs</span>
+                        <span className="text-xs font-black text-amber-300">{userEntry.referralCountThisWeek ?? userEntry.referralCount ?? 0} refs</span>
                       </div>
                       <div className="flex items-center gap-3">
                         <img src={`https://mc-heads.net/avatar/${userEntry.minecraftIgn}/48`} alt={userEntry.minecraftIgn} className="w-10 h-10 rounded-xl border border-white/10 bg-neutral-800" onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }} />

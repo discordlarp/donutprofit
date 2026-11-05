@@ -26,35 +26,35 @@ export default function RecentBetsTable() {
         targetIgn={selectedPlayer}
       />
 
-      <div className="bg-[#0e101c]/90 border border-violet-500/20 rounded-3xl p-5 sm:p-7 shadow-2xl backdrop-blur-xl">
+      <div className="bg-[#0b0e16] border border-white/[0.08] rounded-3xl p-5 sm:p-7 shadow-xl">
         {/* Table Header & Tabs */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-violet-600/30 to-indigo-600/20 border border-violet-500/30 flex items-center justify-center text-violet-400 shrink-0 shadow-md shadow-violet-500/10">
-              <Activity className="w-5 h-5 animate-pulse" />
+            <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-emerald-400 shrink-0">
+              <Activity className="w-4 h-4" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-lg sm:text-xl font-black text-white tracking-wide uppercase">
-                  LIVE ACTIVITY FEED
+                <h3 className="text-base sm:text-lg font-black text-white tracking-wide uppercase">
+                  LIVE WAGERS
                 </h3>
-                <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-400 border border-cyan-500/30">
+                <span className="text-[9px] font-bold uppercase px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/25">
                   REAL-TIME
                 </span>
               </div>
               <p className="text-xs text-neutral-400 mt-0.5">
-                Live wagers, high multipliers, and payouts across Donut Profit
+                Real-time player bets and outcomes
               </p>
             </div>
           </div>
 
           {/* Filter Pills */}
-          <div className="flex items-center gap-1.5 bg-[#090b14] border border-white/10 p-1 rounded-2xl">
+          <div className="flex items-center gap-1.5 bg-[#080a10] border border-white/[0.08] p-1 rounded-2xl">
             <button
               onClick={() => setFilter('all')}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition cursor-pointer ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
                 filter === 'all'
-                  ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg shadow-violet-500/25'
+                  ? 'bg-white/10 text-white'
                   : 'text-neutral-400 hover:text-white'
               }`}
             >
@@ -62,9 +62,9 @@ export default function RecentBetsTable() {
             </button>
             <button
               onClick={() => setFilter('high_rollers')}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition flex items-center gap-1 cursor-pointer ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
                 filter === 'high_rollers'
-                  ? 'bg-gradient-to-r from-amber-400 to-yellow-500 text-black shadow-lg shadow-amber-500/25'
+                  ? 'bg-amber-500 text-black shadow-sm'
                   : 'text-neutral-400 hover:text-white'
               }`}
             >
@@ -73,9 +73,9 @@ export default function RecentBetsTable() {
             </button>
             <button
               onClick={() => setFilter('my_bets')}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition flex items-center gap-1 cursor-pointer ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
                 filter === 'my_bets'
-                  ? 'bg-gradient-to-r from-cyan-600 to-teal-600 text-white shadow-lg shadow-cyan-500/25'
+                  ? 'bg-emerald-500 text-black shadow-sm'
                   : 'text-neutral-400 hover:text-white'
               }`}
             >
@@ -114,7 +114,7 @@ export default function RecentBetsTable() {
                     >
                       {/* Game */}
                       <td className="py-3 px-3 font-sans font-bold text-neutral-200 capitalize flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-violet-400 group-hover:scale-125 transition-transform" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 group-hover:scale-125 transition-transform" />
                         <span>{bet.game}</span>
                       </td>
 
@@ -129,7 +129,7 @@ export default function RecentBetsTable() {
                             <button
                               type="button"
                               onClick={() => setSelectedPlayer(bet.minecraftIgn)}
-                              className="flex items-center gap-1.5 hover:text-cyan-400 transition cursor-pointer text-left group-hover:underline"
+                              className="flex items-center gap-1.5 hover:text-emerald-400 transition cursor-pointer text-left group-hover:underline"
                             >
                               {/* eslint-disable-next-line @next/next/no-img-element */}
                               <img
@@ -166,8 +166,8 @@ export default function RecentBetsTable() {
                         <span
                           className={`px-2 py-0.5 rounded font-black text-[11px] ${
                             isWin
-                              ? 'bg-cyan-500/15 text-cyan-400 border border-cyan-500/30'
-                              : 'text-neutral-500'
+                              ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                              : 'text-neutral-500 font-semibold'
                           }`}
                         >
                           {bet.multiplier.toFixed(2)}x
@@ -179,7 +179,7 @@ export default function RecentBetsTable() {
                         <span
                           className={
                             isWin
-                              ? 'text-amber-300 font-bold drop-shadow-sm'
+                              ? 'text-emerald-400 font-bold'
                               : 'text-neutral-500'
                           }
                         >

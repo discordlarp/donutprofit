@@ -52,7 +52,7 @@ export default function LevelModal() {
       onClick={() => setIsLevelModalOpen(false)}
     >
       <div 
-        className="relative w-full max-w-2xl bg-[#0d0f1a] border border-violet-500/30 rounded-3xl p-5 sm:p-7 shadow-2xl flex flex-col text-white max-h-[90vh] overflow-y-auto scrollbar-none"
+        className="relative w-full max-w-2xl bg-[#0b0e16] border border-white/10 rounded-3xl p-5 sm:p-7 shadow-2xl flex flex-col text-white max-h-[90vh] overflow-y-auto scrollbar-none"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header Bar */}
@@ -100,7 +100,7 @@ export default function LevelModal() {
         </div>
 
         {/* User Level Card */}
-        <div className="mt-5 p-5 rounded-2xl bg-gradient-to-br from-[#121526] via-[#101220] to-[#181b30] border border-white/10 relative overflow-hidden shadow-xl">
+        <div className="mt-5 p-5 rounded-2xl bg-[#0e121b] border border-white/10 relative overflow-hidden shadow-xl">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3.5">
               {/* Avatar */}
@@ -156,7 +156,7 @@ export default function LevelModal() {
                 className="h-full rounded-full transition-all duration-500 relative"
                 style={{
                   width: `${levelInfo.progress}%`,
-                  background: `linear-gradient(90deg, #7c3aed, ${levelInfo.tier.color})`,
+                  background: `linear-gradient(90deg, #10b981, ${levelInfo.tier.color})`,
                   boxShadow: `0 0 12px ${levelInfo.tier.glow}`
                 }}
               />
@@ -183,8 +183,8 @@ export default function LevelModal() {
             onClick={() => setActiveTab('rewards')}
             className={`py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-2 ${
               activeTab === 'rewards'
-                ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg shadow-violet-500/25'
-                : 'bg-[#121524] hover:bg-[#181c30] text-neutral-400 hover:text-white border border-white/5'
+                ? 'bg-amber-500 text-black shadow-md font-black'
+                : 'bg-[#0e121b] hover:bg-white/5 text-neutral-400 hover:text-white border border-white/5'
             }`}
           >
             <Trophy className="w-3.5 h-3.5" />
@@ -195,8 +195,8 @@ export default function LevelModal() {
             onClick={() => setActiveTab('tiers')}
             className={`py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-2 ${
               activeTab === 'tiers'
-                ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg shadow-violet-500/25'
-                : 'bg-[#121524] hover:bg-[#181c30] text-neutral-400 hover:text-white border border-white/5'
+                ? 'bg-amber-500 text-black shadow-md font-black'
+                : 'bg-[#0e121b] hover:bg-white/5 text-neutral-400 hover:text-white border border-white/5'
             }`}
           >
             <Crown className="w-3.5 h-3.5" />

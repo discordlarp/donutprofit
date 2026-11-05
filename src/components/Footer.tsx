@@ -15,14 +15,14 @@ export default function Footer() {
             <div className="flex items-center gap-2.5 mb-3">
               <DonutLogo size={28} className="w-7 h-7" />
               <span className="text-lg font-black text-white tracking-wider">
-                DONUT<span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 via-cyan-400 to-amber-300">PROFIT</span>
+                DONUT<span className="text-amber-400">PROFIT</span>
               </span>
             </div>
             <p className="text-xs text-neutral-400 leading-relaxed max-w-sm mb-4">
               Donut Profit is an independent, community-driven entertainment arcade designed exclusively for Donut SMP Minecraft players. Enjoy provably fair minigames powered by virtual Donut Cash.
             </p>
-            <div className="flex items-center gap-2 text-xs text-violet-300 font-bold bg-violet-600/15 border border-violet-500/30 px-3 py-1.5 rounded-xl w-fit">
-              <ShieldCheck className="w-4 h-4 text-cyan-400" />
+            <div className="flex items-center gap-2 text-xs text-emerald-400 font-bold bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-xl w-fit">
+              <ShieldCheck className="w-4 h-4 text-emerald-400" />
               <span>100% Cryptographic Provably Fair SHA-256</span>
             </div>
           </div>
@@ -31,19 +31,19 @@ export default function Footer() {
           <div>
             <h4 className="text-xs font-black uppercase tracking-wider text-white mb-3">Arcade</h4>
             <ul className="flex flex-col gap-2 text-xs">
-              <li><Link href="/" className="hover:text-violet-400 transition">Game Catalog</Link></li>
-              <li><Link href="/profile" className="hover:text-cyan-400 transition">Player Profile & Stats</Link></li>
+              <li><Link href="/" className="hover:text-emerald-400 transition">Game Catalog</Link></li>
+              <li><Link href="/profile" className="hover:text-emerald-400 transition">Player Profile & Stats</Link></li>
               <li><Link href="/promo" className="hover:text-amber-400 transition">Promo & Codes</Link></li>
               <li><Link href="/referral" className="hover:text-amber-400 transition">Affiliate Rewards</Link></li>
-              <li><Link href="/deposit" className="hover:text-violet-400 transition">Deposit Currency</Link></li>
+              <li><Link href="/deposit" className="hover:text-emerald-400 transition">Deposit Currency</Link></li>
               <li><Link href="/withdraw" className="hover:text-amber-400 transition">Withdrawal Requests</Link></li>
-              <li><Link href="/leaderboard" className="hover:text-violet-400 transition">Top Players</Link></li>
+              <li><Link href="/leaderboard" className="hover:text-emerald-400 transition">Top Players</Link></li>
               <li>
                 <a 
                   href="https://discord.gg/qEHzmKNAv" 
                   target="_blank" 
                   rel="noopener noreferrer" 
-                  className="text-indigo-400 hover:text-indigo-300 font-bold flex items-center gap-1.5"
+                  className="text-amber-400 hover:text-amber-300 font-bold flex items-center gap-1.5"
                 >
                   <MessageSquare className="w-3.5 h-3.5" />
                   <span>Official Discord</span>

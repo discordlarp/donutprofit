@@ -21,7 +21,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="antialiased bg-[#090a10] text-neutral-100 min-h-screen flex flex-col selection:bg-violet-600 selection:text-white">
+      <body className="antialiased bg-[#090a10] text-neutral-100 min-h-screen flex flex-col selection:bg-emerald-500 selection:text-black">
         <GameProvider>
           <BannedScreen />
           <DepositNotificationToast />

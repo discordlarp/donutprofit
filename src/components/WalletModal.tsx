@@ -163,13 +163,13 @@ export default function WalletModal({ isOpen, onClose, initialTab = 'deposit' }:
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
       {/* Modal Container */}
       <div 
-        className="relative w-full max-w-[440px] bg-[#0f111e]/98 border border-violet-500/30 rounded-3xl p-6 sm:p-7 shadow-2xl text-left"
+        className="relative w-full max-w-[440px] bg-[#0b0e16]/98 border border-white/10 rounded-3xl p-6 sm:p-7 shadow-2xl text-left"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Top Header */}
         <div className="flex items-center justify-between pb-1">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-violet-600/20 border border-violet-500/30 flex items-center justify-center text-violet-400">
+            <div className="w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
               <Coins className="w-4 h-4" />
             </div>
             <h2 className="text-lg font-black text-white uppercase tracking-wider">
@@ -187,8 +187,8 @@ export default function WalletModal({ isOpen, onClose, initialTab = 'deposit' }:
         </div>
 
         {/* Balance Row */}
-        <div className="flex items-center gap-2.5 mt-3 p-3 rounded-2xl bg-[#090b14] border border-white/5">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-400 to-yellow-600 flex items-center justify-center text-black font-black shadow-md shadow-amber-500/20">
+        <div className="flex items-center gap-2.5 mt-3 p-3 rounded-2xl bg-[#080a10] border border-white/5">
+          <div className="w-8 h-8 rounded-xl bg-amber-500 flex items-center justify-center text-black font-black shadow-md shadow-amber-500/20">
             <Coins className="w-4 h-4 text-black" />
           </div>
           <div className="flex items-baseline gap-1.5">
@@ -208,8 +208,8 @@ export default function WalletModal({ isOpen, onClose, initialTab = 'deposit' }:
             onClick={() => setActiveTab('deposit')}
             className={`py-2.5 rounded-xl font-black text-xs uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1.5 ${
               activeTab === 'deposit'
-                ? 'bg-gradient-to-r from-violet-600 via-indigo-600 to-violet-600 text-white shadow-lg shadow-violet-500/25'
-                : 'bg-[#151829] hover:bg-[#1c2138] text-neutral-400 hover:text-white border border-white/5'
+                ? 'bg-emerald-500 text-black shadow-md'
+                : 'bg-[#0e121b] hover:bg-white/5 text-neutral-400 hover:text-white border border-white/5'
             }`}
           >
             <ArrowDownCircle className="w-3.5 h-3.5" />
@@ -220,8 +220,8 @@ export default function WalletModal({ isOpen, onClose, initialTab = 'deposit' }:
             onClick={() => setActiveTab('withdraw')}
             className={`py-2.5 rounded-xl font-black text-xs uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1.5 ${
               activeTab === 'withdraw'
-                ? 'bg-gradient-to-r from-violet-600 via-indigo-600 to-violet-600 text-white shadow-lg shadow-violet-500/25'
-                : 'bg-[#151829] hover:bg-[#1c2138] text-neutral-400 hover:text-white border border-white/5'
+                ? 'bg-amber-500 text-black shadow-md'
+                : 'bg-[#0e121b] hover:bg-white/5 text-neutral-400 hover:text-white border border-white/5'
             }`}
           >
             <ArrowUpCircle className="w-3.5 h-3.5" />
@@ -233,8 +233,8 @@ export default function WalletModal({ isOpen, onClose, initialTab = 'deposit' }:
           /* DEPOSIT TAB */
           <div className="mt-4">
             {/* Status Banner */}
-            <div className="rounded-xl border border-violet-500/20 bg-[#090b14] px-4 py-2.5 flex items-center gap-2 text-xs">
-              <span className="w-2 h-2 rounded-full bg-cyan-400 shrink-0 shadow-[0_0_8px_#06b6d4]" />
+            <div className="rounded-xl border border-white/10 bg-[#080a10] px-4 py-2.5 flex items-center gap-2 text-xs">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0 shadow-[0_0_8px_#10b981]" />
               <span className="font-bold text-white">Live In-Game Deposit</span>
               <span className="text-neutral-400 font-medium ml-1">Send to {settings.designatedIgn} on DonutSMP.</span>
             </div>
@@ -244,7 +244,7 @@ export default function WalletModal({ isOpen, onClose, initialTab = 'deposit' }:
               <label className="text-xs font-bold text-neutral-400 block mb-2">
                 Deposit Amount
               </label>
-              <div className="flex items-center bg-[#090b14] border border-white/10 focus-within:border-violet-500 rounded-xl px-4 py-2.5 transition shadow-inner">
+              <div className="flex items-center bg-[#080a10] border border-white/10 focus-within:border-emerald-500 rounded-xl px-4 py-2.5 transition shadow-inner">
                 <Coins className="w-4 h-4 text-amber-400 shrink-0" />
                 <input
                   type="text"
@@ -266,7 +266,7 @@ export default function WalletModal({ isOpen, onClose, initialTab = 'deposit' }:
                   key={preset}
                   type="button"
                   onClick={() => setDepositAmountInput(preset)}
-                  className="bg-[#151829] hover:bg-[#1e233d] border border-white/5 text-white font-black text-xs py-2 rounded-xl transition cursor-pointer active:scale-95 text-center"
+                  className="bg-[#0e121b] hover:bg-white/10 border border-white/5 text-white font-black text-xs py-2 rounded-xl transition cursor-pointer active:scale-95 text-center"
                 >
                   {preset}
                 </button>
@@ -275,9 +275,9 @@ export default function WalletModal({ isOpen, onClose, initialTab = 'deposit' }:
 
             {/* In-Game Command Helper */}
             {parsedDeposit && (
-              <div className="mt-4 p-3 rounded-xl bg-violet-950/40 border border-violet-500/30 flex items-center justify-between gap-2 animate-in fade-in duration-150">
+              <div className="mt-4 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-between gap-2 animate-in fade-in duration-150">
                 <div className="flex flex-col min-w-0">
-                  <span className="text-[10px] uppercase font-bold text-violet-300">Run in-game on DonutSMP:</span>
+                  <span className="text-[10px] uppercase font-bold text-amber-300">Run in-game on DonutSMP:</span>
                   <span className="font-mono text-xs font-bold text-white truncate">
                     /pay {settings.designatedIgn} {parsedDeposit.toLocaleString()}
                   </span>
@@ -285,9 +285,9 @@ export default function WalletModal({ isOpen, onClose, initialTab = 'deposit' }:
                 <button
                   type="button"
                   onClick={handleCopyDepositCommand}
-                  className="px-3 py-1.5 rounded-lg bg-violet-600 hover:bg-violet-500 text-white font-bold text-xs shrink-0 flex items-center gap-1 transition cursor-pointer shadow-md shadow-violet-500/20"
+                  className="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-black font-black text-xs shrink-0 flex items-center gap-1 transition cursor-pointer shadow-md"
                 >
-                  {copiedDeposit ? <Check className="w-3 h-3 text-white" /> : <Copy className="w-3 h-3 text-white" />}
+                  {copiedDeposit ? <Check className="w-3 h-3 text-black" /> : <Copy className="w-3 h-3 text-black" />}
                   {copiedDeposit ? 'COPIED' : 'COPY'}
                 </button>
               </div>
@@ -298,7 +298,7 @@ export default function WalletModal({ isOpen, onClose, initialTab = 'deposit' }:
               <label className="text-xs font-bold text-neutral-400 block mb-2">
                 Have a promotion code?
               </label>
-              <form onSubmit={handleRedeemPromo} className="flex items-center justify-between bg-[#090b14] border border-white/10 focus-within:border-violet-500 rounded-xl pl-4 pr-2 py-1 transition">
+              <form onSubmit={handleRedeemPromo} className="flex items-center justify-between bg-[#080a10] border border-white/10 focus-within:border-emerald-500 rounded-xl pl-4 pr-2 py-1 transition">
                 <input
                   type="text"
                   value={promoInput}
@@ -309,7 +309,7 @@ export default function WalletModal({ isOpen, onClose, initialTab = 'deposit' }:
                 <button
                   type="submit"
                   disabled={!promoInput.trim() || isRedeeming}
-                  className="px-3 py-1.5 text-xs font-black uppercase tracking-wider text-violet-400 hover:text-violet-300 transition cursor-pointer shrink-0 disabled:opacity-40"
+                  className="px-3 py-1.5 text-xs font-black uppercase tracking-wider text-emerald-400 hover:text-emerald-300 transition cursor-pointer shrink-0 disabled:opacity-40"
                 >
                   {isRedeeming ? '...' : 'CLAIM'}
                 </button>
@@ -325,7 +325,7 @@ export default function WalletModal({ isOpen, onClose, initialTab = 'deposit' }:
           /* WITHDRAW TAB */
           <div className="mt-4">
             {/* Status Banner */}
-            <div className="rounded-xl border border-violet-500/20 bg-[#090b14] px-4 py-2.5 flex items-center gap-2 text-xs">
+            <div className="rounded-xl border border-white/10 bg-[#080a10] px-4 py-2.5 flex items-center gap-2 text-xs">
               <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0 shadow-[0_0_8px_#10b981]" />
               <span className="font-bold text-white">Automated Withdrawals</span>
               <span className="text-neutral-400 font-medium ml-1">Paid directly to your IGN in DonutSMP.</span>
@@ -336,7 +336,7 @@ export default function WalletModal({ isOpen, onClose, initialTab = 'deposit' }:
               <label className="text-xs font-bold text-neutral-400 block mb-2">
                 Withdrawal Amount
               </label>
-              <div className="flex items-center bg-[#090b14] border border-white/10 focus-within:border-violet-500 rounded-xl px-4 py-2.5 transition shadow-inner">
+              <div className="flex items-center bg-[#080a10] border border-white/10 focus-within:border-emerald-500 rounded-xl px-4 py-2.5 transition shadow-inner">
                 <Coins className="w-4 h-4 text-amber-400 shrink-0" />
                 <input
                   type="text"
@@ -363,7 +363,7 @@ export default function WalletModal({ isOpen, onClose, initialTab = 'deposit' }:
                         setWithdrawAmountInput(preset);
                       }
                     }}
-                    className="bg-[#151829] hover:bg-[#1e233d] border border-white/5 text-white font-black text-xs py-2 rounded-xl transition cursor-pointer active:scale-95 text-center"
+                    className="bg-[#0e121b] hover:bg-white/10 border border-white/5 text-white font-black text-xs py-2 rounded-xl transition cursor-pointer active:scale-95 text-center"
                   >
                     {preset}
                   </button>
@@ -380,7 +380,7 @@ export default function WalletModal({ isOpen, onClose, initialTab = 'deposit' }:
               <button
                 type="submit"
                 disabled={!parsedWithdraw || parsedWithdraw <= 0}
-                className="w-full mt-4 py-2.5 rounded-xl bg-gradient-to-r from-violet-600 via-indigo-600 to-violet-600 hover:from-violet-500 hover:to-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-black text-xs uppercase tracking-wider transition cursor-pointer active:scale-95 shadow-lg shadow-violet-500/25"
+                className="w-full mt-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:opacity-40 disabled:cursor-not-allowed text-black font-black text-xs uppercase tracking-wider transition cursor-pointer active:scale-95 shadow-lg shadow-amber-500/20"
               >
                 REQUEST WITHDRAWAL
               </button>

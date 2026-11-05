@@ -158,7 +158,7 @@ export default function HomePage() {
   });
 
   return (
-    <div className="min-h-screen text-neutral-100 flex flex-col selection:bg-violet-600 selection:text-white">
+    <div className="min-h-screen text-neutral-100 flex flex-col selection:bg-emerald-500 selection:text-black">
       <AuthModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
 
       {/* Interactive Game Arena Modal */}
@@ -168,13 +168,13 @@ export default function HomePage() {
           onClick={() => setIsGameModalOpen(false)}
         >
           <div 
-            className={`relative w-full ${isTheaterMode ? 'max-w-6xl' : 'max-w-4xl'} max-h-[92vh] overflow-y-auto bg-[#0b0d18] border border-violet-500/30 rounded-3xl shadow-2xl flex flex-col text-white`}
+            className={`relative w-full ${isTheaterMode ? 'max-w-6xl' : 'max-w-4xl'} max-h-[92vh] overflow-y-auto bg-[#0a0d16] border border-white/[0.12] rounded-3xl shadow-2xl flex flex-col text-white`}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header Bar */}
-            <div className="sticky top-0 z-30 h-14 border-b border-white/[0.08] px-4 sm:px-6 flex items-center justify-between bg-[#101322]/95 backdrop-blur-md">
+            <div className="sticky top-0 z-30 h-14 border-b border-white/[0.08] px-4 sm:px-6 flex items-center justify-between bg-[#0e111c] backdrop-blur-md">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-xl bg-violet-600/20 border border-violet-500/30 flex items-center justify-center text-violet-400">
+                <div className="w-8 h-8 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-emerald-400">
                   <Gamepad2 className="w-4 h-4" />
                 </div>
                 <div>
@@ -182,8 +182,8 @@ export default function HomePage() {
                     <span className="font-black text-sm text-white uppercase tracking-wider">
                       {activeGameMeta.title}
                     </span>
-                    <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-violet-500/15 text-violet-300 border border-violet-500/30 font-mono">
-                      {activeGameMeta.multiplier} MAX
+                    <span className="text-[9px] font-bold uppercase px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 font-mono">
+                      {activeGameMeta.multiplier}
                     </span>
                   </div>
                 </div>
@@ -225,9 +225,9 @@ export default function HomePage() {
             </div>
 
             {/* Quick Switch Bar Inside Modal */}
-            <div className="bg-[#090b14] py-2 px-3 border-b border-white/5 flex items-center gap-2 overflow-x-auto scrollbar-none select-none">
-              <span className="text-[10px] font-black uppercase text-violet-400 px-2 shrink-0">
-                SWITCH:
+            <div className="bg-[#080a11] py-2 px-3 border-b border-white/[0.06] flex items-center gap-2 overflow-x-auto scrollbar-none select-none">
+              <span className="text-[10px] font-bold uppercase text-neutral-400 px-2 shrink-0">
+                GAMES:
               </span>
               {QUICK_SWITCH_GAMES.map((g) => {
                 const isCurrent = activeGame === g.id;
@@ -238,10 +238,10 @@ export default function HomePage() {
                       setActiveGame(g.id);
                       sound.playClick();
                     }}
-                    className={`px-3 py-1 rounded-xl text-xs font-black whitespace-nowrap transition flex items-center gap-1.5 cursor-pointer ${
+                    className={`px-3 py-1 rounded-xl text-xs font-bold whitespace-nowrap transition flex items-center gap-1.5 cursor-pointer ${
                       isCurrent
-                        ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-md shadow-violet-500/25 border border-violet-400/40'
-                        : 'bg-[#111422] hover:bg-[#181d30] text-neutral-300 border border-white/5'
+                        ? 'bg-emerald-500 text-black shadow-md shadow-emerald-500/20'
+                        : 'bg-[#101320] hover:bg-[#181d2c] text-neutral-300 border border-white/5'
                     }`}
                   >
                     <span>{g.emoji}</span>
@@ -281,21 +281,21 @@ export default function HomePage() {
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 flex flex-col gap-8">
         {/* Active Referrer Banner */}
         {activeReferrer && !user && (
-          <div className="p-4 rounded-3xl bg-gradient-to-r from-violet-600/20 via-amber-500/15 to-violet-600/20 border-2 border-amber-400/80 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl shadow-violet-500/10 backdrop-blur-md">
+          <div className="p-4 rounded-2xl bg-[#0f121b] border border-amber-500/30 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3.5">
-              <span className="text-3xl animate-bounce">🎁</span>
+              <span className="text-3xl">🎁</span>
               <div>
-                <h4 className="text-sm font-black text-white">
-                  Invited by <span className="text-amber-400 font-mono font-black">{activeReferrer}</span>!
+                <h4 className="text-sm font-bold text-white">
+                  Invited by <span className="text-amber-400 font-mono font-black">{activeReferrer}</span>
                 </h4>
                 <p className="text-xs text-neutral-300">
-                  Deposit at least $10M in-game on Donut SMP to unlock a bonus <strong className="text-amber-300">$20M Cash</strong> for both of you!
+                  Deposit at least $10M in-game on Donut SMP to unlock a bonus <strong className="text-amber-300">$20M Cash</strong> for both players.
                 </p>
               </div>
             </div>
             <button
               onClick={() => setIsModalOpen(true)}
-              className="shrink-0 px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-400 text-black font-black text-xs uppercase tracking-wider shadow-lg hover:scale-105 transition cursor-pointer"
+              className="shrink-0 px-5 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-black font-black text-xs uppercase tracking-wider transition cursor-pointer"
             >
               CLAIM $20M BONUS
             </button>
@@ -308,33 +308,32 @@ export default function HomePage() {
         </div>
 
         {/* 2. Below that: All The Games (like it already is) */}
-        <section id="game-library" className="flex flex-col gap-5 pt-2">
+        <section id="game-library" className="flex flex-col gap-4 pt-1">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-              <h2 className="text-xl sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2">
-                <Gamepad2 className="w-6 h-6 text-violet-400" />
-                <span>EXPLORE ALL GAMES</span>
+              <h2 className="text-lg sm:text-xl font-black text-white uppercase tracking-wider flex items-center gap-2">
+                <span>ALL GAMES</span>
               </h2>
               <p className="text-xs text-neutral-400 mt-0.5">
-                18 Provably Fair games with high multipliers and verified random seeds
+                Instant delivery &bull; Provably fair seeds &bull; Live multiplayer
               </p>
             </div>
 
             {/* Category Filter Pills */}
-            <div className="flex items-center gap-1.5 bg-[#090b14] border border-white/10 p-1 rounded-2xl overflow-x-auto scrollbar-none w-full sm:w-auto">
+            <div className="flex items-center gap-1.5 bg-[#0a0c14] border border-white/[0.08] p-1 rounded-2xl overflow-x-auto scrollbar-none w-full sm:w-auto">
               {[
-                { id: 'all', label: `All Games (${POSTER_GAMES.length})` },
+                { id: 'all', label: `All (${POSTER_GAMES.length})` },
                 { id: 'originals', label: '⚡ Originals' },
-                { id: 'pvp', label: '⚔️ PvP Duels' },
+                { id: 'pvp', label: '⚔️ PvP' },
                 { id: 'cards', label: '🃏 Tables' },
                 { id: 'high_multiplier', label: '💎 High Multi' },
               ].map((cat) => (
                 <button
                   key={cat.id}
                   onClick={() => setSelectedCategory(cat.id as any)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-black transition cursor-pointer whitespace-nowrap ${
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer whitespace-nowrap ${
                     selectedCategory === cat.id
-                      ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-md shadow-violet-500/20'
+                      ? 'bg-emerald-500 text-black shadow-sm'
                       : 'text-neutral-400 hover:text-white'
                   }`}
                 >
@@ -350,7 +349,7 @@ export default function HomePage() {
               <div
                 key={game.id}
                 onClick={() => handleLaunchGame(game.id)}
-                className="group relative flex flex-col rounded-2xl overflow-hidden bg-[#0e101c] border border-white/10 hover:border-violet-500/50 hover:shadow-xl hover:shadow-violet-500/15 transition-all duration-300 cursor-pointer transform hover:-translate-y-1"
+                className="group relative flex flex-col rounded-2xl overflow-hidden pro-card transition-all duration-200 cursor-pointer transform hover:-translate-y-1"
               >
                 {/* 3D Poster Artwork with Hover Zoom */}
                 <div className="aspect-[4/5] w-full overflow-hidden relative">
@@ -358,21 +357,21 @@ export default function HomePage() {
                 </div>
 
                 {/* Card Bottom Meta Info */}
-                <div className="p-3 flex flex-col gap-1 bg-[#101322]">
+                <div className="p-3 flex flex-col gap-1 bg-[#0c0f18] border-t border-white/[0.06]">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-black text-white uppercase tracking-wider truncate">
                       {game.title}
                     </span>
-                    <span className="text-[10px] font-mono font-bold text-amber-300">
+                    <span className="text-[10px] font-mono font-bold text-amber-400">
                       {game.multiplier}
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-[10px] text-neutral-400">
-                    <span className="flex items-center gap-1 text-cyan-400 font-bold">
-                      <Users className="w-3 h-3" />
+                    <span className="flex items-center gap-1 text-emerald-400 font-bold">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
                       <span>{game.players} online</span>
                     </span>
-                    <span className="uppercase font-mono text-[9px] text-neutral-500">
+                    <span className="uppercase font-mono text-[9px] text-neutral-400">
                       {game.category}
                     </span>
                   </div>
