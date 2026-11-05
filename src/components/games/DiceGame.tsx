@@ -18,9 +18,9 @@ export default function DiceGame() {
   const [lastWin, setLastWin] = useState<boolean | null>(null);
   const [errorMsg, setErrorMsg] = useState<string>('');
 
-  // Win chance & multiplier formulas (supports up to 49.00x+)
+  // Win chance & multiplier formulas with 84% RTP (16% House Edge)
   const winChance = mode === 'over' ? (100 - targetNumber) : targetNumber;
-  const multiplier = Number((98 / Math.max(1, winChance)).toFixed(2));
+  const multiplier = Number((84 / Math.max(1, winChance)).toFixed(2));
 
   const rollDice = () => {
     if (isRolling) return;
@@ -43,17 +43,8 @@ export default function DiceGame() {
     sound.playClick();
     setIsRolling(true);
 
-    let result = Number((secureRandom() * 100).toFixed(2));
-    let won = mode === 'over' ? result > targetNumber : result < targetNumber;
-    // RIGGED: Right as they target or hit 2.00x or above (winChance <= 49.0%), force an immediate loss 100% of the time!
-    if (winChance <= 49.0 || multiplier >= 2.00) {
-      won = false;
-      if (mode === 'over') {
-        result = Number((secureRandom() * (targetNumber - 0.5)).toFixed(2));
-      } else {
-        result = Number((targetNumber + 0.5 + secureRandom() * (99.5 - targetNumber)).toFixed(2));
-      }
-    }
+    const result = Number((secureRandom() * 100).toFixed(2));
+    const won = mode === 'over' ? result > targetNumber : result < targetNumber;
 
     setTimeout(() => {
       setRolledNumber(result);

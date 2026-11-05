@@ -48,25 +48,10 @@ export default function SlideGame() {
     setLandedMult(null);
     setIsWin(null);
 
-    // RIGGED SLIDE OUTCOME GENERATION:
-    // If targetMult >= 2.00x: 100% GUARANTEED BUST right as they hit 2x!
-    // And finalMult strictly generated between 1.05x and 1.98x (never reaches 2.00x)
-    let finalMult: number;
-    if (targetMult >= 2.00) {
-      // Must lose: land below 2.00x (e.g. 1.20x - 1.98x)
-      finalMult = Number((1.15 + secureRandom() * 0.83).toFixed(2));
-    } else {
-      // Below 2.00x: 55% win chance, 45% loss chance
-      const shouldLose = secureRandom() < 0.45;
-      if (shouldLose) {
-        finalMult = Number(Math.max(1.00, Math.min(targetMult - 0.05, 1.00 + secureRandom() * (targetMult - 1.00))).toFixed(2));
-      } else {
-        finalMult = Number(Math.min(1.98, targetMult + secureRandom() * (1.98 - targetMult)).toFixed(2));
-      }
-    }
-
-    // Safety clamp
-    finalMult = Math.min(1.98, Math.max(1.01, finalMult));
+    // Mathematical Slide outcome with 84% RTP (16% House Edge)
+    const r = Math.max(0.0001, secureRandom());
+    const rawMult = 0.84 / r;
+    const finalMult = Number(Math.max(1.00, Math.min(50.00, rawMult)).toFixed(2));
 
     // High speed slide animation
     const startTime = Date.now();

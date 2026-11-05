@@ -8,14 +8,14 @@ import { sound } from '@/lib/sound';
 import { formatCash } from '@/lib/format';
 import { secureRandom } from '@/lib/cryptoRandom';
 
-// 6 Crossing Lanes - High Multiplier Action (Up to 20.00x+)
+// 6 Crossing Lanes - 84% RTP Scaling
 const LANES = [
-  { step: 1, mult: 1.20, label: 'LANE 1' },
-  { step: 2, mult: 1.45, label: 'LANE 2' },
-  { step: 3, mult: 1.75, label: 'LANE 3' },
-  { step: 4, mult: 2.50, label: 'LANE 4' },
-  { step: 5, mult: 5.00, label: 'LANE 5' },
-  { step: 6, mult: 20.00, label: 'FINISH (20X+)' },
+  { step: 1, mult: 1.12, label: 'LANE 1' },
+  { step: 2, mult: 1.49, label: 'LANE 2' },
+  { step: 3, mult: 2.00, label: 'LANE 3' },
+  { step: 4, mult: 2.65, label: 'LANE 4' },
+  { step: 5, mult: 3.55, label: 'LANE 5' },
+  { step: 6, mult: 4.75, label: 'FINISH' },
 ];
 
 export default function ChickenGame() {
@@ -55,17 +55,8 @@ export default function ChickenGame() {
     const nextStep = currentStep + 1;
     sound.playClick();
 
-    // RIGGED HOUSE ODDS:
-    // Earlier steps have moderate success (< 2x).
-    // The moment nextStep hits Lane 4 (>= 2.00x), chicken 100% loses and gets fried!
-    let survived = false;
-    if (nextStep === 1) survived = secureRandom() < 0.85;
-    else if (nextStep === 2) survived = secureRandom() < 0.75;
-    else if (nextStep === 3) survived = secureRandom() < 0.65;
-    else {
-      // Step 4+: multiplier >= 2.00x -> guaranteed instant loss right as they hit 2x
-      survived = false;
-    }
+    // Standard 75% step survival probability with 84% RTP payouts
+    const survived = secureRandom() < 0.75;
 
     if (!survived) {
       // Chicken gets fried / roasted!
@@ -78,9 +69,9 @@ export default function ChickenGame() {
 
     setCurrentStep(nextStep);
 
-    // Reached finish line (Step 6 = 2.00x MAX)
+    // Reached finish line
     if (nextStep === LANES.length) {
-      const maxMult = 1.98;
+      const maxMult = LANES[LANES.length - 1].mult;
       setHasWon(true);
       setGameActive(false);
       sound.playWin();
@@ -92,7 +83,7 @@ export default function ChickenGame() {
   const cashOut = () => {
     if (!gameActive || currentStep === 0 || isBusted) return;
 
-    const mult = Math.min(1.98, LANES[currentStep - 1].mult);
+    const mult = LANES[currentStep - 1].mult;
     setGameActive(false);
     setHasWon(true);
     sound.playWin();

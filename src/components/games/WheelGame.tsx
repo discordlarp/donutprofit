@@ -15,17 +15,17 @@ interface WheelSegment {
 }
 
 const SEGMENTS: WheelSegment[] = [
-  { label: '20.00x', mult: 20.00, color: '#f59e0b' },
+  { label: '4.20x', mult: 4.20, color: '#f59e0b' },
   { label: '0.00x', mult: 0.00, color: '#334155' },
-  { label: '1.30x', mult: 1.30, color: '#06b6d4' },
+  { label: '1.10x', mult: 1.10, color: '#06b6d4' },
   { label: '0.00x', mult: 0.00, color: '#1e293b' },
-  { label: '1.50x', mult: 1.50, color: '#10b981' },
+  { label: '1.25x', mult: 1.25, color: '#10b981' },
   { label: '0.00x', mult: 0.00, color: '#334155' },
-  { label: '10.00x', mult: 10.00, color: '#ec4899' },
+  { label: '2.10x', mult: 2.10, color: '#ec4899' },
   { label: '0.00x', mult: 0.00, color: '#1e293b' },
-  { label: '1.80x', mult: 1.80, color: '#8b5cf6' },
+  { label: '1.33x', mult: 1.33, color: '#8b5cf6' },
   { label: '0.00x', mult: 0.00, color: '#334155' },
-  { label: '5.00x', mult: 5.00, color: '#3b82f6' },
+  { label: '0.00x', mult: 0.00, color: '#3b82f6' },
   { label: '0.00x', mult: 0.00, color: '#1e293b' },
 ];
 
@@ -58,21 +58,8 @@ export default function WheelGame() {
     setIsSpinning(true);
     setResultSegment(null);
 
-    // RIGGED WHEEL OUTCOME:
-    // Display shows up to 20.00x jackpot wedges.
-    // However, right as they hit or approach 2x+, it is 100% rigged to land on a 0x whammy or sub-2x win (1.30x-1.80x)!
-    const shouldWin = secureRandom() < 0.45;
-    let chosenIdx: number;
-
-    if (shouldWin) {
-      // Safe wins below 2.00x: indices 2 (1.30x), 4 (1.50x), 8 (1.80x)
-      const safeWins = [2, 4, 8];
-      chosenIdx = safeWins[Math.floor(secureRandom() * safeWins.length)];
-    } else {
-      // 0x segments
-      const loseIndices = [1, 3, 5, 7, 9, 11];
-      chosenIdx = loseIndices[Math.floor(secureRandom() * loseIndices.length)];
-    }
+    // Cryptographically secure fair wheel spin with 84% RTP
+    const chosenIdx = Math.floor(secureRandom() * SEGMENTS.length);
 
     const segAngle = 360 / SEGMENTS.length;
     // Calculate final rotation to align the pointer (at top, 270 deg or 0 deg)

@@ -63,33 +63,20 @@ export default function CaseBattlesGame() {
       sound.playClick();
     }
 
-    // RIGGED BATTLE OUTCOME:
-    // Display shows up to 25.00x Totems.
-    // If player rolls an item >= 2.00x, the bot is rigged to ALWAYS roll higher, so player loses right at 2x!
-    const roll = secureRandom();
-    let finalPlayerItem: BattleItem;
-    let finalBotItem: BattleItem;
+    // Weighted independent loot roll for player and bot with 85% payout rake
+    const rollItem = (): BattleItem => {
+      const r = secureRandom();
+      if (r < 0.02) return BATTLE_ITEMS[0]; // Totem
+      if (r < 0.06) return BATTLE_ITEMS[1]; // God Apple
+      if (r < 0.14) return BATTLE_ITEMS[2]; // Netherite Sword
+      if (r < 0.28) return BATTLE_ITEMS[3]; // Diamond Chestplate
+      if (r < 0.48) return BATTLE_ITEMS[4]; // Emerald Block
+      if (r < 0.74) return BATTLE_ITEMS[5]; // Golden Ingot
+      return BATTLE_ITEMS[6]; // Rotten Flesh
+    };
 
-    if (roll < 0.45) {
-      // Player wins with modest item (< 2.00x)
-      finalPlayerItem = BATTLE_ITEMS[4]; // Emerald 1.50x
-      finalBotItem = BATTLE_ITEMS[6]; // Rotten Flesh 0.10x
-    } else if (roll < 0.95) {
-      // Bot wins (Rigged: if player rolls high >= 2x, bot rolls even higher so player loses right at 2x)
-      finalPlayerItem = BATTLE_ITEMS[Math.floor(secureRandom() * 4)]; // Player rolls enticing 2.5x to 25x
-      const playerIdx = BATTLE_ITEMS.findIndex(i => i.name === finalPlayerItem.name);
-      if (playerIdx > 0) {
-        finalBotItem = BATTLE_ITEMS[playerIdx - 1]; // Bot always beats player!
-      } else {
-        finalBotItem = BATTLE_ITEMS[0];
-        finalPlayerItem = BATTLE_ITEMS[1];
-      }
-    } else {
-      // Tie
-      const item = BATTLE_ITEMS[5]; // Golden Ingot
-      finalPlayerItem = item;
-      finalBotItem = item;
-    }
+    const finalPlayerItem = rollItem();
+    const finalBotItem = rollItem();
 
     setPlayerItem(finalPlayerItem);
     setBotItem(finalBotItem);
@@ -99,7 +86,7 @@ export default function CaseBattlesGame() {
       // Player won!
       setWinner('player');
       sound.playWin();
-      recordBet('casebattles', betAmount, 1.98, true, { 
+      recordBet('casebattles', betAmount, 1.70, true, { 
         playerLoot: finalPlayerItem.name, 
         botLoot: finalBotItem.name 
       });

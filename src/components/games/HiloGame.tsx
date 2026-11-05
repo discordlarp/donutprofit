@@ -52,7 +52,7 @@ export default function HiloGame() {
 
     const rolled = CARDS[Math.floor(secureRandom() * CARDS.length)];
     const won = guess === 'higher' ? rolled.num >= currentCard.num : rolled.num <= currentCard.num;
-    const mult = 1.92;
+    const mult = 1.68;
 
     setTimeout(() => {
       setNextCard(rolled);
@@ -140,14 +140,14 @@ export default function HiloGame() {
             disabled={isDealing}
             className="flex-1 sm:flex-none px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-black font-black text-xs uppercase tracking-wider rounded-xl shadow-lg transition flex items-center gap-1.5"
           >
-            <TrendingUp className="w-4 h-4" /> HIGHER (1.92x)
+            <TrendingUp className="w-4 h-4" /> HIGHER (1.68x)
           </button>
           <button
             onClick={() => playGuess('lower')}
             disabled={isDealing}
             className="flex-1 sm:flex-none px-6 py-3 bg-red-500 hover:bg-red-600 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-lg transition flex items-center gap-1.5"
           >
-            <TrendingDown className="w-4 h-4" /> LOWER (1.92x)
+            <TrendingDown className="w-4 h-4" /> LOWER (1.68x)
           </button>
         </div>
       </div>

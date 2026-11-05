@@ -17,7 +17,8 @@ export default function LimboGame() {
   const [isWin, setIsWin] = useState<boolean | null>(null);
   const [errorMsg, setErrorMsg] = useState<string>('');
 
-  const winChance = Number((98 / Math.max(1.05, targetMult)).toFixed(2));
+  // Win chance formula with 84% RTP (16% House Edge)
+  const winChance = Number((84 / Math.max(1.05, targetMult)).toFixed(2));
 
   const rollLimbo = () => {
     if (isRolling) return;
@@ -48,16 +49,11 @@ export default function LimboGame() {
     setIsRolling(true);
     setIsWin(null);
 
-    // Cryptographically secure RNG: outcomes range organically between 1.01x and 1.98x
-    // If target >= 2.00x, it is 100% rigged to lose right as they hit 2x
-    const r = secureRandom();
-    let result = 1.05;
-    if (r < 0.20) {
-      result = Number((1.01 + secureRandom() * 0.40).toFixed(2));
-    } else {
-      result = Number((1.20 + secureRandom() * 0.78).toFixed(2)); // max 1.98x
-    }
-    const won = targetMult < 2.00 && result >= targetMult;
+    // Cryptographically secure Limbo roll with 84% RTP
+    const r = Math.max(0.0001, secureRandom());
+    const rawResult = 0.84 / r;
+    const result = Number(Math.max(1.00, Math.min(100.00, rawResult)).toFixed(2));
+    const won = result >= targetMult;
 
     setTimeout(() => {
       setRolledMult(result);

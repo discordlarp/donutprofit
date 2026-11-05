@@ -42,7 +42,7 @@ export default function CoinflipGame() {
     setLastResult(null);
 
     // Cryptographically secure random outcome (protected against Math.random tampering)
-    const winRate = 0.49;
+    const winRate = 0.50;
     const outcome: 'glazed' | 'chocolate' = secureRandom() < winRate ? chosenSide : (chosenSide === 'glazed' ? 'chocolate' : 'glazed');
     const isWin = outcome === chosenSide;
 
@@ -67,7 +67,7 @@ export default function CoinflipGame() {
         sound.playBomb();
       }
 
-      recordBet('coinflip', betAmount, 1.96, isWin, { chosenSide, outcome });
+      recordBet('coinflip', betAmount, 1.70, isWin, { chosenSide, outcome });
     }, 2200);
   };
 
@@ -193,7 +193,7 @@ export default function CoinflipGame() {
             disabled={isFlipping || !user || user.balance <= 0}
             className="w-full py-4 rounded-xl font-black text-sm tracking-wider uppercase bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-black shadow-lg shadow-orange-500/25 transform active:scale-[0.98] transition disabled:opacity-50"
           >
-            {isFlipping ? 'FLIPPING COIN...' : `FLIP FOR ${formatCash(betAmount * 1.96)} COINS`}
+            {isFlipping ? 'FLIPPING COIN...' : `FLIP FOR ${formatCash(betAmount * 1.70)} COINS`}
           </button>
         </div>
 

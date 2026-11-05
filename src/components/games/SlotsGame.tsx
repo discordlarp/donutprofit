@@ -15,11 +15,11 @@ interface SymbolInfo {
 }
 
 const SYMBOLS: SymbolInfo[] = [
-  { icon: '🍩', name: 'Glazed Donut', multiplier: 50.0 },
-  { icon: '👑', name: 'Netherite Crown', multiplier: 25.0 },
-  { icon: '💎', name: 'Diamond Block', multiplier: 10.0 },
-  { icon: '🍏', name: 'God Apple', multiplier: 1.8 },
-  { icon: '🥖', name: 'Bread', multiplier: 1.4 },
+  { icon: '🍩', name: 'Glazed Donut', multiplier: 25.0 },
+  { icon: '👑', name: 'Netherite Crown', multiplier: 12.0 },
+  { icon: '💎', name: 'Diamond Block', multiplier: 5.0 },
+  { icon: '🍏', name: 'God Apple', multiplier: 1.5 },
+  { icon: '🥖', name: 'Bread', multiplier: 1.1 },
   { icon: '🥩', name: 'Rotten Flesh', multiplier: 0 },
 ];
 
@@ -58,15 +58,9 @@ export default function SlotsGame() {
     setLastWin(null);
 
     // Cryptographically secure reel spin outcome
-    let s1 = SYMBOLS[Math.floor(secureRandom() * SYMBOLS.length)];
-    let s2 = SYMBOLS[Math.floor(secureRandom() * SYMBOLS.length)];
-    let s3 = SYMBOLS[Math.floor(secureRandom() * SYMBOLS.length)];
-
-    // RIGGED: If reels 1 & 2 match on multiplier >= 2.0x, break reel 3 so they instantly lose right at 2x!
-    if (s1.multiplier >= 2.0 && s1.name === s2.name) {
-      const others = SYMBOLS.filter(s => s.name !== s1.name);
-      s3 = others[Math.floor(secureRandom() * others.length)];
-    }
+    const s1 = SYMBOLS[Math.floor(secureRandom() * SYMBOLS.length)];
+    const s2 = SYMBOLS[Math.floor(secureRandom() * SYMBOLS.length)];
+    const s3 = SYMBOLS[Math.floor(secureRandom() * SYMBOLS.length)];
 
     setTimeout(() => {
       setReels([s1, s2, s3]);
@@ -75,9 +69,9 @@ export default function SlotsGame() {
       // Payout logic
       let mult = 0;
       if (s1.name === s2.name && s2.name === s3.name && s1.multiplier > 0) {
-        mult = Math.min(1.98, s1.multiplier); // 3-of-a-kind
+        mult = s1.multiplier; // 3-of-a-kind
       } else if ((s1.name === s2.name || s2.name === s3.name || s1.name === s3.name) && (s1.multiplier > 0 || s2.multiplier > 0)) {
-        mult = 1.2; // 2-of-a-kind minor win
+        mult = 1.1; // 2-of-a-kind minor win
       }
 
       const isWon = mult > 0;

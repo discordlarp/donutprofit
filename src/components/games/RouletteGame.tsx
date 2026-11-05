@@ -70,12 +70,8 @@ export default function RouletteGame() {
     sound.playClick();
     setIsSpinning(true);
 
-    // Secure hardware random outcome (protected against Math.random tampering)
-    let winIndex = Math.floor(secureRandom() * WHEEL_ITEMS.length);
-    if (selectedBet === 'gold') {
-      const nonGold = WHEEL_ITEMS.map((item, idx) => item.color !== 'gold' ? idx : -1).filter(i => i !== -1);
-      winIndex = nonGold[Math.floor(secureRandom() * nonGold.length)];
-    }
+    // Secure random outcome with standard fair RNG
+    const winIndex = Math.floor(secureRandom() * WHEEL_ITEMS.length);
     const winningItem = WHEEL_ITEMS[winIndex];
 
     // Compute pixel offset for smooth horizontal rolling (each card is 72px + 8px gap = 80px)
@@ -86,7 +82,7 @@ export default function RouletteGame() {
     setSpinOffset(prev => prev + targetOffset);
 
     const isWin = winningItem.color === selectedBet;
-    const multiplier = selectedBet === 'gold' ? 20.0 : 1.98;
+    const multiplier = selectedBet === 'gold' ? 12.60 : 1.75;
 
     setTimeout(() => {
       setIsSpinning(false);
@@ -173,7 +169,7 @@ export default function RouletteGame() {
               >
                 <span>{item.num}</span>
                 <span className="text-[10px] font-sans uppercase font-bold tracking-widest opacity-80">
-                  {item.color === 'gold' ? '🍩 5X' : '2X'}
+                  {item.color === 'gold' ? '🍩 12.6X' : '1.75X'}
                 </span>
               </div>
             ))}
@@ -194,7 +190,7 @@ export default function RouletteGame() {
           }`}
         >
           <span className="text-xl font-black">RED (1-7)</span>
-          <span className="text-xs font-bold text-red-300 mt-1">PAYS 2x</span>
+          <span className="text-xs font-bold text-red-300 mt-1">PAYS 1.75x</span>
         </button>
 
         <button
@@ -208,7 +204,7 @@ export default function RouletteGame() {
           }`}
         >
           <span className="text-xl font-black text-amber-400">GOLDEN DONUT (0)</span>
-          <span className="text-xs font-bold text-amber-300 mt-1">PAYS 20x+ JACKPOT</span>
+          <span className="text-xs font-bold text-amber-300 mt-1">PAYS 12.60x</span>
         </button>
 
         <button
@@ -222,7 +218,7 @@ export default function RouletteGame() {
           }`}
         >
           <span className="text-xl font-black">BLACK (8-14)</span>
-          <span className="text-xs font-bold text-neutral-300 mt-1">PAYS 2x</span>
+          <span className="text-xs font-bold text-neutral-300 mt-1">PAYS 1.75x</span>
         </button>
       </div>
 

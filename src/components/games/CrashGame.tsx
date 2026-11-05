@@ -42,16 +42,16 @@ export default function CrashGame() {
 
     sound.playClick();
 
-    // Determine crash point: allow organic climb up towards 1.99x, but strictly crash before 2.00x
-    const r = secureRandom();
-    let point = 1.05;
-    if (r < 0.15) {
-      point = Number((1.02 + secureRandom() * 0.35).toFixed(2));
+    // Mathematical Crash Point generation with 84% RTP (16% House Edge)
+    const r = Math.max(0.0001, secureRandom());
+    let point = 1.00;
+    if (r < 0.16) {
+      point = Number((1.00 + secureRandom() * 0.08).toFixed(2));
     } else {
-      point = Number((1.30 + secureRandom() * 0.68).toFixed(2)); // up to 1.98x
+      const raw = 0.84 / r;
+      point = Number(Math.max(1.05, Math.min(100.00, raw)).toFixed(2));
     }
-    // Hard ceiling: strictly crash right as it approaches 2x so reaching 2x is an instant loss
-    crashPointRef.current = Math.min(1.98, Math.max(1.05, point));
+    crashPointRef.current = point;
 
     setGameState('running');
     setMultiplier(1.00);
@@ -90,17 +90,7 @@ export default function CrashGame() {
     if (gameState !== 'running') return;
     if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
 
-    // If multiplier somehow reached or tried to cashout at >= 2.00x, it's an immediate loss
-    if ((atMultiplier || multiplier) >= 2.00) {
-      setMultiplier(1.99);
-      setGameState('crashed');
-      sound.playBomb();
-      setCrashHistory(prev => [1.99, ...prev.slice(0, 7)]);
-      recordBet('crash', betAmount, 1.99, false, { crashPoint: 1.99 });
-      return;
-    }
-
-    const winMult = Math.min(1.98, atMultiplier || multiplier);
+    const winMult = atMultiplier || multiplier;
     setCashedMultiplier(winMult);
     setGameState('cashed_out');
     sound.playWin();

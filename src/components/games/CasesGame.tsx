@@ -23,7 +23,7 @@ const ITEMS: LootItem[] = [
     id: 'totem',
     name: 'Totem of Undying',
     tier: 'mythic',
-    mult: 25.0,
+    mult: 10.0,
     color: 'text-amber-400',
     borderColor: 'border-amber-400/80',
     bgGradient: 'from-amber-500/20 to-yellow-500/5',
@@ -32,7 +32,7 @@ const ITEMS: LootItem[] = [
     id: 'godapple',
     name: 'Enchanted Golden Apple',
     tier: 'legendary',
-    mult: 10.0,
+    mult: 4.5,
     color: 'text-purple-400',
     borderColor: 'border-purple-400/80',
     bgGradient: 'from-purple-500/20 to-pink-500/5',
@@ -41,7 +41,7 @@ const ITEMS: LootItem[] = [
     id: 'sword',
     name: 'Netherite Sword',
     tier: 'epic',
-    mult: 1.8,
+    mult: 1.4,
     color: 'text-sky-400',
     borderColor: 'border-sky-400/80',
     bgGradient: 'from-sky-500/20 to-blue-500/5',
@@ -50,7 +50,7 @@ const ITEMS: LootItem[] = [
     id: 'diamond',
     name: 'Diamond Block',
     tier: 'rare',
-    mult: 1.4,
+    mult: 1.0,
     color: 'text-emerald-400',
     borderColor: 'border-emerald-400/80',
     bgGradient: 'from-emerald-500/20 to-teal-500/5',
@@ -59,7 +59,7 @@ const ITEMS: LootItem[] = [
     id: 'iron',
     name: 'Iron Ingot',
     tier: 'common',
-    mult: 1.0,
+    mult: 0.5,
     color: 'text-neutral-300',
     borderColor: 'border-neutral-400/60',
     bgGradient: 'from-neutral-500/20 to-neutral-700/5',
@@ -175,14 +175,15 @@ export default function CasesGame() {
     setIsSpinning(true);
     setUnboxedItem(null);
 
-    // Pick winning item using secure hardware random
+    // Pick winning item using secure hardware random with 84% RTP
     const rand = secureRandom();
     let winner: LootItem;
-    // RIGGED: Totem (25x) and God Apple (10x) will never drop to enforce no win >= 2x
-    if (rand < 0.22) winner = ITEMS[2]; // Sword 1.8x
-    else if (rand < 0.45) winner = ITEMS[3]; // Diamond 1.4x
-    else if (rand < 0.68) winner = ITEMS[4]; // Iron 1.0x
-    else winner = ITEMS[5]; // Flesh 0x
+    if (rand < 0.015) winner = ITEMS[0]; // Totem 10.0x
+    else if (rand < 0.055) winner = ITEMS[1]; // God Apple 4.5x
+    else if (rand < 0.175) winner = ITEMS[2]; // Sword 1.4x
+    else if (rand < 0.355) winner = ITEMS[3]; // Diamond 1.0x
+    else if (rand < 0.675) winner = ITEMS[4]; // Iron 0.5x
+    else winner = ITEMS[5]; // Flesh 0.0x
 
     // Generate 45 items for strip, winner at index 35
     const strip: LootItem[] = [];

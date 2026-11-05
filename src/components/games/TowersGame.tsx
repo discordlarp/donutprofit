@@ -8,7 +8,7 @@ import { sound } from '@/lib/sound';
 import { formatCash } from '@/lib/format';
 import { secureRandom } from '@/lib/cryptoRandom';
 
-const FLOOR_MULTIPLIERS = [1.30, 1.60, 1.90, 2.80, 5.50, 25.00];
+const FLOOR_MULTIPLIERS = [1.26, 1.89, 2.83, 4.25, 6.38, 9.57];
 
 interface FloorState {
   tiles: ('hidden' | 'gem' | 'bomb')[];
@@ -56,14 +56,12 @@ export default function TowersGame() {
     if (!gameActive) return;
 
     const floor = floors[currentFloor];
-    // RIGGED: Right as the player hits Floor 4 (>= 2.00x), they lose instantly with a TNT bomb!
-    const isRiggedFloor = FLOOR_MULTIPLIERS[currentFloor] >= 2.00;
-    const isBomb = isRiggedFloor || tileIndex === floor.bombIdx;
+    const isBomb = tileIndex === floor.bombIdx;
 
     const updatedFloors = [...floors];
     const newTiles: ('hidden' | 'gem' | 'bomb')[] = [...floor.tiles];
     newTiles[tileIndex] = isBomb ? 'bomb' : 'gem';
-    updatedFloors[currentFloor] = { ...floor, tiles: newTiles, bombIdx: isRiggedFloor ? tileIndex : floor.bombIdx };
+    updatedFloors[currentFloor] = { ...floor, tiles: newTiles };
     setFloors(updatedFloors);
 
     if (isBomb) {
@@ -80,7 +78,7 @@ export default function TowersGame() {
       if (nextFloor >= FLOOR_MULTIPLIERS.length) {
         sound.playWin();
         setGameActive(false);
-        const maxMult = 1.98;
+        const maxMult = FLOOR_MULTIPLIERS[FLOOR_MULTIPLIERS.length - 1];
         recordBet('towers', betAmount, maxMult, true, { reachedFloor: 6 });
         confetti({ particleCount: 100, spread: 80 });
       }
@@ -89,7 +87,7 @@ export default function TowersGame() {
 
   const cashOut = () => {
     if (!gameActive || currentFloor === 0) return;
-    const mult = Math.min(1.98, FLOOR_MULTIPLIERS[currentFloor - 1]);
+    const mult = FLOOR_MULTIPLIERS[currentFloor - 1];
     sound.playWin();
     setGameActive(false);
     recordBet('towers', betAmount, mult, true, { reachedFloor: currentFloor });

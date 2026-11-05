@@ -12,15 +12,15 @@ import { secureRandom } from '@/lib/cryptoRandom';
 const HIT_PAYOUTS: Record<number, number> = {
   0: 0.00,
   1: 1.10,
-  2: 1.35,
-  3: 1.75,
-  4: 3.50,
-  5: 8.00,
-  6: 20.00,
-  7: 50.00,
-  8: 100.00,
-  9: 250.00,
-  10: 500.00,
+  2: 1.15,
+  3: 1.50,
+  4: 2.95,
+  5: 6.75,
+  6: 16.80,
+  7: 42.00,
+  8: 84.00,
+  9: 210.00,
+  10: 420.00,
 };
 
 export default function KenoGame() {
@@ -89,39 +89,14 @@ export default function KenoGame() {
     setDrawnNumbers([]);
     setResultMsg(null);
 
-    // RIGGED DRAW ENGINE:
-    // Generate 10 drawn numbers from 1 to 40
-    // Bias draws so that hit count strictly never yields over 2.00x,
-    // and house edge targets ~48% win rate with most wins at 1.10x - 1.55x
+    // Standard fair Keno drawing using cryptographically secure random numbers
     const pool = Array.from({ length: 40 }, (_, i) => i + 1);
     const drawn: number[] = [];
 
-    // Simulate 10 draws one-by-one with staggered animation
-    // RIGGED: Strictly allow max 3 hits (1.75x). The moment 4 hits (>= 2x) would occur, it loses!
-    const targetWinsAllowed = secureRandom() < 0.48; // House edge ~52% loss
-    const maxHitsAllowed = targetWinsAllowed ? Math.min(3, Math.floor(secureRandom() * 3) + 1) : 0;
-
-    let hitsCount = 0;
     while (drawn.length < 10) {
       const remainingPool = pool.filter(n => !drawn.includes(n));
       const chosen = remainingPool[Math.floor(secureRandom() * remainingPool.length)];
-
-      if (selectedNumbers.includes(chosen)) {
-        if (hitsCount < maxHitsAllowed) {
-          hitsCount++;
-          drawn.push(chosen);
-        } else {
-          // Skip and pick a non-selected number to maintain house odds
-          const nonSelected = remainingPool.filter(n => !selectedNumbers.includes(n));
-          if (nonSelected.length > 0) {
-            drawn.push(nonSelected[Math.floor(secureRandom() * nonSelected.length)]);
-          } else {
-            drawn.push(chosen);
-          }
-        }
-      } else {
-        drawn.push(chosen);
-      }
+      drawn.push(chosen);
     }
 
     // Animate ball reveal sequentially
@@ -133,8 +108,7 @@ export default function KenoGame() {
 
     // Calculate final results
     const matchingHits = drawn.filter(n => selectedNumbers.includes(n)).length;
-    // RIGGED HARD CAP: Multiplier is strictly clamped to max 2.00x
-    const finalMult = Math.min(1.98, HIT_PAYOUTS[matchingHits] ?? 0);
+    const finalMult = HIT_PAYOUTS[matchingHits] ?? 0;
     const won = finalMult > 0;
 
     setIsDrawing(false);

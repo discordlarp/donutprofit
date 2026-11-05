@@ -16,19 +16,19 @@ interface RiskConfig {
 
 const RISK_CONFIGS: Record<RiskLevel, RiskConfig> = {
   low: {
-    multipliers: [16.0, 4.0, 1.5, 1.0, 0.5, 1.0, 1.5, 4.0, 16.0],
+    multipliers: [8.5, 2.8, 1.25, 0.9, 0.45, 0.9, 1.25, 2.8, 8.5],
     colors: [
       '#EF4444', '#F97316', '#F59E0B', '#10B981', '#059669', '#10B981', '#F59E0B', '#F97316', '#EF4444'
     ]
   },
   medium: {
-    multipliers: [33.0, 6.0, 1.6, 0.7, 0.4, 0.7, 1.6, 6.0, 33.0],
+    multipliers: [18.0, 4.2, 1.35, 0.6, 0.35, 0.6, 1.35, 4.2, 18.0],
     colors: [
       '#DC2626', '#EA580C', '#D97706', '#10B981', '#047857', '#10B981', '#D97706', '#EA580C', '#DC2626'
     ]
   },
   high: {
-    multipliers: [100.0, 10.0, 1.8, 0.4, 0.2, 0.4, 1.8, 10.0, 100.0],
+    multipliers: [45.0, 7.5, 1.5, 0.35, 0.18, 0.35, 1.5, 7.5, 45.0],
     colors: [
       '#B91C1C', '#C2410C', '#B45309', '#10B981', '#065F46', '#10B981', '#B45309', '#C2410C', '#B91C1C'
     ]
@@ -306,11 +306,7 @@ export default function PlinkoGame() {
           let landedBin = Math.floor((ball.x - binStartX) / binWidth);
           landedBin = Math.max(0, Math.min(BIN_COUNT - 1, landedBin));
 
-          // RIGGED: Outer edge bins (>= 2x) are deflected inward so nobody exceeds safe limits
-          if (landedBin <= 1) landedBin = 2;
-          if (landedBin >= BIN_COUNT - 2) landedBin = BIN_COUNT - 3;
-
-          const finalMult = Math.min(1.98, config.multipliers[landedBin]);
+          const finalMult = config.multipliers[landedBin];
           const isWin = finalMult >= 1.0;
 
           // Visual Bin Bounce Flash

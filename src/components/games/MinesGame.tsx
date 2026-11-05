@@ -24,20 +24,15 @@ export default function MinesGame() {
   const [isWin, setIsWin] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string>('');
 
-  // Progressive multiplier:
-  // Smooth natural scaling: Tile 1: 1.05x | Tile 2: 1.11x | Tile 3: 1.18x | Tile 4: 1.27x | Tile 5: 1.38x ...
+  // Progressive multiplier with 84% RTP (16% House Edge)
   const calculateMultiplier = (mines: number, revealed: number) => {
     if (revealed === 0) return 1.0;
-    if (revealed === 1) return 1.05;
-    if (revealed === 2) return 1.11;
-    if (revealed === 3) return 1.18;
-    if (revealed === 4) return 1.27;
-    // Gradual smooth progression without abrupt jumps
-    let mult = 1.27;
-    for (let i = 5; i <= revealed; i++) {
-      mult += 0.08 + (i - 4) * 0.025;
+    let mult = 1.0;
+    for (let i = 0; i < revealed; i++) {
+      mult *= (25 - i) / (25 - mines - i);
     }
-    return Number(mult.toFixed(2));
+    const scaled = Math.max(1.02, mult * 0.84);
+    return Number(scaled.toFixed(2));
   };
 
   const currentMultiplier = calculateMultiplier(mineCount, revealedCount);
@@ -84,12 +79,6 @@ export default function MinesGame() {
 
     const tile = grid[index];
 
-    // RIGGED: If they attempt to click a 5th tile, it is 100% rigged to hit a bomb and lose!
-    const nextRevealedCount = revealedCount + 1;
-    if (nextRevealedCount >= 5) {
-      tile.isMine = true;
-    }
-
     if (tile.isMine) {
       // Hit a mine!
       sound.playBomb();
@@ -105,7 +94,7 @@ export default function MinesGame() {
       return;
     }
 
-    // Safe gem (Only allowed on tiles 1 to 4 and strictly below 5.00x)
+    // Safe gem
     sound.playGem();
     const newGrid = [...grid];
     newGrid[index] = { ...tile, revealed: true };
@@ -113,18 +102,6 @@ export default function MinesGame() {
 
     const nextCount = revealedCount + 1;
     setRevealedCount(nextCount);
-
-    // Safeguard: If somehow nextCount >= 5, explode immediately
-    if (nextCount >= 5) {
-      sound.playBomb();
-      const revealedAll = newGrid.map((t, idx) => idx === index ? { revealed: true, isMine: true } : { ...t, revealed: true });
-      setGrid(revealedAll);
-      setGameOver(true);
-      setGameActive(false);
-      setIsWin(false);
-      recordBet('mines', betAmount, 0, false, { mineCount, revealedCount });
-      return;
-    }
 
     // Check if all safe tiles cleared
     if (nextCount === 25 - mineCount) {
