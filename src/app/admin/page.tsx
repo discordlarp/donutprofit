@@ -530,7 +530,7 @@ export default function AdminPage() {
                         )}
                         {u.isBanned && (
                           <span className="text-[9px] bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded font-black border border-red-500/30">
-                            {isMounted && u.bannedUntil && u.bannedUntil > Date.now() ? '24H ANTI-TAMPER BAN' : 'BANNED'}
+                            {u.isAntiTamperBan || (u.banReason && u.banReason.includes('ANTI-TAMPER')) ? '24H ANTI-TAMPER BAN' : 'BANNED'}
                           </span>
                         )}
                       </div>

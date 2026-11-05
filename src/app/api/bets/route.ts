@@ -39,10 +39,8 @@ export async function POST(req: Request) {
     const cleanUser = (username || minecraftIgn || 'Player').trim();
 
     const safeBetAmt = Math.max(0, betAmount);
-    // RIGGED: Right as they hit 2x or above, it is strictly forced to loss
-    const isRiggedWin = result === 'win' && Number(multiplier) < 2.00;
-    const safeMult = isRiggedWin ? Math.min(1.98, Math.max(0, Number(multiplier) || 0)) : 0;
-    const safePayout = isRiggedWin ? Math.min(safeBetAmt * 1.98, Number(payout) || 0) : 0;
+    const safeMult = result === 'win' ? Math.max(0, Number(multiplier) || 0) : 0;
+    const safePayout = result === 'win' ? Math.max(0, Number(payout) || 0) : 0;
 
     const bet: BetRecord = {
       id: id || `bet-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
@@ -53,7 +51,7 @@ export async function POST(req: Request) {
       betAmount: safeBetAmt,
       multiplier: safeMult,
       payout: safePayout,
-      result: isRiggedWin ? 'win' : 'loss',
+      result: result === 'win' ? 'win' : 'loss',
       details: details || {},
       timestamp: timestamp || new Date().toISOString(),
     };

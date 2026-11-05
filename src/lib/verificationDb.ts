@@ -1,6 +1,8 @@
 import crypto from 'crypto';
 import path from 'path';
 import fs from 'fs';
+import os from 'os';
+import { saveUser } from './serverStore';
 
 export interface PendingSignup {
   username: string; // lowercase key
@@ -42,9 +44,34 @@ export interface DepositCredit {
   claimed_at?: number;
 }
 
-// Persistent File Store Path
-const dataDir = path.join(process.cwd(), 'data');
-const jsonFilePath = path.join(dataDir, 'verifications.json');
+// Determine writable data directory safely (works on local dev & serverless/Vercel)
+let activeDataDir: string | null = null;
+function getDataDir(): string {
+  if (activeDataDir) return activeDataDir;
+  try {
+    const localDir = path.join(process.cwd(), 'data');
+    if (!fs.existsSync(localDir)) {
+      fs.mkdirSync(localDir, { recursive: true });
+    }
+    const testFile = path.join(localDir, '.write_test');
+    fs.writeFileSync(testFile, 'ok');
+    fs.unlinkSync(testFile);
+    activeDataDir = localDir;
+    return activeDataDir;
+  } catch {
+    try {
+      const tmpDir = path.join(os.tmpdir(), 'donutprofit_data');
+      if (!fs.existsSync(tmpDir)) {
+        fs.mkdirSync(tmpDir, { recursive: true });
+      }
+      activeDataDir = tmpDir;
+      return activeDataDir;
+    } catch {
+      activeDataDir = os.tmpdir();
+      return activeDataDir;
+    }
+  }
+}
 
 // Global in-memory storage maps
 const memoryPending = new Map<string, PendingSignup>();
@@ -55,11 +82,10 @@ const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
 
 // Try loading persisted data from disk on startup
 try {
-  if (!fs.existsSync(dataDir)) {
-    fs.mkdirSync(dataDir, { recursive: true });
-  }
-  if (fs.existsSync(jsonFilePath)) {
-    const raw = fs.readFileSync(jsonFilePath, 'utf-8');
+  const dir = getDataDir();
+  const filePath = path.join(dir, 'verifications.json');
+  if (fs.existsSync(filePath)) {
+    const raw = fs.readFileSync(filePath, 'utf-8');
     const parsed = JSON.parse(raw);
     if (parsed.pending && Array.isArray(parsed.pending)) {
       for (const p of parsed.pending) memoryPending.set(p.username, p);
@@ -85,7 +111,7 @@ try {
   if (typeof getBuiltin === 'function') {
     const sqlite = getBuiltin('node:sqlite');
     if (sqlite && sqlite.DatabaseSync) {
-      const dbPath = path.join(dataDir, 'verifications.db');
+      const dbPath = path.join(getDataDir(), 'verifications.db');
       db = new sqlite.DatabaseSync(dbPath);
       db.exec(`
         CREATE TABLE IF NOT EXISTS pending_signups (
@@ -136,8 +162,9 @@ try {
 
 function persistToDisk(): void {
   try {
-    if (!fs.existsSync(dataDir)) {
-      fs.mkdirSync(dataDir, { recursive: true });
+    const dir = getDataDir();
+    if (!fs.existsSync(/*turbopackIgnore: true*/ dir)) {
+      fs.mkdirSync(dir, { recursive: true });
     }
     const payload = {
       pending: Array.from(memoryPending.values()),
@@ -146,7 +173,7 @@ function persistToDisk(): void {
       transfers: Array.from(memoryTransfers.values()),
       savedAt: new Date().toISOString(),
     };
-    fs.writeFileSync(jsonFilePath, JSON.stringify(payload, null, 2), 'utf-8');
+    fs.writeFileSync(path.join(dir, 'verifications.json'), JSON.stringify(payload, null, 2), 'utf-8');
   } catch (err) {
     console.error('[VerificationDB] Error persisting state to disk:', err);
   }
@@ -332,7 +359,6 @@ export function verifyBotPayment(rawUsername: string, amount: number, authHeader
 
   // Sync to centralized server store for real-time member logs and admin visibility
   try {
-    const { saveUser } = require('./serverStore');
     saveUser({
       id: `user-mc-${normalizedKey}`,
       username: rec.display_name,
@@ -522,7 +548,7 @@ export function recordUserTransfer(senderIgn: string, recipientIgn: string, amou
         INSERT INTO user_transfers (id, sender_ign, recipient_ign, amount, timestamp, claimed)
         VALUES (?, ?, ?, ?, ?, 0)
       `).run(transferId, cleanSender, cleanRecipient, numAmount, now);
-    } catch (e) {
+    } catch {
       // ignore
     }
   }

@@ -112,10 +112,10 @@ export default function BlackjackGame() {
     }
   };
 
-  const stand = (activePlayerCards = playerCards) => {
+  const stand = (activePlayerCards = playerCards, activeBet?: number) => {
     setGameState('dealer_turn');
 
-    let currentDealer = [...dealerCards];
+    const currentDealer = [...dealerCards];
     while (calculateHand(currentDealer) < 17) {
       currentDealer.push(drawCard());
     }
@@ -125,38 +125,39 @@ export default function BlackjackGame() {
     const dScore = calculateHand(currentDealer);
 
     if (dScore > 21) {
-      finishGame(activePlayerCards, currentDealer, 'dealer_bust');
+      finishGame(activePlayerCards, currentDealer, 'dealer_bust', activeBet);
     } else if (pScore > dScore) {
-      finishGame(activePlayerCards, currentDealer, 'win');
+      finishGame(activePlayerCards, currentDealer, 'win', activeBet);
     } else if (pScore < dScore) {
-      finishGame(activePlayerCards, currentDealer, 'loss');
+      finishGame(activePlayerCards, currentDealer, 'loss', activeBet);
     } else {
-      finishGame(activePlayerCards, currentDealer, 'push');
+      finishGame(activePlayerCards, currentDealer, 'push', activeBet);
     }
   };
 
   const doubleDown = () => {
     if (gameState !== 'playing' || playerCards.length !== 2) return;
-    if (!user || betAmount * 2 > user.balance) {
+    const doubledBet = betAmount * 2;
+    if (!user || doubledBet > user.balance) {
       setErrorMsg('Not enough balance to double down!');
       return;
     }
 
-    setBetAmount(prev => prev * 2);
     const newCard = drawCard();
     const nextPlayer = [...playerCards, newCard];
     setPlayerCards(nextPlayer);
 
     const total = calculateHand(nextPlayer);
     if (total > 21) {
-      finishGame(nextPlayer, dealerCards, 'player_bust');
+      finishGame(nextPlayer, dealerCards, 'player_bust', doubledBet);
     } else {
-      stand(nextPlayer);
+      stand(nextPlayer, doubledBet);
     }
   };
 
-  const finishGame = (pCards: Card[], dCards: Card[], outcome: string) => {
+  const finishGame = (pCards: Card[], dCards: Card[], outcome: string, customBet?: number) => {
     setGameState('finished');
+    const finalBet = customBet ?? betAmount;
 
     let won = false;
     let multiplier = 0;
@@ -188,7 +189,7 @@ export default function BlackjackGame() {
     }
 
     setResultMsg(msg);
-    recordBet('blackjack', betAmount, multiplier, won, { pScore: calculateHand(pCards), dScore: calculateHand(dCards) });
+    recordBet('blackjack', finalBet, multiplier, won, { pScore: calculateHand(pCards), dScore: calculateHand(dCards) });
   };
 
   return (

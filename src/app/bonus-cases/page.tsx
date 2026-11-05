@@ -384,7 +384,7 @@ const CASES_DATA: CaseItem[] = [
 ];
 
 export default function BonusCasesPage() {
-  const { user } = useGame();
+  const { user, supplyCoins } = useGame();
   const [isSoundMuted, setIsSoundMuted] = useState(false);
   const [isXpBreakdownOpen, setIsXpBreakdownOpen] = useState(false);
   const [isHowXpOpen, setIsHowXpOpen] = useState(false);
@@ -429,6 +429,9 @@ export default function BonusCasesPage() {
 
       setUnboxedReward(won);
       setIsOpening(false);
+      if (user) {
+        supplyCoins(user.id, won.amount, `Bonus Case Unbox: ${won.name}`);
+      }
       if (!isSoundMuted) sound.playWin();
       confetti({ particleCount: 110, spread: 80 });
     }, 1200);

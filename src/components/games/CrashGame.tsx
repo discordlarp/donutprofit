@@ -21,9 +21,31 @@ export default function CrashGame() {
   const animFrameRef = useRef<number | null>(null);
   const crashPointRef = useRef<number>(1.00);
   const startTimeRef = useRef<number>(0);
+  const isRunningRef = useRef<boolean>(false);
+  const currentMultiplierRef = useRef<number>(1.00);
+
+  const handleCashout = (atMultiplier?: number) => {
+    if (!isRunningRef.current) return;
+    isRunningRef.current = false;
+    if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+
+    const winMult = atMultiplier || currentMultiplierRef.current || multiplier;
+    setCashedMultiplier(winMult);
+    setGameState('cashed_out');
+    sound.playWin();
+    setCrashHistory(prev => [crashPointRef.current, ...prev.slice(0, 7)]);
+
+    recordBet('crash', betAmount, winMult, true, { crashPoint: crashPointRef.current, cashedAt: winMult });
+
+    confetti({
+      particleCount: 80,
+      spread: 70,
+      origin: { y: 0.6 }
+    });
+  };
 
   const startCrashGame = () => {
-    if (gameState === 'running') return;
+    if (isRunningRef.current || gameState === 'running') return;
     setErrorMsg('');
 
     if (!user) {
@@ -53,6 +75,8 @@ export default function CrashGame() {
     }
     crashPointRef.current = point;
 
+    isRunningRef.current = true;
+    currentMultiplierRef.current = 1.00;
     setGameState('running');
     setMultiplier(1.00);
     setCashedMultiplier(0);
@@ -60,18 +84,21 @@ export default function CrashGame() {
 
     // Loop
     const tick = (now: number) => {
+      if (!isRunningRef.current) return;
       const elapsed = (now - startTimeRef.current) / 1000;
       // Growth curve: exponential increase
       const current = Number(Math.pow(Math.E, 0.07 * elapsed * (1 + elapsed * 0.12)).toFixed(2));
+      currentMultiplierRef.current = current;
 
       // Check auto cashout
       const autoVal = parseFloat(autoCashout);
-      if (!isNaN(autoVal) && autoVal > 1.01 && current >= autoVal && gameState !== 'cashed_out') {
+      if (!isNaN(autoVal) && autoVal > 1.01 && current >= autoVal) {
         handleCashout(current);
         return;
       }
 
       if (current >= crashPointRef.current) {
+        isRunningRef.current = false;
         setMultiplier(crashPointRef.current);
         setGameState('crashed');
         sound.playBomb();
@@ -84,25 +111,6 @@ export default function CrashGame() {
     };
 
     animFrameRef.current = requestAnimationFrame(tick);
-  };
-
-  const handleCashout = (atMultiplier?: number) => {
-    if (gameState !== 'running') return;
-    if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
-
-    const winMult = atMultiplier || multiplier;
-    setCashedMultiplier(winMult);
-    setGameState('cashed_out');
-    sound.playWin();
-    setCrashHistory(prev => [crashPointRef.current, ...prev.slice(0, 7)]);
-
-    recordBet('crash', betAmount, winMult, true, { crashPoint: crashPointRef.current, cashedAt: winMult });
-
-    confetti({
-      particleCount: 80,
-      spread: 70,
-      origin: { y: 0.6 }
-    });
   };
 
   useEffect(() => {

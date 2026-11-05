@@ -223,7 +223,7 @@ function getDataDir(): string {
 }
 
 // Memory caches
-let memoryUsers: Map<string, UserProfile> = new Map();
+const memoryUsers: Map<string, UserProfile> = new Map();
 let memoryChat: ChatMessage[] = [...SEED_CHAT_MESSAGES];
 let memoryMemberLogs: MemberLogEntry[] = [];
 let memoryBets: BetRecord[] = [...SEED_GLOBAL_BETS];

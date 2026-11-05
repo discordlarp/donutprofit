@@ -1849,16 +1849,11 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       return { newBalance: currentUser.balance, payout: 0 };
     }
 
-    // RIGGED HARD CEILING:
-    // Right as they hit 2.00x or above, it is strictly marked as a loss
-    const actuallyWon = won && multiplier < 2.00;
     const MAX_ALLOWED_BET = 500_000_000;
     const cleanBet = Math.min(MAX_ALLOWED_BET, Math.max(1, Math.floor(betAmount)));
-    const MAX_ALLOWED_MULTIPLIER = 1.98;
-    const safeMultiplier = actuallyWon ? Math.min(MAX_ALLOWED_MULTIPLIER, Math.max(0, multiplier)) : 0;
-    const effectiveMult = actuallyWon ? safeMultiplier : 0;
-    const payout = actuallyWon ? Number((cleanBet * safeMultiplier).toFixed(2)) : 0;
-    const netChange = actuallyWon ? payout - cleanBet : -cleanBet;
+    const safeMultiplier = won ? Math.max(0, multiplier) : 0;
+    const payout = won ? Number((cleanBet * safeMultiplier).toFixed(2)) : 0;
+    const netChange = won ? payout - cleanBet : -cleanBet;
     const newBal = Number(Math.max(0, currentUser.balance + netChange).toFixed(2));
 
     const updatedStats = {
@@ -1888,7 +1883,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       minecraftIgn: currentUser.minecraftIgn,
       game,
       betAmount: cleanBet,
-      multiplier: effectiveMult,
+      multiplier: won ? safeMultiplier : 0,
       payout: won ? payout : 0,
       result: won ? 'win' : 'loss',
       details,
@@ -2356,7 +2351,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     setCurrentUser(updatedSender);
 
     // Credit recipient
-    let recipient = users.find(u => 
+    const recipient = users.find(u => 
       u.minecraftIgn.toLowerCase() === cleanTarget.toLowerCase() || 
       u.username.toLowerCase() === cleanTarget.toLowerCase() ||
       u.minecraftIgn.toLowerCase().replace(/^\./, '') === cleanTarget.toLowerCase().replace(/^\./, '') ||
@@ -2484,7 +2479,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     const BONUS = REFERRAL_BONUS_AMOUNT; // 20M
     const hasDeposited10M = deposits.some(d => d.userId === currentUser.id && d.status === 'approved' && (d.amountCoins >= REFERRAL_MIN_DEPOSIT || d.amountInGame >= REFERRAL_MIN_DEPOSIT)) || (currentUser.balance >= REFERRAL_MIN_DEPOSIT);
 
-    let foundReferrer = users.find(
+    const foundReferrer = users.find(
       u => u.minecraftIgn.toLowerCase() === targetIgn || u.username.toLowerCase() === targetIgn
     );
 

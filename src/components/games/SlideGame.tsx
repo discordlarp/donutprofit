@@ -71,7 +71,7 @@ export default function SlideGame() {
         // Slide stopped on landed multiplier
         setIsSliding(false);
         setLandedMult(finalMult);
-        const won = targetMult < 2.00 && finalMult >= targetMult;
+        const won = finalMult >= targetMult;
         setIsWin(won);
 
         if (won) {
