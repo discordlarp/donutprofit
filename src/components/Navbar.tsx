@@ -9,6 +9,7 @@ import { calculateUserLevel } from '@/lib/levels';
 import AuthModal from '@/components/AuthModal';
 import DonutLogo from '@/components/DonutLogo';
 import PromoModal from '@/components/PromoModal';
+import BonusCasesModal from '@/components/BonusCasesModal';
 import { 
   Coins, 
   ShieldAlert, 
@@ -29,7 +30,8 @@ import {
   X,
   Star,
   Plus,
-  Wallet
+  Wallet,
+  Package
 } from 'lucide-react';
 
 interface NavbarProps {
@@ -58,6 +60,7 @@ export default function Navbar({ onToggleChat: propOnToggle, isChatOpen: propIsO
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [isPassModalOpen, setIsPassModalOpen] = useState(false);
   const [isPromoModalOpen, setIsPromoModalOpen] = useState(false);
+  const [isBonusCasesModalOpen, setIsBonusCasesModalOpen] = useState(false);
 
   const userLevel = calculateUserLevel(user?.totalWagered ?? 0);
   const [newPass, setNewPass] = useState('');
@@ -94,6 +97,11 @@ export default function Navbar({ onToggleChat: propOnToggle, isChatOpen: propIsO
       <PromoModal
         isOpen={isPromoModalOpen}
         onClose={() => setIsPromoModalOpen(false)}
+      />
+
+      <BonusCasesModal
+        isOpen={isBonusCasesModalOpen}
+        onClose={() => setIsBonusCasesModalOpen(false)}
       />
 
       {/* Change Password Modal */}
@@ -180,6 +188,16 @@ export default function Navbar({ onToggleChat: propOnToggle, isChatOpen: propIsO
 
             {/* Central Navigation Dock (Desktop) */}
             <nav className="hidden lg:flex items-center gap-2.5 ml-6 p-1.5 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
+              <button
+                type="button"
+                onClick={() => setIsBonusCasesModalOpen(true)}
+                className="px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 text-neutral-400 hover:text-emerald-400 hover:bg-emerald-500/10 border border-transparent hover:border-emerald-500/20 cursor-pointer active:scale-95"
+                title="Bonus Cases"
+              >
+                <Package className="w-4 h-4 text-emerald-400" />
+                <span>BONUS CASES</span>
+              </button>
+
               <Link
                 href="/referral"
                 className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 ${
@@ -395,6 +413,18 @@ export default function Navbar({ onToggleChat: propOnToggle, isChatOpen: propIsO
                         <User className="w-3.5 h-3.5 text-neutral-400" />
                         <span>Profile & Statistics</span>
                       </Link>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setProfileDropdownOpen(false);
+                          setIsBonusCasesModalOpen(true);
+                        }}
+                        className="px-3 py-2 rounded-xl text-emerald-300 hover:text-white hover:bg-emerald-500/10 flex items-center gap-2 font-bold transition w-full text-left cursor-pointer"
+                      >
+                        <Package className="w-3.5 h-3.5 text-emerald-400" />
+                        <span>Bonus Cases</span>
+                      </button>
 
                       <Link
                         href="/referral"
