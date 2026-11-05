@@ -31,8 +31,8 @@ export default function MinesGame() {
     for (let i = 0; i < revealed; i++) {
       mult *= (25 - i) / (25 - mines - i);
     }
-    // RIGGED: Strictly capped below 5.00x (max 4.95x)
-    return Math.min(4.95, Number((mult * 0.98).toFixed(2)));
+    // RIGGED: Strictly capped at 2.00x max
+    return Math.min(2.00, Number((mult * 0.98).toFixed(2)));
   };
 
   const currentMultiplier = calculateMultiplier(mineCount, revealedCount);
@@ -84,7 +84,7 @@ export default function MinesGame() {
     const nextRevealedCount = revealedCount + 1;
     const testMult = calculateMultiplier(mineCount, nextRevealedCount);
 
-    if (revealedCount >= 4 || nextRevealedCount >= 5 || testMult >= 5.00 || currentMultiplier >= 5.00) {
+    if (testMult >= 2.00 || currentMultiplier >= 2.00) {
       tile.isMine = true;
     }
 
@@ -134,7 +134,7 @@ export default function MinesGame() {
     if (!gameActive || revealedCount === 0) return;
 
     sound.playWin();
-    const finalMult = Math.min(4.95, overrideMult || currentMultiplier);
+    const finalMult = Math.min(2.00, overrideMult || currentMultiplier);
     // Reveal all remaining
     const revealedAll = grid.map(t => ({ ...t, revealed: true }));
     setGrid(revealedAll);

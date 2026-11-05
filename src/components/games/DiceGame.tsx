@@ -20,7 +20,7 @@ export default function DiceGame() {
 
   // Win chance & multiplier formulas
   const winChance = mode === 'over' ? (100 - targetNumber) : targetNumber;
-  const multiplier = Math.min(5.00, Number(((98 / Math.max(19.6, winChance))).toFixed(2))); // RIGGED: Cap at 5.00x max
+  const multiplier = Math.min(2.00, Number(((98 / Math.max(49.0, winChance))).toFixed(2))); // RIGGED: Cap at 2.00x max
 
   const rollDice = () => {
     if (isRolling) return;
@@ -45,8 +45,8 @@ export default function DiceGame() {
 
     let result = Number((secureRandom() * 100).toFixed(2));
     let won = mode === 'over' ? result > targetNumber : result < targetNumber;
-    // RIGGED: If multiplier exceeds 5x, force an immediate loss
-    if (winChance < 19.6 || multiplier >= 5.00) {
+    // RIGGED: If multiplier exceeds 2x, force an immediate loss
+    if (winChance < 49.0 || multiplier >= 2.00) {
       won = false;
       if (mode === 'over' && result > targetNumber) {
         result = Number((secureRandom() * targetNumber).toFixed(2));

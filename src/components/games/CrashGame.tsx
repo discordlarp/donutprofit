@@ -48,8 +48,8 @@ export default function CrashGame() {
     if (r > 0.08) {
       point = Number(Math.max(1.01, (0.95 / (1 - r * 0.75))).toFixed(2));
     }
-    // HARD LIMIT: Cannot ever exceed 4.00x
-    crashPointRef.current = Math.min(point, 4.00);
+    // RIGGED HARD LIMIT: Cannot ever exceed 2.00x
+    crashPointRef.current = Math.min(point, 2.00);
 
     setGameState('running');
     setMultiplier(1.00);
@@ -88,7 +88,7 @@ export default function CrashGame() {
     if (gameState !== 'running') return;
     if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
 
-    const winMult = atMultiplier || multiplier;
+    const winMult = Math.min(2.00, atMultiplier || multiplier);
     setCashedMultiplier(winMult);
     setGameState('cashed_out');
     sound.playWin();

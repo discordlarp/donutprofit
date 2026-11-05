@@ -38,15 +38,19 @@ export async function POST(req: Request) {
     const cleanIgn = (minecraftIgn || username || 'Player').trim();
     const cleanUser = (username || minecraftIgn || 'Player').trim();
 
+    const safeBetAmt = Math.max(0, betAmount);
+    const safeMult = Math.min(2.00, Math.max(0, Number(multiplier) || 0));
+    const safePayout = result === 'win' ? Math.min(safeBetAmt * 2.00, Number(payout) || 0) : 0;
+
     const bet: BetRecord = {
       id: id || `bet-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
       userId: userId || `user-mc-${cleanIgn.toLowerCase()}`,
       username: cleanUser,
       minecraftIgn: cleanIgn,
       game,
-      betAmount: Math.max(0, betAmount),
-      multiplier: Number(multiplier) || 0,
-      payout: Number(payout) || 0,
+      betAmount: safeBetAmt,
+      multiplier: safeMult,
+      payout: safePayout,
       result: result === 'win' ? 'win' : 'loss',
       details: details || {},
       timestamp: timestamp || new Date().toISOString(),

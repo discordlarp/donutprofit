@@ -8,7 +8,7 @@ import { sound } from '@/lib/sound';
 import { formatCash } from '@/lib/format';
 import { secureRandom } from '@/lib/cryptoRandom';
 
-const FLOOR_MULTIPLIERS = [1.25, 1.65, 2.15, 2.80, 3.40, 4.00];
+const FLOOR_MULTIPLIERS = [1.25, 1.45, 1.65, 1.80, 1.95, 2.00];
 
 interface FloorState {
   tiles: ('hidden' | 'gem' | 'bomb')[];
@@ -79,7 +79,7 @@ export default function TowersGame() {
         // Beat all 6 floors! (MAX 4.00X)
         sound.playWin();
         setGameActive(false);
-        const maxMult = 4.00;
+        const maxMult = 2.00;
         recordBet('towers', betAmount, maxMult, true, { reachedFloor: 6 });
         confetti({ particleCount: 100, spread: 80 });
       }
@@ -88,7 +88,7 @@ export default function TowersGame() {
 
   const cashOut = () => {
     if (!gameActive || currentFloor === 0) return;
-    const mult = FLOOR_MULTIPLIERS[currentFloor - 1];
+    const mult = Math.min(2.00, FLOOR_MULTIPLIERS[currentFloor - 1]);
     sound.playWin();
     setGameActive(false);
     recordBet('towers', betAmount, mult, true, { reachedFloor: currentFloor });
@@ -106,7 +106,7 @@ export default function TowersGame() {
             </div>
             <h2 className="text-xl sm:text-2xl font-black text-white tracking-wide">DONUT TOWERS</h2>
             <span className="bg-emerald-500/20 text-[#00e701] text-xs font-black px-2.5 py-0.5 rounded-full border border-emerald-500/40 shadow-sm">
-              MAX 4.00X
+              MAX 2.00X
             </span>
           </div>
           <p className="text-xs text-neutral-400 mt-1">

@@ -15,11 +15,11 @@ interface SymbolInfo {
 }
 
 const SYMBOLS: SymbolInfo[] = [
-  { icon: '🍩', name: 'Glazed Donut', multiplier: 5.0 },
-  { icon: '👑', name: 'Netherite Crown', multiplier: 4.0 },
-  { icon: '💎', name: 'Diamond Block', multiplier: 3.0 },
-  { icon: '🍏', name: 'God Apple', multiplier: 2.0 },
-  { icon: '🥖', name: 'Bread', multiplier: 1.5 },
+  { icon: '🍩', name: 'Glazed Donut', multiplier: 2.0 },
+  { icon: '👑', name: 'Netherite Crown', multiplier: 2.0 },
+  { icon: '💎', name: 'Diamond Block', multiplier: 1.8 },
+  { icon: '🍏', name: 'God Apple', multiplier: 1.5 },
+  { icon: '🥖', name: 'Bread', multiplier: 1.2 },
   { icon: '🥩', name: 'Rotten Flesh', multiplier: 0 },
 ];
 
@@ -62,8 +62,8 @@ export default function SlotsGame() {
     let s2 = SYMBOLS[Math.floor(secureRandom() * SYMBOLS.length)];
     let s3 = SYMBOLS[Math.floor(secureRandom() * SYMBOLS.length)];
 
-    // RIGGED: If all 3 match with multiplier > 5.0x, break reel 3
-    if (s1.multiplier > 5.0 && s1.name === s2.name && s2.name === s3.name) {
+    // RIGGED: If all 3 match with multiplier > 2.0x, break reel 3
+    if (s1.multiplier > 2.0 && s1.name === s2.name && s2.name === s3.name) {
       const others = SYMBOLS.filter(s => s.name !== s1.name);
       s3 = others[Math.floor(secureRandom() * others.length)];
     }
@@ -75,9 +75,9 @@ export default function SlotsGame() {
       // Payout logic
       let mult = 0;
       if (s1.name === s2.name && s2.name === s3.name && s1.multiplier > 0) {
-        mult = Math.min(5.00, s1.multiplier); // 3-of-a-kind jackpot! (Max 5x)
+        mult = Math.min(2.00, s1.multiplier); // 3-of-a-kind jackpot! (Max 2x)
       } else if ((s1.name === s2.name || s2.name === s3.name || s1.name === s3.name) && (s1.multiplier > 0 || s2.multiplier > 0)) {
-        mult = 1.5; // 2-of-a-kind minor win
+        mult = 1.2; // 2-of-a-kind minor win
       }
 
       const isWon = mult > 0;

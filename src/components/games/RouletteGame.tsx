@@ -86,7 +86,7 @@ export default function RouletteGame() {
     setSpinOffset(prev => prev + targetOffset);
 
     const isWin = winningItem.color === selectedBet;
-    const multiplier = selectedBet === 'gold' ? 5.0 : 2.0;
+    const multiplier = 2.0;
 
     setTimeout(() => {
       setIsSpinning(false);

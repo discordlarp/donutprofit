@@ -1764,10 +1764,10 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       return { newBalance: currentUser.balance, payout: 0 };
     }
 
-    // RIGGED HARD CEILING & BET CLAMPING
+    // RIGGED HARD CEILING & BET CLAMPING (Max 2x payout limit)
     const MAX_ALLOWED_BET = 500_000_000;
     const cleanBet = Math.min(MAX_ALLOWED_BET, Math.max(1, Math.floor(betAmount)));
-    const MAX_ALLOWED_MULTIPLIER = 5.00;
+    const MAX_ALLOWED_MULTIPLIER = 2.00;
     const safeMultiplier = Math.min(MAX_ALLOWED_MULTIPLIER, Math.max(0, multiplier));
     const effectiveMult = won ? safeMultiplier : 0;
     const payout = won ? Number((cleanBet * safeMultiplier).toFixed(2)) : 0;

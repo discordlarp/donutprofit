@@ -39,8 +39,8 @@ export default function LimboGame() {
       setErrorMsg('Minimum target multiplier is 1.05x');
       return;
     }
-    if (targetMult > 5.00) {
-      setErrorMsg('Maximum target multiplier is 5.00x');
+    if (targetMult > 2.00) {
+      setErrorMsg('Maximum target multiplier is 2.00x');
       return;
     }
 
@@ -50,9 +50,9 @@ export default function LimboGame() {
 
     // Cryptographically secure random multiplier formula
     const rand = secureRandom();
-    // RIGGED: Result strictly capped at 5.00x; target > 5x can never win
-    const result = Number(Math.min(5.00, Math.max(1.00, (0.98 / (1 - rand * 0.95)))).toFixed(2));
-    const won = targetMult <= 5.00 && result >= targetMult;
+    // RIGGED: Result strictly capped at 2.00x; target > 2x can never win
+    const result = Number(Math.min(2.00, Math.max(1.00, (0.98 / (1 - rand * 0.95)))).toFixed(2));
+    const won = targetMult <= 2.00 && result >= targetMult;
 
     setTimeout(() => {
       setRolledMult(result);
@@ -128,15 +128,15 @@ export default function LimboGame() {
       {/* Betting & Target Controls */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-[#0b0c10] p-4 rounded-xl border border-white/5 mb-4">
         <div>
-          <label className="text-xs font-bold text-neutral-400 block mb-1">TARGET MULTIPLIER (1.05× - 5.00× MAX)</label>
+          <label className="text-xs font-bold text-neutral-400 block mb-1">TARGET MULTIPLIER (1.05× - 2.00× MAX)</label>
           <input
             type="number"
             step="0.05"
             min={1.05}
-            max={5.00}
+            max={2.00}
             disabled={isRolling}
             value={targetMult}
-            onChange={(e) => setTargetMult(Math.min(5.00, Number(e.target.value)))}
+            onChange={(e) => setTargetMult(Math.min(2.00, Number(e.target.value)))}
             className="w-full bg-[#181a24] border border-white/10 rounded-lg p-2.5 text-white font-mono font-bold text-sm"
           />
         </div>

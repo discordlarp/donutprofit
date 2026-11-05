@@ -16,19 +16,19 @@ interface RiskConfig {
 
 const RISK_CONFIGS: Record<RiskLevel, RiskConfig> = {
   low: {
-    multipliers: [3.0, 1.6, 1.2, 0.9, 0.7, 0.9, 1.2, 1.6, 3.0],
+    multipliers: [2.0, 1.6, 1.2, 0.9, 0.7, 0.9, 1.2, 1.6, 2.0],
     colors: [
       '#EF4444', '#F97316', '#F59E0B', '#10B981', '#059669', '#10B981', '#F59E0B', '#F97316', '#EF4444'
     ]
   },
   medium: {
-    multipliers: [4.0, 2.0, 1.4, 0.6, 0.4, 0.6, 1.4, 2.0, 4.0],
+    multipliers: [2.0, 1.7, 1.3, 0.6, 0.4, 0.6, 1.3, 1.7, 2.0],
     colors: [
       '#DC2626', '#EA580C', '#D97706', '#10B981', '#047857', '#10B981', '#D97706', '#EA580C', '#DC2626'
     ]
   },
   high: {
-    multipliers: [5.0, 3.0, 1.5, 0.5, 0.2, 0.5, 1.5, 3.0, 5.0],
+    multipliers: [2.0, 1.8, 1.4, 0.5, 0.2, 0.5, 1.4, 1.8, 2.0],
     colors: [
       '#B91C1C', '#C2410C', '#B45309', '#10B981', '#065F46', '#10B981', '#B45309', '#C2410C', '#B91C1C'
     ]
@@ -310,7 +310,7 @@ export default function PlinkoGame() {
           if (landedBin === 0) landedBin = 1;
           if (landedBin === BIN_COUNT - 1) landedBin = BIN_COUNT - 2;
 
-          const finalMult = Math.min(5.00, config.multipliers[landedBin]);
+          const finalMult = Math.min(2.00, config.multipliers[landedBin]);
           const isWin = finalMult >= 1.0;
 
           // Visual Bin Bounce Flash
