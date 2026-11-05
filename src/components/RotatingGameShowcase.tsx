@@ -97,11 +97,11 @@ const GAME_IMAGE_SLIDES: FullImageSlide[] = [
     id: 'slots',
     title: 'SMP SLOTS',
     badge: '🎰 HIGH ROLLER',
-    badgeStyle: 'bg-purple-500/25 text-purple-300 border-purple-400/50',
+    badgeStyle: 'bg-amber-500/25 text-amber-300 border-amber-400/50',
     multiplier: '50.00x+ JACKPOT',
     players: 28,
     image: '/images/cards/slots.png',
-    glow: '#a855f7',
+    glow: '#f59e0b',
   },
   {
     id: 'coinflip',

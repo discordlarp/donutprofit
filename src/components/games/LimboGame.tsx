@@ -152,6 +152,25 @@ export default function LimboGame() {
             onChange={(e) => setBetAmount(Math.max(1, Number(e.target.value)))}
             className="w-full bg-[#181a24] border border-white/10 rounded-lg p-2.5 text-white font-mono font-bold text-sm"
           />
+          <div className="grid grid-cols-5 gap-1 mt-1.5">
+            {[
+              { label: '1M', val: 1000000 },
+              { label: '5M', val: 5000000 },
+              { label: '10M', val: 10000000 },
+              { label: '25M', val: 25000000 },
+              { label: 'MAX', val: user?.balance ?? 0 },
+            ].map((p) => (
+              <button
+                key={p.label}
+                type="button"
+                disabled={isRolling}
+                onClick={() => setBetAmount(Math.max(1, Math.min(user?.balance ?? 0, p.val)))}
+                className="py-0.5 rounded bg-white/5 hover:bg-white/10 text-[9px] font-mono font-bold text-neutral-300 hover:text-white border border-white/5 transition cursor-pointer disabled:opacity-40"
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 

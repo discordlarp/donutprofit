@@ -363,13 +363,35 @@ export default function BlackjackGame() {
               type="button"
               onClick={startHand}
               disabled={!user || user.balance <= 0}
-              className="w-full sm:w-1/2 py-3.5 rounded-xl font-black text-sm tracking-wider uppercase bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-black shadow-lg shadow-orange-500/25 transform active:scale-[0.98] transition"
+              className="w-full sm:w-1/2 py-3.5 rounded-xl font-black text-sm tracking-wider uppercase bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-black shadow-lg shadow-orange-500/25 transform active:scale-[0.98] transition cursor-pointer"
             >
               DEAL CARDS
             </button>
           </>
         )}
       </div>
+
+      {/* Quick Bet Presets when not in hand */}
+      {gameState !== 'playing' && (
+        <div className="grid grid-cols-5 gap-1.5 mt-2">
+          {[
+            { label: '1M', val: 1000000 },
+            { label: '5M', val: 5000000 },
+            { label: '10M', val: 10000000 },
+            { label: '25M', val: 25000000 },
+            { label: 'MAX', val: user?.balance ?? 0 },
+          ].map((p) => (
+            <button
+              key={p.label}
+              type="button"
+              onClick={() => setBetAmount(Math.max(1, Math.min(user?.balance ?? 0, p.val)))}
+              className="py-1 rounded-lg bg-white/5 hover:bg-white/10 text-[10px] font-mono font-bold text-neutral-300 hover:text-white border border-white/5 transition cursor-pointer"
+            >
+              {p.label}
+            </button>
+          ))}
+        </div>
+      )}
 
       {errorMsg && (
         <div className="mt-3 flex items-center gap-2 text-rose-400 text-xs bg-rose-500/10 border border-rose-500/20 p-2.5 rounded-lg">

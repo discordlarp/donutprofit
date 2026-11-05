@@ -241,7 +241,7 @@ export default function HomePage() {
                     className={`px-3 py-1 rounded-xl text-xs font-bold whitespace-nowrap transition flex items-center gap-1.5 cursor-pointer ${
                       isCurrent
                         ? 'bg-emerald-500 text-black shadow-md shadow-emerald-500/20'
-                        : 'bg-[#101320] hover:bg-[#181d2c] text-neutral-300 border border-white/5'
+                        : 'bg-[#0b0e16] hover:bg-[#121622] text-neutral-300 border border-white/10'
                     }`}
                   >
                     <span>{g.emoji}</span>

@@ -177,7 +177,7 @@ export default function MinesGame() {
                   type="button"
                   onClick={() => setBetAmount(prev => Math.max(1, Math.floor(prev / 2)))}
                   disabled={gameActive}
-                  className="bg-white/5 hover:bg-white/10 text-neutral-300 text-xs px-2 py-1 rounded font-bold"
+                  className="bg-white/5 hover:bg-white/10 text-neutral-300 text-xs px-2 py-1 rounded font-bold cursor-pointer"
                 >
                   ½
                 </button>
@@ -185,11 +185,31 @@ export default function MinesGame() {
                   type="button"
                   onClick={() => setBetAmount(prev => Math.min(user?.balance ?? 0, prev * 2))}
                   disabled={gameActive}
-                  className="bg-white/5 hover:bg-white/10 text-neutral-300 text-xs px-2 py-1 rounded font-bold"
+                  className="bg-white/5 hover:bg-white/10 text-neutral-300 text-xs px-2 py-1 rounded font-bold cursor-pointer"
                 >
                   2x
                 </button>
               </div>
+            </div>
+            {/* Quick Bet Presets */}
+            <div className="grid grid-cols-5 gap-1.5 mt-2">
+              {[
+                { label: '1M', val: 1000000 },
+                { label: '5M', val: 5000000 },
+                { label: '10M', val: 10000000 },
+                { label: '25M', val: 25000000 },
+                { label: 'MAX', val: user?.balance ?? 0 },
+              ].map((p) => (
+                <button
+                  key={p.label}
+                  type="button"
+                  disabled={gameActive}
+                  onClick={() => setBetAmount(Math.max(1, Math.min(user?.balance ?? 0, p.val)))}
+                  className="py-1 rounded-lg bg-white/5 hover:bg-white/10 text-[10px] font-mono font-bold text-neutral-300 hover:text-white border border-white/5 transition cursor-pointer disabled:opacity-40"
+                >
+                  {p.label}
+                </button>
+              ))}
             </div>
           </div>
 

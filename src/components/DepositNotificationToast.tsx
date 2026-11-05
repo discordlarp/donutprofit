@@ -20,12 +20,9 @@ export default function DepositNotificationToast() {
 
   return (
     <div className="fixed bottom-6 right-6 z-[9999] max-w-md w-full px-4 animate-in fade-in slide-in-from-bottom-5 duration-300">
-      <div className="relative overflow-hidden rounded-2xl bg-[#0d1512] border-2 border-emerald-500/80 p-5 shadow-2xl shadow-emerald-500/30 backdrop-blur-md">
-        {/* Glow ambient background */}
-        <div className="absolute -top-12 -right-12 w-36 h-36 bg-emerald-500/20 rounded-full blur-2xl pointer-events-none" />
-
+      <div className="relative overflow-hidden rounded-2xl bg-[#0b0e16] border border-emerald-500/40 p-5 shadow-2xl backdrop-blur-md">
         <div className="flex items-start gap-3.5 relative z-10">
-          <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-400 to-green-600 flex items-center justify-center text-black shrink-0 shadow-lg shadow-emerald-500/40">
+          <div className="w-11 h-11 rounded-xl bg-emerald-500 flex items-center justify-center text-black shrink-0 shadow-lg shadow-emerald-500/30">
             <Coins className="w-6 h-6 animate-bounce" />
           </div>
 

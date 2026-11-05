@@ -280,92 +280,45 @@ export default function ReferralPage() {
       <AuthModal isOpen={authModalOpen} onClose={() => setAuthModalOpen(false)} />
 
       {/* 1. TOP HERO BANNER */}
-      <div className="relative rounded-3xl overflow-hidden border border-purple-500/30 bg-gradient-to-r from-[#170732] via-[#240b49] to-[#3a0f69] p-7 sm:p-10 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-8">
-        {/* Subtle Ambient Cosmic Glows */}
-        <div className="absolute -top-16 -left-16 w-80 h-80 bg-purple-600/25 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-16 -right-16 w-80 h-80 bg-blue-600/20 rounded-full blur-3xl pointer-events-none" />
-
+      <div className="relative rounded-3xl overflow-hidden border border-white/10 bg-[#0b0e16] p-7 sm:p-10 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-8">
         {/* Left Side: Text Details */}
         <div className="flex-1 z-10 max-w-xl">
           <span className="text-amber-400 font-extrabold uppercase text-[11px] tracking-widest block mb-2 font-mono">
-            REFERRALS
+            AFFILIATES &amp; REWARDS
           </span>
           <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-[1.1] mb-4">
             Bring your friends,<br />
             earn from every<br />
             deposit
           </h1>
-          <p className="text-xs sm:text-sm text-purple-200/90 leading-relaxed font-medium mb-3">
-            Share your code. When someone signs up with it, you get a share of everything they deposit, paid out every week.
+          <p className="text-xs sm:text-sm text-neutral-400 leading-relaxed font-medium mb-3">
+            Share your personal invite code. When someone signs up, you get a lifetime revenue share of their wagers and deposits!
           </p>
-          <p className="text-xs sm:text-sm text-purple-100 font-bold leading-relaxed">
-            Plus <strong className="text-white font-black">20M</strong> for each friend who deposits 20M.
+          <p className="text-xs sm:text-sm text-neutral-300 font-bold leading-relaxed">
+            Plus <strong className="text-amber-400 font-black">+20,000,000 Cash</strong> credited for each qualifying friend.
           </p>
         </div>
 
-        {/* Right Side: Visual Graphic (Glowing Blue Donut & Connected Purple Network Spheres) */}
-        <div className="relative w-64 h-64 sm:w-72 sm:h-72 shrink-0 flex items-center justify-center select-none z-10">
-          {/* Pulsing Backlight */}
-          <div className="absolute w-52 h-52 rounded-full bg-gradient-to-tr from-purple-600/40 via-blue-500/40 to-fuchsia-500/40 blur-2xl animate-pulse" />
-
-          {/* SVG Connecting Light Trails */}
-          <svg className="absolute inset-0 w-full h-full pointer-events-none z-0" viewBox="0 0 280 280">
-            {/* Top Node Connector */}
-            <path d="M 140 140 L 60 70" stroke="rgba(192, 132, 252, 0.7)" strokeWidth="2.5" strokeDasharray="4 2" />
-            {/* Bottom Node Connector */}
-            <path d="M 140 140 L 55 205" stroke="rgba(192, 132, 252, 0.7)" strokeWidth="2.5" strokeDasharray="4 2" />
-            {/* Right Node Connector */}
-            <path d="M 140 140 L 225 145" stroke="rgba(192, 132, 252, 0.7)" strokeWidth="2.5" strokeDasharray="4 2" />
-          </svg>
-
-          {/* Node 1: Top Left Sphere */}
-          <div className="absolute top-4 left-6 z-20 w-14 h-14 rounded-full bg-gradient-to-br from-purple-500 via-indigo-600 to-purple-800 p-0.5 shadow-[0_0_20px_rgba(168,85,247,0.7)] flex items-center justify-center animate-bounce duration-1000">
-            <div className="w-full h-full rounded-full bg-[#1c0e3a]/80 backdrop-blur-md flex items-center justify-center border border-purple-300/60 shadow-inner">
-              <User className="w-6 h-6 text-purple-100" />
-            </div>
+        {/* Right Side: Clean Donut SMP Brand Card */}
+        <div className="relative w-full md:w-80 p-6 rounded-2xl bg-[#0e121b] border border-white/[0.08] shadow-xl flex flex-col items-center text-center">
+          <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-3xl mb-3 shadow-md">
+            🍩
           </div>
-
-          {/* Node 2: Bottom Left Sphere */}
-          <div className="absolute bottom-6 left-5 z-20 w-16 h-16 rounded-full bg-gradient-to-br from-fuchsia-500 via-purple-600 to-indigo-800 p-0.5 shadow-[0_0_22px_rgba(217,70,239,0.7)] flex items-center justify-center">
-            <div className="w-full h-full rounded-full bg-[#200e42]/80 backdrop-blur-md flex items-center justify-center border border-fuchsia-300/60 shadow-inner">
-              <User className="w-7 h-7 text-purple-100" />
-            </div>
-          </div>
-
-          {/* Node 3: Far Right Sphere */}
-          <div className="absolute top-1/2 -translate-y-1/2 right-1 z-20 w-14 h-14 rounded-full bg-gradient-to-br from-purple-500 via-violet-600 to-indigo-800 p-0.5 shadow-[0_0_20px_rgba(168,85,247,0.7)] flex items-center justify-center">
-            <div className="w-full h-full rounded-full bg-[#1b0d39]/80 backdrop-blur-md flex items-center justify-center border border-purple-300/60 shadow-inner">
-              <User className="w-6 h-6 text-purple-100" />
-            </div>
-          </div>
-
-          {/* Centerpiece: Glowing Blue Frosted 3D Donut */}
-          <div className="relative z-10 w-36 h-36 sm:w-40 sm:h-40 rounded-full flex items-center justify-center shadow-[0_0_40px_rgba(59,130,246,0.8)] filter drop-shadow">
-            {/* Outer Neon Glow Ring */}
-            <div className="absolute inset-0 rounded-full border-4 border-cyan-400/80 shadow-[0_0_30px_rgba(6,182,212,0.9)] animate-pulse" />
-
-            {/* Donut Body with Electric-Blue Glaze & Chocolate Rim */}
-            <div className="w-full h-full rounded-full bg-gradient-to-br from-[#00d2ff] via-[#0088ff] to-[#0055d4] p-3 shadow-2xl flex items-center justify-center border-4 border-sky-300 relative overflow-hidden">
-              {/* Glossy High-Gloss Reflection */}
-              <div className="absolute top-1 left-4 right-4 h-8 bg-white/40 rounded-full blur-sm transform -rotate-12 pointer-events-none" />
-
-              {/* Colorful Donut Sprinkles */}
-              <span className="absolute top-4 left-9 w-2 h-1 bg-yellow-300 rounded-full transform rotate-45" />
-              <span className="absolute top-8 right-8 w-2.5 h-1 bg-pink-300 rounded-full transform -rotate-30" />
-              <span className="absolute bottom-6 left-8 w-2 h-1 bg-white rounded-full transform rotate-12" />
-              <span className="absolute bottom-9 right-9 w-2 h-1 bg-amber-300 rounded-full transform -rotate-45" />
-              <span className="absolute top-12 left-5 w-2 h-1 bg-emerald-300 rounded-full transform rotate-90" />
-              <span className="absolute bottom-4 right-14 w-2 h-1 bg-fuchsia-300 rounded-full transform rotate-30" />
-
-              {/* Donut Center Hole */}
-              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-[#1c0838] border-4 border-amber-900 shadow-inner flex items-center justify-center" />
-            </div>
+          <h4 className="text-base font-black text-white uppercase tracking-wider mb-1">
+            Donut SMP Affiliates
+          </h4>
+          <p className="text-xs text-neutral-400 leading-relaxed mb-4">
+            Automated in-game bot rewards delivered directly to your Minecraft wallet.
+          </p>
+          <div className="w-full py-2 px-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono font-bold flex items-center justify-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span>Active Weekly Payouts</span>
           </div>
         </div>
       </div>
 
       {/* 2. MIDDLE CARD: REFERRAL RAFFLE */}
-      <div className="rounded-2xl border border-[#1b2644] bg-[#0c1222] p-6 sm:p-7 shadow-xl">
+      <div className="rounded-3xl border border-white/10 bg-[#0b0e16] p-6 sm:p-7 shadow-xl">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           {/* Left: Pool Amount & Info */}
           <div className="flex-1">
@@ -391,7 +344,7 @@ export default function ReferralPage() {
           {/* Right: 3 Metric Counters */}
           <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap shrink-0">
             {/* Box 1: Your tickets */}
-            <div className="flex-1 sm:flex-initial min-w-[105px] bg-[#080c18] border border-[#1a2542] rounded-xl px-4 py-3.5 text-center shadow-inner">
+            <div className="flex-1 sm:flex-initial min-w-[105px] bg-[#0e121b] border border-white/[0.08] rounded-2xl px-4 py-3.5 text-center shadow-inner">
               <span className="text-2xl font-black text-white font-mono block">
                 {ticketsCount}
               </span>
@@ -401,7 +354,7 @@ export default function ReferralPage() {
             </div>
 
             {/* Box 2: Referrals this round */}
-            <div className="flex-1 sm:flex-initial min-w-[130px] bg-[#080c18] border border-[#1a2542] rounded-xl px-4 py-3.5 text-center shadow-inner">
+            <div className="flex-1 sm:flex-initial min-w-[130px] bg-[#0e121b] border border-white/[0.08] rounded-2xl px-4 py-3.5 text-center shadow-inner">
               <span className="text-2xl font-black text-white font-mono block">
                 {referralCount}
               </span>
@@ -411,7 +364,7 @@ export default function ReferralPage() {
             </div>
 
             {/* Box 3: Tickets in total */}
-            <div className="flex-1 sm:flex-initial min-w-[105px] bg-[#080c18] border border-[#1a2542] rounded-xl px-4 py-3.5 text-center shadow-inner">
+            <div className="flex-1 sm:flex-initial min-w-[105px] bg-[#0e121b] border border-white/[0.08] rounded-2xl px-4 py-3.5 text-center shadow-inner">
               <span className="text-2xl font-black text-white font-mono block">
                 {totalTickets}
               </span>
@@ -426,14 +379,14 @@ export default function ReferralPage() {
       {/* 3. BOTTOM SECTION: TWO-COLUMN LAYOUT */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
         {/* Left Column: YOUR REFERRAL CODE */}
-        <div className="lg:col-span-8 rounded-2xl border border-[#1b2644] bg-[#0c1222] p-6 sm:p-7 shadow-xl flex flex-col justify-between gap-5">
+        <div className="lg:col-span-8 rounded-3xl border border-white/10 bg-[#0b0e16] p-6 sm:p-7 shadow-xl flex flex-col justify-between gap-5">
           <div>
             <h3 className="text-sm font-black text-white uppercase tracking-wider mb-4 font-mono">
               YOUR REFERRAL CODE
             </h3>
 
             {/* Inset Code Pill Box */}
-            <div className="bg-[#070b15] border border-[#1a233c] rounded-xl px-4 py-3.5 flex items-center justify-between mb-3 shadow-inner">
+            <div className="bg-[#080a10] border border-white/[0.08] rounded-2xl px-4 py-3.5 flex items-center justify-between mb-3 shadow-inner">
               <div className="flex items-center gap-3 min-w-0">
                 <span className="text-[10px] font-extrabold uppercase tracking-wider text-neutral-500 font-mono shrink-0">
                   YOUR CODE
@@ -449,7 +402,7 @@ export default function ReferralPage() {
               <button
                 type="button"
                 onClick={handleCopyCode}
-                className="w-full sm:flex-1 py-3 px-4 rounded-xl bg-[#141b2f] hover:bg-[#1c2642] border border-white/10 text-white font-black text-xs uppercase tracking-wider transition flex items-center justify-center gap-2 cursor-pointer active:scale-95 shadow-md"
+                className="w-full sm:flex-1 py-3 px-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white font-black text-xs uppercase tracking-wider transition flex items-center justify-center gap-2 cursor-pointer active:scale-95 shadow-md"
               >
                 {copiedCode ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4 text-neutral-300" />}
                 <span>{copiedCode ? 'COPIED CODE!' : 'COPY CODE'}</span>
@@ -458,9 +411,9 @@ export default function ReferralPage() {
               <button
                 type="button"
                 onClick={handleCopyLink}
-                className="w-full sm:flex-1 py-3 px-4 rounded-xl bg-[#3b82f6] hover:bg-[#2563eb] text-white font-black text-xs uppercase tracking-wider transition flex items-center justify-center gap-2 cursor-pointer active:scale-95 shadow-lg shadow-blue-500/25"
+                className="w-full sm:flex-1 py-3 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-black text-xs uppercase tracking-wider transition flex items-center justify-center gap-2 cursor-pointer active:scale-95 shadow-lg shadow-emerald-500/20"
               >
-                {copiedLink ? <Check className="w-4 h-4 text-white" /> : <Link2 className="w-4 h-4 text-white" />}
+                {copiedLink ? <Check className="w-4 h-4 text-black" /> : <Link2 className="w-4 h-4 text-black" />}
                 <span>{copiedLink ? 'COPIED LINK!' : 'COPY LINK'}</span>
               </button>
             </div>
@@ -479,12 +432,12 @@ export default function ReferralPage() {
               onChange={(e) => setCustomCodeInput(e.target.value)}
               placeholder="Make a custom code"
               maxLength={24}
-              className="flex-1 bg-[#070b15] border border-[#1a233c] rounded-xl px-4 py-3 text-xs text-white placeholder-neutral-500 font-mono outline-none focus:border-blue-500 transition shadow-inner"
+              className="flex-1 bg-[#080a10] border border-white/[0.08] rounded-xl px-4 py-3 text-xs text-white placeholder-neutral-500 font-mono outline-none focus:border-emerald-500 transition shadow-inner"
             />
             <button
               type="submit"
               disabled={!customCodeInput.trim()}
-              className="px-6 py-3 rounded-xl bg-[#1d2744] hover:bg-[#29365c] text-blue-300 disabled:opacity-50 disabled:cursor-not-allowed font-black text-xs uppercase tracking-wider transition cursor-pointer active:scale-95"
+              className="px-6 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white border border-white/10 disabled:opacity-40 disabled:cursor-not-allowed font-black text-xs uppercase tracking-wider transition cursor-pointer active:scale-95"
             >
               {saveSuccess ? 'SAVED!' : 'SAVE'}
             </button>
@@ -492,7 +445,7 @@ export default function ReferralPage() {
         </div>
 
         {/* Right Column: TIER / PROFIT SHARE CARD */}
-        <div className="lg:col-span-4 rounded-2xl border border-[#1b2644] bg-[#0c1222] p-6 sm:p-7 shadow-xl flex flex-col items-center justify-between text-center gap-4">
+        <div className="lg:col-span-4 rounded-3xl border border-white/10 bg-[#0b0e16] p-6 sm:p-7 shadow-xl flex flex-col items-center justify-between text-center gap-4">
           <div className="flex flex-col items-center w-full">
             {/* Minecraft Steve / Player Avatar */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -506,7 +459,7 @@ export default function ReferralPage() {
             />
 
             {/* Tier Badge */}
-            <span className="mt-3 px-3.5 py-1 rounded-md bg-[#3b82f6] text-white font-black text-xs uppercase tracking-wider shadow-sm">
+            <span className="mt-3 px-3.5 py-1 rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/30 font-black text-xs uppercase tracking-wider shadow-sm">
               TIER {currentTier}
             </span>
 
@@ -521,9 +474,9 @@ export default function ReferralPage() {
             </div>
 
             {/* Progress Bar to Next Tier */}
-            <div className="w-full h-1.5 bg-[#141c33] rounded-full overflow-hidden mb-2">
+            <div className="w-full h-1.5 bg-[#080a10] rounded-full overflow-hidden mb-2 border border-white/5">
               <div
-                className="h-full bg-[#3b82f6] rounded-full transition-all duration-500"
+                className="h-full bg-emerald-500 rounded-full transition-all duration-500"
                 style={{ width: `${Math.min(100, Math.max(0, (referralCount / 5) * 100))}%` }}
               />
             </div>
@@ -556,7 +509,7 @@ export default function ReferralPage() {
           </span>
         </div>
 
-        <div className="rounded-2xl border border-[#1b2644] bg-[#0c1222] p-6 sm:p-7 shadow-xl">
+        <div className="rounded-3xl border border-white/10 bg-[#0b0e16] p-6 sm:p-7 shadow-xl">
           <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-6">
             {/* Left Column: REFERRED BY & Status */}
             <div className="flex flex-col">
@@ -592,7 +545,7 @@ export default function ReferralPage() {
                   type="button"
                   onClick={handleRemoveReferrer}
                   disabled={changesLeft <= 0 || currentReferrer === 'None' || isLocked}
-                  className="text-xs font-bold text-blue-400 hover:text-blue-300 hover:underline disabled:opacity-40 disabled:hover:no-underline disabled:cursor-not-allowed transition cursor-pointer text-left w-fit"
+                  className="text-xs font-bold text-neutral-400 hover:text-white hover:underline disabled:opacity-40 disabled:hover:no-underline disabled:cursor-not-allowed transition cursor-pointer text-left w-fit"
                 >
                   Remove my referrer
                 </button>
@@ -616,12 +569,12 @@ export default function ReferralPage() {
                 placeholder="New code"
                 maxLength={24}
                 disabled={changesLeft <= 0 || (currentReferrer !== 'None' && isLocked)}
-                className="flex-1 sm:w-60 bg-[#070b15] border border-[#1a233c] rounded-xl px-4 py-3 text-xs text-white placeholder-neutral-500 font-mono outline-none focus:border-blue-500 transition shadow-inner disabled:opacity-50"
+                className="flex-1 sm:w-60 bg-[#080a10] border border-white/[0.08] rounded-xl px-4 py-3 text-xs text-white placeholder-neutral-500 font-mono outline-none focus:border-emerald-500 transition shadow-inner disabled:opacity-50"
               />
               <button
                 type="submit"
                 disabled={!newReferrerInput.trim() || changesLeft <= 0 || (currentReferrer !== 'None' && isLocked)}
-                className="px-6 py-3 rounded-xl bg-[#2563eb] hover:bg-[#1d4ed8] disabled:opacity-40 disabled:cursor-not-allowed text-white font-black text-xs uppercase tracking-wider transition cursor-pointer active:scale-95 shadow-md shadow-blue-500/20 shrink-0"
+                className="px-6 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 disabled:opacity-40 disabled:cursor-not-allowed text-black font-black text-xs uppercase tracking-wider transition cursor-pointer active:scale-95 shadow-md shrink-0"
               >
                 CHANGE
               </button>
@@ -648,7 +601,7 @@ export default function ReferralPage() {
       {/* VIEW TIERS MODAL */}
       {showTiersModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-[#0c1222] border border-[#1b2644] rounded-3xl max-w-md w-full p-6 shadow-2xl relative">
+          <div className="bg-[#0b0e16] border border-white/10 rounded-3xl max-w-md w-full p-6 shadow-2xl relative">
             <button
               onClick={() => setShowTiersModal(false)}
               className="absolute top-4 right-4 text-neutral-400 hover:text-white p-1 rounded-lg hover:bg-white/5 transition cursor-pointer"
@@ -674,8 +627,8 @@ export default function ReferralPage() {
                   key={t.tier}
                   className={`p-3.5 rounded-xl border flex items-center justify-between text-xs ${
                     t.active
-                      ? 'bg-blue-500/15 border-blue-500/40 text-blue-300 font-bold'
-                      : 'bg-[#080c18] border-white/5 text-neutral-300'
+                      ? 'bg-amber-500/10 border-amber-500/30 text-amber-300 font-bold'
+                      : 'bg-[#0e121b] border-white/5 text-neutral-300'
                   }`}
                 >
                   <div>
@@ -689,7 +642,7 @@ export default function ReferralPage() {
 
             <button
               onClick={() => setShowTiersModal(false)}
-              className="w-full mt-5 py-3 rounded-xl bg-[#3b82f6] hover:bg-[#2563eb] text-white font-black text-xs uppercase tracking-wider transition cursor-pointer"
+              className="w-full mt-5 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-black text-xs uppercase tracking-wider transition cursor-pointer"
             >
               Close
             </button>

@@ -234,11 +234,8 @@ export default function UserProfileModal({
           width: '100%',
           margin: '0 auto',
         }}
-        className="relative bg-[#0a0f1d] border border-[#1b2644] rounded-3xl p-6 shadow-2xl overflow-hidden select-none"
+        className="relative bg-[#0b0e16] border border-white/10 rounded-3xl p-6 shadow-2xl overflow-hidden select-none"
       >
-        {/* Emerald Ambient Glow at top center */}
-        <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-64 h-44 bg-emerald-500/25 rounded-full blur-3xl pointer-events-none" />
-
         {/* Close Button */}
         <button
           onClick={onClose}
@@ -253,7 +250,7 @@ export default function UserProfileModal({
           <img
             src={`https://mc-heads.net/avatar/${encodeURIComponent(cleanTarget)}/80`}
             alt={cleanTarget}
-            className="w-20 h-20 rounded-full border-2 border-white/10 shadow-xl object-cover bg-neutral-900"
+            className="w-20 h-20 rounded-2xl border-2 border-white/10 shadow-xl object-cover bg-neutral-900"
             onError={(e) => {
               (e.target as HTMLElement).style.display = 'none';
             }}
@@ -284,7 +281,7 @@ export default function UserProfileModal({
           >
             {lvlInfo.tier.name} Tier
           </span>
-          <span className="px-2.5 py-1 rounded-lg bg-[#132a58] text-[#5b95ff] font-mono font-black text-xs shadow-sm border border-blue-500/30">
+          <span className="px-2.5 py-1 rounded-lg bg-white/5 text-neutral-300 font-mono font-black text-xs shadow-sm border border-white/10">
             #{playerRank}
           </span>
         </div>
@@ -310,8 +307,8 @@ export default function UserProfileModal({
             onClick={() => setIsFriend(!isFriend)}
             className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
               isFriend
-                ? 'border border-emerald-500 bg-emerald-500/20 text-emerald-300 shadow-sm shadow-emerald-500/20'
-                : 'border border-emerald-500/60 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400'
+                ? 'border border-emerald-500 bg-emerald-500/20 text-emerald-300 shadow-sm'
+                : 'border border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400'
             }`}
           >
             <Users className="w-4 h-4" />
@@ -321,7 +318,7 @@ export default function UserProfileModal({
           <button
             type="button"
             onClick={handleMention}
-            className="px-4 py-2 rounded-xl border border-[#1c2a4d] bg-[#11192e] hover:bg-[#182442] text-neutral-300 hover:text-white text-xs font-bold transition flex items-center gap-2 cursor-pointer"
+            className="px-4 py-2 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-neutral-300 hover:text-white text-xs font-bold transition flex items-center gap-2 cursor-pointer"
           >
             <AtSign className="w-4 h-4 text-neutral-400" />
             <span>Mention</span>
@@ -331,7 +328,7 @@ export default function UserProfileModal({
         {/* 4 Stats Cards Grid */}
         <div className="grid grid-cols-4 gap-2 mb-4">
           {/* Card 1: Total played */}
-          <div className="bg-[#10172a] border border-[#1c2949] rounded-2xl p-2.5 flex flex-col justify-between min-h-[78px]">
+          <div className="bg-[#0e121b] border border-white/[0.08] rounded-2xl p-2.5 flex flex-col justify-between min-h-[78px]">
             <span className="text-[10px] sm:text-[11px] font-bold text-neutral-400 whitespace-nowrap">Total played</span>
             <div className="flex items-center gap-1 my-1">
               <span className="text-xs shrink-0">🪙</span>
@@ -345,7 +342,7 @@ export default function UserProfileModal({
           </div>
 
           {/* Card 2: Deposited */}
-          <div className="bg-[#10172a] border border-[#1c2949] rounded-2xl p-2.5 flex flex-col justify-between min-h-[78px]">
+          <div className="bg-[#0e121b] border border-white/[0.08] rounded-2xl p-2.5 flex flex-col justify-between min-h-[78px]">
             <span className="text-[10px] sm:text-[11px] font-bold text-neutral-400 whitespace-nowrap">Deposited</span>
             <div className="flex items-center gap-1 my-1">
               <span className="text-xs shrink-0">🪙</span>
@@ -357,7 +354,7 @@ export default function UserProfileModal({
           </div>
 
           {/* Card 3: Withdrawn */}
-          <div className="bg-[#10172a] border border-[#1c2949] rounded-2xl p-2.5 flex flex-col justify-between min-h-[78px]">
+          <div className="bg-[#0e121b] border border-white/[0.08] rounded-2xl p-2.5 flex flex-col justify-between min-h-[78px]">
             <span className="text-[10px] sm:text-[11px] font-bold text-neutral-400 whitespace-nowrap">Withdrawn</span>
             <div className="flex items-center gap-1 my-1">
               <span className="text-xs shrink-0">🪙</span>
@@ -369,7 +366,7 @@ export default function UserProfileModal({
           </div>
 
           {/* Card 4: Profit */}
-          <div className="bg-[#10172a] border border-[#1c2949] rounded-2xl p-2.5 flex flex-col justify-between min-h-[78px]">
+          <div className="bg-[#0e121b] border border-white/[0.08] rounded-2xl p-2.5 flex flex-col justify-between min-h-[78px]">
             <span className="text-[10px] sm:text-[11px] font-bold text-neutral-400 whitespace-nowrap">Profit</span>
             <div className="flex items-center gap-1 my-1">
               <span className="text-xs shrink-0">🪙</span>
@@ -382,7 +379,7 @@ export default function UserProfileModal({
         </div>
 
         {/* Tip Section Card */}
-        <div className="bg-[#10172a] border border-[#1c2949] rounded-2xl p-4 flex flex-col gap-3">
+        <div className="bg-[#0e121b] border border-white/[0.08] rounded-2xl p-4 flex flex-col gap-3">
           <div className="flex items-center justify-between">
             <h4 className="text-sm font-black text-white">
               Tip {cleanTarget}
@@ -396,9 +393,9 @@ export default function UserProfileModal({
             </div>
           </div>
 
-          {/* Input & Blue TIP Button */}
+          {/* Input & Emerald TIP Button */}
           <div className="flex items-center gap-2">
-            <div className="flex-1 bg-[#090d18] border border-[#19243f] rounded-xl px-3 py-2.5 flex items-center gap-2 focus-within:border-blue-500 transition shadow-inner">
+            <div className="flex-1 bg-[#080a10] border border-white/10 rounded-xl px-3 py-2.5 flex items-center gap-2 focus-within:border-emerald-500 transition shadow-inner">
               <span className="text-xs select-none">🪙</span>
               <input
                 type="text"
@@ -413,7 +410,7 @@ export default function UserProfileModal({
               type="button"
               onClick={handleSendTip}
               disabled={isSending || !tipInput.trim()}
-              className="px-6 py-2.5 rounded-xl bg-[#2563eb] hover:bg-[#1d4ed8] disabled:opacity-40 disabled:cursor-not-allowed text-white font-black text-xs uppercase tracking-wider transition cursor-pointer shadow-lg shadow-blue-500/25 active:scale-95 shrink-0"
+              className="px-6 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 disabled:opacity-40 disabled:cursor-not-allowed text-black font-black text-xs uppercase tracking-wider transition cursor-pointer active:scale-95 shrink-0"
             >
               {isSending ? '...' : 'TIP'}
             </button>
@@ -432,7 +429,7 @@ export default function UserProfileModal({
                     setTipInput(preset);
                   }
                 }}
-                className="py-1.5 px-2 rounded-xl bg-[#090d18] hover:bg-[#131c33] border border-[#19243f] text-xs font-bold text-neutral-300 hover:text-white transition text-center cursor-pointer active:scale-95"
+                className="py-1.5 px-2 rounded-xl bg-[#080a10] hover:bg-white/10 border border-white/5 text-xs font-bold text-neutral-300 hover:text-white transition text-center cursor-pointer active:scale-95"
               >
                 {preset}
               </button>

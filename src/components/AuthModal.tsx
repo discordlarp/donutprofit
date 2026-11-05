@@ -355,7 +355,7 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'minecraft' }:
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in">
       <div 
-        className="relative w-full max-w-2xl bg-[#0c0d14] border border-white/10 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col md:flex-row ring-1 ring-white/5"
+        className="relative w-full max-w-2xl bg-[#0b0e16] border border-white/10 rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close button */}
@@ -370,13 +370,13 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'minecraft' }:
         <div className="flex-1 p-6 sm:p-8 flex flex-col justify-between">
           <div>
             {/* Top Method Tabs */}
-            <div className="flex items-center gap-1.5 p-1 bg-[#141722] border border-white/5 rounded-2xl mb-5">
+            <div className="flex items-center gap-1.5 p-1 bg-[#0e121b] border border-white/10 rounded-2xl mb-5">
               <button
                 type="button"
                 onClick={() => { setActiveTab('minecraft'); setMsg(null); }}
                 className={`flex-1 py-2 px-3 rounded-xl text-xs font-black transition flex items-center justify-center gap-1.5 ${
                   activeTab === 'minecraft'
-                    ? 'bg-[#00e701] text-black shadow-md'
+                    ? 'bg-emerald-500 text-black shadow-md'
                     : 'text-neutral-400 hover:text-white'
                 }`}
               >
@@ -404,7 +404,7 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'minecraft' }:
                 className={`py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 ${
                   activeTab === 'staff'
                     ? 'bg-amber-500 text-black font-black'
-                    : 'text-neutral-500 hover:text-neutral-300'
+                    : 'text-neutral-400 hover:text-white'
                 }`}
               >
                 <ShieldAlert className="w-3 h-3" />
@@ -466,7 +466,7 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'minecraft' }:
                       placeholder="Your Minecraft IGN (e.g. cartisneakz)"
                       value={ign}
                       onChange={(e) => setIgn(e.target.value)}
-                      className="w-full bg-[#12151e] border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 text-sm font-bold text-white outline-none focus:border-emerald-500 transition font-mono"
+                      className="w-full bg-[#080a10] border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 text-sm font-bold text-white outline-none focus:border-emerald-500 transition font-mono"
                     />
                   </div>
 
@@ -480,14 +480,14 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'minecraft' }:
                       placeholder="Promotion Code (Optional - Get +20M)"
                       value={refCodeInput || activeReferrer || ''}
                       onChange={(e) => setRefCodeInput(e.target.value)}
-                      className="w-full bg-[#0a0c12] border border-amber-500/20 rounded-2xl py-2.5 pl-10 pr-4 text-xs font-bold text-white placeholder-neutral-500 outline-none focus:border-amber-400 transition font-mono"
+                      className="w-full bg-[#080a10] border border-amber-500/20 rounded-2xl py-2.5 pl-10 pr-4 text-xs font-bold text-white placeholder-neutral-500 outline-none focus:border-amber-400 transition font-mono"
                     />
                   </div>
 
                   <button
                     type="submit"
                     disabled={isVerifying}
-                    className="w-full bg-[#00e701] hover:bg-[#00c901] disabled:opacity-50 text-black font-black text-xs uppercase tracking-wider py-3.5 rounded-2xl transition shadow-lg shadow-emerald-500/25 flex items-center justify-center gap-2 transform active:scale-98"
+                    className="w-full bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-black font-black text-xs uppercase tracking-wider py-3.5 rounded-2xl transition shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 transform active:scale-98 cursor-pointer"
                   >
                     {isVerifying ? (
                       <>
@@ -507,7 +507,7 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'minecraft' }:
 
             {/* TAB 1 - STEP 2: In-Game Payment Verification Active */}
             {activeTab === 'minecraft' && isAwaitingInGamePayment && (
-              <div className="bg-[#0b1410] border border-emerald-500/30 rounded-2xl p-5">
+              <div className="bg-[#0e121b] border border-emerald-500/30 rounded-2xl p-5">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-[10px] font-black uppercase tracking-wider text-emerald-400">
                     STEP 2: IN-GAME VERIFICATION
@@ -525,9 +525,9 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'minecraft' }:
                 {/* Big Copyable Command Box */}
                 <div 
                   onClick={handleCopyCommand} 
-                  className="bg-[#050f0a] border border-emerald-500/40 hover:border-emerald-400 rounded-xl p-4 text-center cursor-pointer transition group shadow-inner relative"
+                  className="bg-[#080a10] border border-emerald-500/40 hover:border-emerald-400 rounded-xl p-4 text-center cursor-pointer transition group shadow-inner relative"
                 >
-                  <p className="font-mono text-base sm:text-lg font-black text-[#00e701] tracking-wide">
+                  <p className="font-mono text-base sm:text-lg font-black text-emerald-400 tracking-wide">
                     {verifyCommand || `/pay cartisneakz ${verifyAmount}`}
                   </p>
                   <div className="absolute right-3 top-1/2 -translate-y-1/2 opacity-80 group-hover:opacity-100 transition text-emerald-400">
@@ -563,7 +563,7 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'minecraft' }:
                     type="button"
                     disabled={isVerifying}
                     onClick={handleCheckStatusManual}
-                    className="flex-1 bg-[#00e701] hover:bg-[#00c901] disabled:opacity-50 text-black font-black py-2.5 rounded-xl text-xs uppercase tracking-wider transition shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2"
+                    className="flex-1 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-black font-black py-2.5 rounded-xl text-xs uppercase tracking-wider transition shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 cursor-pointer"
                   >
                     {isVerifying ? (
                       <>
@@ -782,7 +782,7 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'minecraft' }:
         </div>
 
         {/* Right Graphic Column: 3D Minecraft Steve & Alex or Discord Bot Graphic */}
-        <div className="hidden md:flex w-72 bg-gradient-to-b from-[#131722] to-[#0a0c12] border-l border-white/5 p-6 flex-col items-center justify-center relative overflow-hidden text-center">
+        <div className="hidden md:flex w-72 bg-[#0e121b] border-l border-white/5 p-6 flex-col items-center justify-center relative overflow-hidden text-center">
           {activeTab === 'discord' ? (
             <div className="flex flex-col items-center justify-center text-center p-2">
               <div className="w-16 h-16 rounded-3xl bg-[#5865F2]/20 border border-[#5865F2]/40 flex items-center justify-center text-[#5865F2] shadow-xl shadow-[#5865F2]/20 mb-4 animate-pulse">
@@ -806,13 +806,13 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'minecraft' }:
                 <img
                   src="/images/steve-alex.png"
                   alt="Minecraft Steve and Alex"
-                  className="w-full h-auto object-contain drop-shadow-[0_15px_30px_rgba(0,231,1,0.3)] select-none pointer-events-none transform hover:scale-105 transition duration-300"
+                  className="w-full h-auto object-contain drop-shadow-[0_15px_30px_rgba(16,185,129,0.2)] select-none pointer-events-none transform hover:scale-105 transition duration-300"
                 />
               </div>
 
               <div className="mt-4 flex flex-col items-center">
-                <span className="text-[11px] font-black uppercase text-[#00e701] tracking-wider flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-[#00e701] animate-pulse" />
+                <span className="text-[11px] font-black uppercase text-emerald-400 tracking-wider flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                   DONUTSMP VERIFIED
                 </span>
                 <p className="text-[11px] text-neutral-400 mt-1 font-mono">
