@@ -25,15 +25,19 @@ export default function MinesGame() {
   const [errorMsg, setErrorMsg] = useState<string>('');
 
   // Progressive multiplier:
-  // Tile 1: 1.05x | Tile 2: 1.11x | Tile 3: 1.18x | Tile 4: 1.27x (Capped Cashout)
-  // Tile 5+: Rigged bomb, explodes immediately!
+  // Smooth natural scaling: Tile 1: 1.05x | Tile 2: 1.11x | Tile 3: 1.18x | Tile 4: 1.27x | Tile 5: 1.38x ...
   const calculateMultiplier = (mines: number, revealed: number) => {
     if (revealed === 0) return 1.0;
     if (revealed === 1) return 1.05;
     if (revealed === 2) return 1.11;
     if (revealed === 3) return 1.18;
     if (revealed === 4) return 1.27;
-    return Number((1.27 + (revealed - 4) * 2.5).toFixed(2));
+    // Gradual smooth progression without abrupt jumps
+    let mult = 1.27;
+    for (let i = 5; i <= revealed; i++) {
+      mult += 0.08 + (i - 4) * 0.025;
+    }
+    return Number(mult.toFixed(2));
   };
 
   const currentMultiplier = calculateMultiplier(mineCount, revealedCount);
@@ -132,8 +136,7 @@ export default function MinesGame() {
     if (!gameActive || revealedCount === 0) return;
 
     sound.playWin();
-    // Strict cap at 1.27x on Mines so 4 tiles gives exactly 1.27x and never 1.98x
-    const finalMult = Math.min(1.27, overrideMult || currentMultiplier);
+    const finalMult = overrideMult || currentMultiplier;
     // Reveal all remaining
     const revealedAll = grid.map(t => ({ ...t, revealed: true }));
     setGrid(revealedAll);
