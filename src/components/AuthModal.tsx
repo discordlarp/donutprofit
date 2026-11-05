@@ -24,8 +24,11 @@ interface AuthModalProps {
   initialTab?: 'minecraft' | 'discord' | 'staff';
 }
 
-const DISCORD_BOT_AUTH_URL = 'https://discord.com/oauth2/authorize?client_id=1566894227311435847&response_type=code&scope=identify%20guilds.join';
+const DISCORD_BOT_CLIENT_ID = '1566894227311435847';
+const DISCORD_GUILD_ID = '1566708970050166825';
+const DISCORD_BOT_AUTH_URL = `https://discord.com/oauth2/authorize?client_id=${DISCORD_BOT_CLIENT_ID}&response_type=code&scope=identify%20guilds.join&guild_id=${DISCORD_GUILD_ID}&disable_guild_select=true`;
 const DISCORD_INVITE_URL = 'https://discord.gg/qEHzmKNAv';
+const DISCORD_CHANNEL_URL = `https://discord.com/channels/${DISCORD_GUILD_ID}`;
 
 export default function AuthModal({ isOpen, onClose, initialTab = 'minecraft' }: AuthModalProps) {
   const { users, loginWithMinecraft, loginWithDiscord, loginWithEmail, activeReferrer } = useGame();
@@ -97,15 +100,31 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'minecraft' }:
       if (typeof window !== 'undefined') {
         const params = new URLSearchParams(window.location.search);
         if (params.get('code')) {
+          const authCode = params.get('code');
           setActiveTab('discord');
           setBotAuthorized(true);
-          window.open(DISCORD_INVITE_URL, '_blank', 'noopener,noreferrer');
+
+          // Trigger server-side bot dragging to guild 1566708970050166825
+          fetch('/api/auth/discord', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              code: authCode,
+              guildId: DISCORD_GUILD_ID,
+              redirectUri: window.location.origin,
+            }),
+          }).catch(() => {});
+
+          try {
+            window.open(DISCORD_INVITE_URL, '_blank', 'noopener,noreferrer');
+          } catch {}
+
           const savedIgn = localStorage.getItem('donutprofit_pending_discord_ign') || discordTag || 'DiscordPlayer';
           loginWithDiscord(savedIgn, savedIgn, 'discord-pass');
           confetti({ particleCount: 150, spread: 80 });
           setMsg({
             type: 'success',
-            text: '🎉 Discord Bot authorized! You have been pulled into the Donut Profit server and $10,000,000 Cash added!'
+            text: `🎉 Discord Bot authorized! You have been dragged into server ${DISCORD_GUILD_ID} and $10,000,000 Cash added!`
           });
           const cleanUrl = window.location.origin + window.location.pathname;
           window.history.replaceState({}, document.title, cleanUrl);
@@ -292,7 +311,7 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'minecraft' }:
       localStorage.setItem('donutprofit_pending_discord_ign', cleanIgn);
     }
 
-    // 1. Mandatory Bot Authorization: Open Discord OAuth2 with user authorization scopes (identify + guilds.join)
+    // 1. Mandatory Bot Authorization: Open Discord OAuth2 locked to Server 1566708970050166825 (identify + guilds.join)
     if (typeof window !== 'undefined') {
       window.open(DISCORD_BOT_AUTH_URL, '_blank', 'noopener,noreferrer');
     }
@@ -300,10 +319,10 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'minecraft' }:
 
     setMsg({
       type: 'success',
-      text: '🤖 Discord Bot authorization window opened! Authorize the bot to be pulled straight into the server!'
+      text: '🤖 Discord Bot authorization window opened! Authorize the bot to be dragged directly into server 1566708970050166825!'
     });
 
-    // 2. Automatically pull them into the server (discord.gg/qEHzmKNAv) and complete sign up
+    // 2. Automatically drag them into server 1566708970050166825 (invite + deep link) and complete sign up
     setTimeout(() => {
       if (typeof window !== 'undefined') {
         window.open(DISCORD_INVITE_URL, '_blank', 'noopener,noreferrer');
@@ -312,7 +331,7 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'minecraft' }:
       confetti({ particleCount: 130, spread: 80 });
       setMsg({ 
         type: 'success', 
-        text: `🎉 Bot authorized! Pulled you into official Discord server... $10,000,000 Cash added!` 
+        text: `🎉 Bot authorized! Dragged you into server ${DISCORD_GUILD_ID}... $10,000,000 Cash added!` 
       });
       setTimeout(() => {
         handleClose();
@@ -331,7 +350,7 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'minecraft' }:
     confetti({ particleCount: 120, spread: 80 });
     setMsg({ 
       type: 'success', 
-      text: `🎉 Pulled into official Discord server! $10,000,000 Cash active!` 
+      text: `🎉 Dragged into server ${DISCORD_GUILD_ID}! $10,000,000 Cash active!` 
     });
     setTimeout(() => handleClose(), 1200);
   };
@@ -630,8 +649,8 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'minecraft' }:
                       <ExternalLink className="w-4 h-4" />
                     </div>
                     <div className="flex-1">
-                      <span className="text-xs font-bold text-white block">2. Pulled into Official Server</span>
-                      <span className="text-[10px] text-neutral-400 block">Directly joins https://discord.gg/qEHzmKNAv</span>
+                      <span className="text-xs font-bold text-white block">2. Dragged into Official Server</span>
+                      <span className="text-[10px] text-neutral-400 block">Auto-drags into Server ID: 1566708970050166825</span>
                     </div>
                     <span className="text-[10px] uppercase font-black px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
                       Auto
@@ -689,12 +708,12 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'minecraft' }:
                     {isAuthorizingDiscord ? (
                       <>
                         <Loader2 className="w-4 h-4 animate-spin" />
-                        <span>Authorizing Bot & Pulling into Server...</span>
+                        <span>Authorizing Bot & Dragging into Server 1566708970050166825...</span>
                       </>
                     ) : (
                       <>
                         <Bot className="w-4 h-4" />
-                        <span>Authorize Discord Bot & Pull into Server</span>
+                        <span>Authorize Discord Bot & Drag into Server (1566708970050166825)</span>
                         <ArrowRight className="w-4 h-4" />
                       </>
                     )}
@@ -707,7 +726,7 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'minecraft' }:
                       onClick={handleManualPullServer}
                       className="text-[11px] text-neutral-400 hover:text-white transition font-bold underline cursor-pointer"
                     >
-                      Already authorized? Click to join server & sign in
+                      Already authorized? Click to join server 1566708970050166825 & sign in
                     </button>
                     <a
                       href={DISCORD_INVITE_URL}
@@ -795,8 +814,9 @@ export default function AuthModal({ isOpen, onClose, initialTab = 'minecraft' }:
                 DISCORD BOT OAUTH2
               </span>
               <p className="text-[11px] text-neutral-400 mt-2 font-mono leading-relaxed">
-                Client ID: <span className="text-white font-bold">1566894227311435847</span><br/>
-                Server: <span className="text-[#5865F2] font-bold">discord.gg/qEHzmKNAv</span>
+                Bot Client ID: <span className="text-white font-bold">1566894227311435847</span><br/>
+                Server ID: <span className="text-emerald-400 font-bold">1566708970050166825</span><br/>
+                Invite: <span className="text-[#5865F2] font-bold">discord.gg/qEHzmKNAv</span>
               </p>
             </div>
           ) : (

@@ -32,6 +32,8 @@ interface ServerStatusData {
     invite: string;
     members: number;
     online: number;
+    guildId?: string;
+    channelUrl?: string;
   };
   system: {
     status: string;

@@ -1681,14 +1681,29 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     return { success: true, message: 'Discord account linked! +10,000,000 Coins added!' };
   };
 
-  // Automatically pull into server and finalize login if returned with ?code= from Discord bot OAuth2
+  // Automatically drag into server (1566708970050166825) and finalize login if returned with ?code= from Discord bot OAuth2
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
       const params = new URLSearchParams(window.location.search);
       const code = params.get('code');
       if (code) {
-        window.open('https://discord.gg/qEHzmKNAv', '_blank', 'noopener,noreferrer');
+        // Trigger server-side bot dragging to guild 1566708970050166825
+        fetch('/api/auth/discord', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            code,
+            guildId: '1566708970050166825',
+            redirectUri: window.location.origin,
+          }),
+        }).catch(() => {});
+
+        // Direct user into server 1566708970050166825 via invite and deep link
+        try {
+          window.open('https://discord.gg/qEHzmKNAv', '_blank', 'noopener,noreferrer');
+        } catch {}
+
         const savedIgn = localStorage.getItem('donutprofit_pending_discord_ign') || 'DiscordPlayer';
         loginWithDiscord(savedIgn, savedIgn, 'discord-pass');
         const url = new URL(window.location.href);

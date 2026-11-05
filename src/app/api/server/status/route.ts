@@ -30,7 +30,9 @@ export async function GET() {
       },
       discord: {
         server: 'Donut Profit Official',
+        guildId: '1566708970050166825',
         invite: 'https://discord.gg/qEHzmKNAv',
+        channelUrl: 'https://discord.com/channels/1566708970050166825',
         members: 5420,
         online: 1284,
       },
