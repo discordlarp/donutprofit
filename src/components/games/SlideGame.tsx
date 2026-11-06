@@ -43,10 +43,18 @@ export default function SlideGame() {
       return;
     }
 
-    sound.playClick();
+    sound.playSpin();
     setIsSliding(true);
     setLandedMult(null);
     setIsWin(null);
+
+    // Audio ticks during slide
+    let ticks = 0;
+    const tickInterval = setInterval(() => {
+      ticks++;
+      sound.playTick();
+      if (ticks > 12) clearInterval(tickInterval);
+    }, 160);
 
     // Mathematical Slide outcome with 84% RTP (16% House Edge)
     const r = Math.max(0.0001, secureRandom());
@@ -68,6 +76,7 @@ export default function SlideGame() {
       if (progress < 1) {
         animRef.current = requestAnimationFrame(animate);
       } else {
+        clearInterval(tickInterval);
         // Slide stopped on landed multiplier
         setIsSliding(false);
         setLandedMult(finalMult);
@@ -75,9 +84,16 @@ export default function SlideGame() {
         setIsWin(won);
 
         if (won) {
-          sound.playWin();
+          if (targetMult >= 5.0) {
+            sound.playJackpot();
+          } else {
+            sound.playCashout();
+          }
           recordBet('slide', betAmount, targetMult, true, { landed: finalMult, target: targetMult });
-          confetti({ particleCount: 70, spread: 65 });
+          confetti({
+            particleCount: targetMult >= 5.0 ? 110 : 70,
+            spread: 65
+          });
         } else {
           sound.playLose();
           recordBet('slide', betAmount, 0, false, { landed: finalMult, target: targetMult });
@@ -89,10 +105,18 @@ export default function SlideGame() {
   };
 
   useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.code === 'Space' && (e.target as HTMLElement)?.tagName !== 'INPUT') {
+        e.preventDefault();
+        if (!isSliding) startSlide();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
     return () => {
+      window.removeEventListener('keydown', handleKeyDown);
       if (animRef.current) cancelAnimationFrame(animRef.current);
     };
-  }, []);
+  }, [isSliding, betAmount, targetMult, user]);
 
   const winPayout = betAmount * targetMult;
 
@@ -199,16 +223,22 @@ export default function SlideGame() {
             <button
               type="button"
               disabled={isSliding}
-              onClick={() => setBetAmount(prev => Math.max(1, Math.floor(prev / 2)))}
-              className="bg-[#181a24] hover:bg-[#202330] border border-white/10 px-3 rounded-lg text-xs font-bold text-neutral-300"
+              onClick={() => {
+                sound.playChip();
+                setBetAmount(prev => Math.max(1, Math.floor(prev / 2)));
+              }}
+              className="bg-[#181a24] hover:bg-[#202330] border border-white/10 px-3 rounded-lg text-xs font-bold text-neutral-300 cursor-pointer"
             >
               1/2
             </button>
             <button
               type="button"
               disabled={isSliding}
-              onClick={() => setBetAmount(prev => prev * 2)}
-              className="bg-[#181a24] hover:bg-[#202330] border border-white/10 px-3 rounded-lg text-xs font-bold text-neutral-300"
+              onClick={() => {
+                sound.playChip();
+                setBetAmount(prev => prev * 2);
+              }}
+              className="bg-[#181a24] hover:bg-[#202330] border border-white/10 px-3 rounded-lg text-xs font-bold text-neutral-300 cursor-pointer"
             >
               2X
             </button>
@@ -221,9 +251,10 @@ export default function SlideGame() {
         type="button"
         disabled={isSliding}
         onClick={startSlide}
-        className="w-full bg-gradient-to-r from-violet-600 via-indigo-600 to-violet-600 hover:from-violet-500 hover:to-indigo-500 text-white font-black py-3.5 rounded-xl shadow-lg shadow-violet-500/25 active:scale-95 transition cursor-pointer text-sm uppercase tracking-wider mb-4 disabled:opacity-50"
+        className="w-full bg-gradient-to-r from-violet-600 via-indigo-600 to-violet-600 hover:from-violet-500 hover:to-indigo-500 text-white font-black py-3.5 rounded-xl shadow-lg shadow-violet-500/25 active:scale-95 transition cursor-pointer text-sm uppercase tracking-wider mb-4 disabled:opacity-50 flex items-center justify-center gap-2"
       >
-        {isSliding ? 'SLIDING...' : `PLAY SLIDE FOR ${formatCash(winPayout)}`}
+        <span>{isSliding ? 'SLIDING...' : `PLAY SLIDE FOR ${formatCash(winPayout)}`}</span>
+        <span className="text-xs opacity-75 font-normal">(SPACE)</span>
       </button>
 
       {/* Footer Info */}

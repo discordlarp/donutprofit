@@ -164,13 +164,16 @@ export default function RecentBetsTable() {
                       {/* Multiplier */}
                       <td className="py-3 px-3 text-center">
                         <span
-                          className={`px-2 py-0.5 rounded font-black text-[11px] ${
-                            isWin
+                          className={`px-2 py-0.5 rounded font-black text-[11px] inline-flex items-center gap-1 ${
+                            bet.multiplier >= 5.0
+                              ? 'bg-amber-500/25 text-amber-300 border border-amber-400/50 shadow-sm shadow-amber-500/20'
+                              : isWin
                               ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
                               : 'text-neutral-500 font-semibold'
                           }`}
                         >
-                          {bet.multiplier.toFixed(2)}x
+                          {bet.multiplier >= 5.0 && <span>🔥</span>}
+                          <span>{bet.multiplier.toFixed(2)}x</span>
                         </span>
                       </td>
 
@@ -178,12 +181,15 @@ export default function RecentBetsTable() {
                       <td className="py-3 px-3 text-right font-black">
                         <span
                           className={
-                            isWin
+                            bet.payout >= 5000000
+                              ? 'text-amber-400 font-black flex items-center justify-end gap-1'
+                              : isWin
                               ? 'text-emerald-400 font-bold'
                               : 'text-neutral-500'
                           }
                         >
-                          {isWin ? formatCash(bet.payout, { showPlus: true }) : '$0'}
+                          {bet.payout >= 5000000 && <span>👑</span>}
+                          <span>{isWin ? formatCash(bet.payout, { showPlus: true }) : '$0'}</span>
                         </span>
                       </td>
                     </tr>

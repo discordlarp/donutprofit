@@ -16,6 +16,8 @@ import {
 } from 'lucide-react';
 import AuthModal from '@/components/AuthModal';
 import { formatCash } from '@/lib/format';
+import { sound } from '@/lib/sound';
+import confetti from 'canvas-confetti';
 
 export default function DepositPage() {
   const { user, deposits, settings, createDepositRequest, updateUserIgn } = useGame();
@@ -31,12 +33,14 @@ export default function DepositPage() {
 
   const handleCopyIgn = () => {
     navigator.clipboard.writeText(settings.designatedIgn);
+    sound.playClick();
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
   const handleCopyCommand = () => {
     navigator.clipboard.writeText(`/pay ${settings.designatedIgn} ${inGameAmount}`);
+    sound.playClick();
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -64,6 +68,8 @@ export default function DepositPage() {
     }
 
     createDepositRequest(inGameAmount, proof);
+    sound.playCashout();
+    confetti({ particleCount: 70, spread: 60 });
     setSubmitted(true);
     setTimeout(() => setSubmitted(false), 4000);
   };

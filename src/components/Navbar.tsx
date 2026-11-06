@@ -30,8 +30,11 @@ import {
   Star,
   Plus,
   Wallet,
-  Package
+  Package,
+  Volume2,
+  VolumeX
 } from 'lucide-react';
+import { sound } from '@/lib/sound';
 
 interface NavbarProps {
   onToggleChat?: () => void;
@@ -59,6 +62,33 @@ export default function Navbar({ onToggleChat: propOnToggle, isChatOpen: propIsO
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [isPassModalOpen, setIsPassModalOpen] = useState(false);
   const [isPromoModalOpen, setIsPromoModalOpen] = useState(false);
+
+  const [balanceGain, setBalanceGain] = useState<number | null>(null);
+  const [isMuted, setIsMuted] = useState(false);
+  const prevBalanceRef = React.useRef<number | null>(null);
+
+  React.useEffect(() => {
+    setIsMuted(sound.getMuted());
+  }, []);
+
+  const toggleGlobalAudio = () => {
+    const next = sound.toggleSound();
+    setIsMuted(next);
+  };
+
+  React.useEffect(() => {
+    if (user?.balance !== undefined) {
+      if (prevBalanceRef.current !== null && user.balance > prevBalanceRef.current) {
+        const diff = user.balance - prevBalanceRef.current;
+        if (diff > 0) {
+          setBalanceGain(diff);
+          const timer = setTimeout(() => setBalanceGain(null), 2500);
+          return () => clearTimeout(timer);
+        }
+      }
+      prevBalanceRef.current = user.balance;
+    }
+  }, [user?.balance]);
 
   const userLevel = calculateUserLevel(user?.totalWagered ?? 0);
   const [newPass, setNewPass] = useState('');
@@ -256,13 +286,18 @@ export default function Navbar({ onToggleChat: propOnToggle, isChatOpen: propIsO
                     <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-amber-500 flex items-center justify-center text-black font-black mr-2 shrink-0">
                       <Coins className="w-4 h-4 text-black" />
                     </div>
-                    <div className="flex flex-col min-w-0 mr-2 sm:mr-3">
+                    <div className="flex flex-col min-w-0 mr-2 sm:mr-3 relative">
                       <span className="text-[8px] sm:text-[9px] uppercase font-bold text-neutral-400 leading-none">
                         Cash Balance
                       </span>
                       <span className="text-xs sm:text-sm font-bold text-amber-400 font-mono truncate">
                         {formatCash(user.balance)}
                       </span>
+                      {balanceGain && (
+                        <span className="absolute -top-3.5 right-0 text-[10px] font-black font-mono text-emerald-300 bg-emerald-950/95 border border-emerald-400/60 px-1.5 py-0.2 rounded shadow-lg shadow-emerald-500/30 animate-bounce whitespace-nowrap z-50 pointer-events-none">
+                          +{formatCash(balanceGain)}
+                        </span>
+                      )}
                     </div>
                   </button>
 
@@ -500,6 +535,21 @@ export default function Navbar({ onToggleChat: propOnToggle, isChatOpen: propIsO
                 </button>
               </div>
             )}
+
+            {/* Global Sound FX Toggle */}
+            <button
+              onClick={toggleGlobalAudio}
+              type="button"
+              aria-label={isMuted ? 'Unmute Sound Effects' : 'Mute Sound Effects'}
+              title={isMuted ? 'Sound Muted - Click to Unmute' : 'Sound Active - Click to Mute'}
+              className={`p-2 sm:p-2.5 rounded-xl border transition flex items-center justify-center cursor-pointer ${
+                isMuted
+                  ? 'bg-rose-500/15 text-rose-400 border-rose-500/30 hover:bg-rose-500/25'
+                  : 'bg-white/5 hover:bg-white/10 text-neutral-300 border-white/10 hover:border-white/20 hover:text-white'
+              }`}
+            >
+              {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4 text-emerald-400" />}
+            </button>
 
             {/* Global Live Chat Toggle Button */}
             <button

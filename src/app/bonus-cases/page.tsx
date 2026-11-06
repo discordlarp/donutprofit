@@ -408,9 +408,16 @@ export default function BonusCasesPage() {
     setIsOpening(true);
     setUnboxedReward(null);
 
-    if (!isSoundMuted) sound.playClick();
+    sound.playSpin();
+    let tickCount = 0;
+    const tickTimer = setInterval(() => {
+      tickCount++;
+      sound.playTick();
+      if (tickCount >= 5) clearInterval(tickTimer);
+    }, 200);
 
     setTimeout(() => {
+      clearInterval(tickTimer);
       // Possible rewards
       const rewards = [
         { name: '$500,000 Cash', amount: 500000, tier: 'Common' },
@@ -432,8 +439,15 @@ export default function BonusCasesPage() {
       if (user) {
         supplyCoins(user.id, won.amount, `Bonus Case Unbox: ${won.name}`);
       }
-      if (!isSoundMuted) sound.playWin();
-      confetti({ particleCount: 110, spread: 80 });
+      if (won.amount >= 5000000) {
+        sound.playJackpot();
+      } else {
+        sound.playCashout();
+      }
+      confetti({
+        particleCount: won.amount >= 5000000 ? 140 : 100,
+        spread: 80
+      });
     }, 1200);
   };
 

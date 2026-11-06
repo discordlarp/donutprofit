@@ -353,7 +353,13 @@ export default function HomePage() {
               >
                 {/* 3D Poster Artwork with Hover Zoom */}
                 <div className="aspect-[4/5] w-full overflow-hidden relative">
-                  <GameArtwork type={game.id} className="w-full h-full" />
+                  <GameArtwork type={game.id} className="w-full h-full transition-transform duration-300 group-hover:scale-105" />
+                  {/* Hover Quick Play Overlay */}
+                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center p-3 pointer-events-none">
+                    <span className="px-3.5 py-1.5 rounded-xl bg-emerald-500 text-black font-black text-xs uppercase tracking-wider flex items-center gap-1.5 shadow-lg shadow-emerald-500/30 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-200">
+                      <Play className="w-3.5 h-3.5 fill-current" /> PLAY
+                    </span>
+                  </div>
                 </div>
 
                 {/* Card Bottom Meta Info */}

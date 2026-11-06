@@ -190,7 +190,7 @@ export default function RotatingGameShowcase({ onSelectGame }: RotatingGameShowc
   };
 
   const handleSelectGame = (gameId: GameType) => {
-    sound.playWin();
+    sound.playClick();
     onSelectGame(gameId);
     const arena = document.getElementById('play-arena');
     if (arena) {

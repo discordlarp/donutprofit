@@ -4,12 +4,16 @@ import React, { useEffect } from 'react';
 import { useGame } from '@/context/GameContext';
 import { CheckCircle2, Coins, X, Sparkles } from 'lucide-react';
 import { formatCash } from '@/lib/format';
+import { sound } from '@/lib/sound';
+import confetti from 'canvas-confetti';
 
 export default function DepositNotificationToast() {
   const { depositNotification, dismissDepositNotification } = useGame();
 
   useEffect(() => {
     if (!depositNotification?.open) return;
+    sound.playCashout();
+    confetti({ particleCount: 90, spread: 70, origin: { y: 0.8, x: 0.85 } });
     const timer = setTimeout(() => {
       dismissDepositNotification();
     }, 8000); // Auto-dismiss after 8 seconds

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useGame } from '@/context/GameContext';
 import { Box, Coins, AlertCircle, Sparkles } from 'lucide-react';
 import confetti from 'canvas-confetti';
@@ -153,8 +153,16 @@ export default function CasesGame() {
   const [reelItems, setReelItems] = useState<LootItem[]>([]);
   const [errorMsg, setErrorMsg] = useState<string>('');
   const stripRef = useRef<HTMLDivElement>(null);
+  const tickTimeoutsRef = useRef<NodeJS.Timeout[]>([]);
 
-  const openCase = () => {
+  // Cleanup tick timeouts on unmount
+  useEffect(() => {
+    return () => {
+      tickTimeoutsRef.current.forEach(clearTimeout);
+    };
+  }, []);
+
+  const openCase = React.useCallback(() => {
     if (isSpinning) return;
     setErrorMsg('');
 
@@ -171,7 +179,7 @@ export default function CasesGame() {
       return;
     }
 
-    sound.playClick();
+    sound.playSpin();
     setIsSpinning(true);
     setUnboxedItem(null);
 
@@ -196,6 +204,20 @@ export default function CasesGame() {
     }
     setReelItems(strip);
 
+    // Clear previous timeouts
+    tickTimeoutsRef.current.forEach(clearTimeout);
+    tickTimeoutsRef.current = [];
+
+    // Schedule decelerating ticks mimicking CS:GO / Stake crate reel
+    const tickIntervals = [
+      80, 160, 240, 320, 400, 490, 580, 680, 790, 910, 1040, 1180, 1330, 
+      1490, 1660, 1850, 2060, 2290, 2540, 2810, 3110, 3440, 3750
+    ];
+    tickIntervals.forEach(ms => {
+      const t = setTimeout(() => sound.playTick(), ms);
+      tickTimeoutsRef.current.push(t);
+    });
+
     // Reset transform first
     if (stripRef.current) {
       stripRef.current.style.transition = 'none';
@@ -218,9 +240,12 @@ export default function CasesGame() {
 
       const isWon = winner.mult >= 1.0;
       if (isWon) {
-        sound.playWin();
-        if (winner.mult >= 2.5) {
-          confetti({ particleCount: 80, spread: 70 });
+        if (winner.mult >= 4.0) {
+          sound.playJackpot();
+          confetti({ particleCount: 120, spread: 90 });
+        } else {
+          sound.playCashout();
+          confetti({ particleCount: 60, spread: 60 });
         }
       } else {
         sound.playBomb();
@@ -228,6 +253,24 @@ export default function CasesGame() {
 
       recordBet('cases', betAmount, winner.mult, isWon, { item: winner.name });
     }, 4000);
+  }, [isSpinning, user, betAmount, recordBet]);
+
+  // Spacebar shortcut
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) return;
+      if (e.code === 'Space') {
+        e.preventDefault();
+        openCase();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [openCase]);
+
+  const setBetQuick = (val: number) => {
+    sound.playChip();
+    setBetAmount(Math.max(1, Math.floor(val)));
   };
 
   return (
@@ -324,33 +367,54 @@ export default function CasesGame() {
 
       {/* Betting Controls */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-[#0b0c10] p-4 rounded-xl border border-white/5">
-        <div className="flex items-center gap-3 w-full sm:w-auto">
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
           <span className="text-xs font-bold text-neutral-400">BET:</span>
-          <div className="relative flex-1 sm:w-36">
-            <Coins className="w-4 h-4 text-amber-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <div className="relative w-28">
+            <Coins className="w-3.5 h-3.5 text-amber-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
             <input
               type="number"
               min={1}
               disabled={isSpinning}
               value={betAmount}
               onChange={(e) => setBetAmount(Math.max(1, Number(e.target.value)))}
-              className="w-full bg-[#181a24] border border-white/10 rounded-lg py-2.5 pl-9 pr-3 text-white font-mono font-bold text-xs outline-none focus:border-sky-500 transition"
+              className="w-full bg-[#181a24] border border-white/10 rounded-lg py-1.5 pl-8 pr-2 text-white font-mono font-bold text-xs outline-none focus:border-sky-500 transition"
             />
           </div>
-          <div className="flex gap-1">
+          <div className="flex items-center gap-1">
             <button
-              onClick={() => setBetAmount(prev => Math.max(1, Math.floor(prev / 2)))}
+              onClick={() => setBetQuick(betAmount / 2)}
               disabled={isSpinning}
-              className="px-2.5 py-1.5 bg-white/5 hover:bg-white/10 rounded text-[11px] text-neutral-300 font-bold"
+              className="px-2 py-1 bg-white/5 hover:bg-white/10 border border-white/5 rounded text-[10px] text-neutral-300 font-bold"
             >
               ½
             </button>
             <button
-              onClick={() => setBetAmount(prev => Math.min(user?.balance ?? 0, prev * 2))}
+              onClick={() => setBetQuick(betAmount * 2)}
               disabled={isSpinning}
-              className="px-2.5 py-1.5 bg-white/5 hover:bg-white/10 rounded text-[11px] text-neutral-300 font-bold"
+              className="px-2 py-1 bg-white/5 hover:bg-white/10 border border-white/5 rounded text-[10px] text-neutral-300 font-bold"
             >
               2x
+            </button>
+            <button
+              onClick={() => setBetQuick(50)}
+              disabled={isSpinning}
+              className="px-2 py-1 bg-white/5 hover:bg-white/10 border border-white/5 rounded text-[10px] text-neutral-300 font-bold"
+            >
+              $50
+            </button>
+            <button
+              onClick={() => setBetQuick(250)}
+              disabled={isSpinning}
+              className="px-2 py-1 bg-white/5 hover:bg-white/10 border border-white/5 rounded text-[10px] text-neutral-300 font-bold"
+            >
+              $250
+            </button>
+            <button
+              onClick={() => setBetQuick(user?.balance ?? 1000)}
+              disabled={isSpinning}
+              className="px-2 py-1 bg-white/5 hover:bg-white/10 border border-white/5 rounded text-[10px] text-emerald-400 font-bold"
+            >
+              MAX
             </button>
           </div>
         </div>
@@ -358,9 +422,9 @@ export default function CasesGame() {
         <button
           onClick={openCase}
           disabled={isSpinning || !user || user.balance <= 0}
-          className="w-full sm:w-auto px-8 py-3 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-lg transition active:scale-95 disabled:opacity-50"
+          className="w-full sm:w-auto px-8 py-3 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-sky-500/20 transition active:scale-95 disabled:opacity-50 cursor-pointer"
         >
-          {isSpinning ? 'SPINNING CRATE...' : 'OPEN CRATE'}
+          {isSpinning ? 'SPINNING CRATE...' : 'OPEN CRATE [Space]'}
         </button>
       </div>
     </div>

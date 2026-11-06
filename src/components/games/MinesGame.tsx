@@ -94,8 +94,8 @@ export default function MinesGame() {
       return;
     }
 
-    // Safe gem
-    sound.playGem();
+    // Safe gem with ascending musical pitch
+    sound.playGem(revealedCount);
     const newGrid = [...grid];
     newGrid[index] = { ...tile, revealed: true };
     setGrid(newGrid);
@@ -112,8 +112,12 @@ export default function MinesGame() {
   const handleCashout = (overrideMult?: number) => {
     if (!gameActive || revealedCount === 0) return;
 
-    sound.playWin();
     const finalMult = overrideMult || currentMultiplier;
+    if (finalMult >= 3.0) {
+      sound.playJackpot();
+    } else {
+      sound.playCashout();
+    }
     // Reveal all remaining
     const revealedAll = grid.map(t => ({ ...t, revealed: true }));
     setGrid(revealedAll);
@@ -124,8 +128,8 @@ export default function MinesGame() {
     recordBet('mines', betAmount, finalMult, true, { mineCount, revealedCount });
 
     confetti({
-      particleCount: 80,
-      spread: 70,
+      particleCount: finalMult >= 3 ? 120 : 70,
+      spread: finalMult >= 3 ? 90 : 65,
       origin: { y: 0.6 }
     });
   };
@@ -175,7 +179,10 @@ export default function MinesGame() {
               <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
                 <button
                   type="button"
-                  onClick={() => setBetAmount(prev => Math.max(1, Math.floor(prev / 2)))}
+                  onClick={() => {
+                    sound.playChip();
+                    setBetAmount(prev => Math.max(1, Math.floor(prev / 2)));
+                  }}
                   disabled={gameActive}
                   className="bg-white/5 hover:bg-white/10 text-neutral-300 text-xs px-2 py-1 rounded font-bold cursor-pointer"
                 >
@@ -183,7 +190,10 @@ export default function MinesGame() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setBetAmount(prev => Math.min(user?.balance ?? 0, prev * 2))}
+                  onClick={() => {
+                    sound.playChip();
+                    setBetAmount(prev => Math.min(user?.balance ?? 0, prev * 2));
+                  }}
                   disabled={gameActive}
                   className="bg-white/5 hover:bg-white/10 text-neutral-300 text-xs px-2 py-1 rounded font-bold cursor-pointer"
                 >
@@ -204,7 +214,10 @@ export default function MinesGame() {
                   key={p.label}
                   type="button"
                   disabled={gameActive}
-                  onClick={() => setBetAmount(Math.max(1, Math.min(user?.balance ?? 0, p.val)))}
+                  onClick={() => {
+                    sound.playChip();
+                    setBetAmount(Math.max(1, Math.min(user?.balance ?? 0, p.val)));
+                  }}
                   className="py-1 rounded-lg bg-white/5 hover:bg-white/10 text-[10px] font-mono font-bold text-neutral-300 hover:text-white border border-white/5 transition cursor-pointer disabled:opacity-40"
                 >
                   {p.label}

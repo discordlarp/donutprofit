@@ -149,6 +149,17 @@ export default function PlinkoGame() {
     setActiveBallsCount(ballsRef.current.length);
   };
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.code === 'Space' && (e.target as HTMLElement)?.tagName !== 'INPUT') {
+        e.preventDefault();
+        handleDropBall();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [betAmount, risk, user]);
+
   // Main Canvas Render & Physics Loop
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -295,7 +306,7 @@ export default function PlinkoGame() {
             ball.vy = Math.abs(Math.sin(bounceAngle) * bounceSpeed) + 0.4;
 
             peg.lastHitTime = now;
-            sound.playGem();
+            sound.playTick();
             break;
           }
         }
@@ -318,12 +329,17 @@ export default function PlinkoGame() {
 
           // Sound and Confetti
           if (isWin) {
-            sound.playWin();
-            if (finalMult >= 2.0) {
-              confetti({ particleCount: 80, spread: 65, origin: { y: 0.7 } });
+            if (finalMult >= 5.0) {
+              sound.playJackpot();
+              confetti({ particleCount: 120, spread: 80, origin: { y: 0.7 } });
+            } else {
+              sound.playCashout();
+              if (finalMult >= 1.5) {
+                confetti({ particleCount: 65, spread: 60, origin: { y: 0.7 } });
+              }
             }
           } else {
-            sound.playClick();
+            sound.playBomb();
           }
 
           // Record Bet in Context
@@ -433,8 +449,11 @@ export default function PlinkoGame() {
                 <button
                   key={r}
                   type="button"
-                  onClick={() => setRisk(r)}
-                  className={`py-2 text-xs font-black uppercase tracking-wider rounded-lg transition ${
+                  onClick={() => {
+                    sound.playChip();
+                    setRisk(r);
+                  }}
+                  className={`py-2 text-xs font-black uppercase tracking-wider rounded-lg transition cursor-pointer ${
                     risk === r
                       ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30'
                       : 'text-neutral-400 hover:text-white hover:bg-white/5'
@@ -470,15 +489,21 @@ export default function PlinkoGame() {
               <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
                 <button
                   type="button"
-                  onClick={() => setBetAmount((prev) => Math.max(1, Math.floor(prev / 2)))}
-                  className="bg-white/5 hover:bg-white/10 text-neutral-300 text-xs px-2 py-1 rounded font-bold transition"
+                  onClick={() => {
+                    sound.playChip();
+                    setBetAmount((prev) => Math.max(1, Math.floor(prev / 2)));
+                  }}
+                  className="bg-white/5 hover:bg-white/10 text-neutral-300 text-xs px-2 py-1 rounded font-bold transition cursor-pointer"
                 >
                   ½
                 </button>
                 <button
                   type="button"
-                  onClick={() => setBetAmount((prev) => Math.min(user?.balance ?? 0, prev * 2))}
-                  className="bg-white/5 hover:bg-white/10 text-neutral-300 text-xs px-2 py-1 rounded font-bold transition"
+                  onClick={() => {
+                    sound.playChip();
+                    setBetAmount((prev) => Math.min(user?.balance ?? 0, prev * 2));
+                  }}
+                  className="bg-white/5 hover:bg-white/10 text-neutral-300 text-xs px-2 py-1 rounded font-bold transition cursor-pointer"
                 >
                   2x
                 </button>
@@ -491,8 +516,11 @@ export default function PlinkoGame() {
                 <button
                   key={amt}
                   type="button"
-                  onClick={() => setBetAmount(amt)}
-                  className={`text-[10px] font-mono font-bold px-2 py-1 rounded-lg border transition ${
+                  onClick={() => {
+                    sound.playChip();
+                    setBetAmount(amt);
+                  }}
+                  className={`text-[10px] font-mono font-bold px-2 py-1 rounded-lg border transition cursor-pointer ${
                     betAmount === amt
                       ? 'bg-purple-500/20 text-purple-300 border-purple-500/40'
                       : 'bg-white/5 text-neutral-400 border-white/5 hover:bg-white/10 hover:text-white'
@@ -504,8 +532,11 @@ export default function PlinkoGame() {
               {user && (
                 <button
                   type="button"
-                  onClick={() => setBetAmount(Math.floor(user.balance))}
-                  className="text-[10px] font-mono font-bold px-2 py-1 rounded-lg bg-amber-500/10 text-amber-300 border border-amber-500/30 hover:bg-amber-500/20 transition"
+                  onClick={() => {
+                    sound.playChip();
+                    setBetAmount(Math.floor(user.balance));
+                  }}
+                  className="text-[10px] font-mono font-bold px-2 py-1 rounded-lg bg-amber-500/10 text-amber-300 border border-amber-500/30 hover:bg-amber-500/20 transition cursor-pointer"
                 >
                   MAX
                 </button>
@@ -518,10 +549,11 @@ export default function PlinkoGame() {
             type="button"
             onClick={handleDropBall}
             disabled={!user || user.balance <= 0}
-            className="w-full py-4 rounded-2xl font-black text-sm tracking-wider uppercase bg-gradient-to-r from-purple-500 via-indigo-500 to-purple-600 hover:from-purple-600 hover:to-indigo-600 text-white shadow-xl shadow-purple-500/30 transition transform active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
+            className="w-full py-4 rounded-2xl font-black text-sm tracking-wider uppercase bg-gradient-to-r from-purple-500 via-indigo-500 to-purple-600 hover:from-purple-600 hover:to-indigo-600 text-white shadow-xl shadow-purple-500/30 transition transform active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
           >
             <CircleDot className="w-4 h-4" />
             <span>DROP BALL ({formatCash(betAmount)})</span>
+            <span className="text-xs opacity-75 font-normal">(SPACE)</span>
             {activeBallsCount > 0 && (
               <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded-full font-mono">
                 {activeBallsCount} active

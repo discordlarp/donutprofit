@@ -23,6 +23,7 @@ export default function CrashGame() {
   const startTimeRef = useRef<number>(0);
   const isRunningRef = useRef<boolean>(false);
   const currentMultiplierRef = useRef<number>(1.00);
+  const lastTickRef = useRef<number>(1.00);
 
   const handleCashout = (atMultiplier?: number) => {
     if (!isRunningRef.current) return;
@@ -32,14 +33,18 @@ export default function CrashGame() {
     const winMult = atMultiplier || currentMultiplierRef.current || multiplier;
     setCashedMultiplier(winMult);
     setGameState('cashed_out');
-    sound.playWin();
+    if (winMult >= 5.0) {
+      sound.playJackpot();
+    } else {
+      sound.playCashout();
+    }
     setCrashHistory(prev => [crashPointRef.current, ...prev.slice(0, 7)]);
 
     recordBet('crash', betAmount, winMult, true, { crashPoint: crashPointRef.current, cashedAt: winMult });
 
     confetti({
-      particleCount: 80,
-      spread: 70,
+      particleCount: winMult >= 5.0 ? 120 : 80,
+      spread: winMult >= 5.0 ? 85 : 70,
       origin: { y: 0.6 }
     });
   };
@@ -77,6 +82,7 @@ export default function CrashGame() {
 
     isRunningRef.current = true;
     currentMultiplierRef.current = 1.00;
+    lastTickRef.current = 1.00;
     setGameState('running');
     setMultiplier(1.00);
     setCashedMultiplier(0);
@@ -89,6 +95,13 @@ export default function CrashGame() {
       // Growth curve: exponential increase
       const current = Number(Math.pow(Math.E, 0.07 * elapsed * (1 + elapsed * 0.12)).toFixed(2));
       currentMultiplierRef.current = current;
+
+      // Play heart-racing tick every 0.25x or whole unit as it climbs
+      const tickStep = current >= 5.0 ? 0.5 : 0.2;
+      if (current - lastTickRef.current >= tickStep) {
+        lastTickRef.current = current;
+        sound.playTick();
+      }
 
       // Check auto cashout
       const autoVal = parseFloat(autoCashout);
@@ -114,10 +127,22 @@ export default function CrashGame() {
   };
 
   useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.code === 'Space' && (e.target as HTMLElement)?.tagName !== 'INPUT') {
+        e.preventDefault();
+        if (isRunningRef.current) {
+          handleCashout();
+        } else if (gameState !== 'running') {
+          startCrashGame();
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
     return () => {
+      window.removeEventListener('keydown', handleKeyDown);
       if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
     };
-  }, []);
+  }, [gameState, betAmount, user]);
 
   // Compute rocket position percentage on 0-100 grid based on multiplier (1.0 to 4.0)
   const progress = Math.min(1, Math.max(0, (multiplier - 1.0) / 3.0));
@@ -176,7 +201,10 @@ export default function CrashGame() {
               <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
                 <button
                   type="button"
-                  onClick={() => setBetAmount(prev => Math.max(1, Math.floor(prev / 2)))}
+                  onClick={() => {
+                    sound.playChip();
+                    setBetAmount(prev => Math.max(1, Math.floor(prev / 2)));
+                  }}
                   disabled={gameState === 'running'}
                   className="bg-white/5 hover:bg-white/10 text-neutral-300 text-xs px-2 py-1 rounded font-bold cursor-pointer"
                 >
@@ -184,7 +212,10 @@ export default function CrashGame() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setBetAmount(prev => Math.min(user?.balance ?? 0, prev * 2))}
+                  onClick={() => {
+                    sound.playChip();
+                    setBetAmount(prev => Math.min(user?.balance ?? 0, prev * 2));
+                  }}
                   disabled={gameState === 'running'}
                   className="bg-white/5 hover:bg-white/10 text-neutral-300 text-xs px-2 py-1 rounded font-bold cursor-pointer"
                 >
@@ -205,7 +236,10 @@ export default function CrashGame() {
                   key={p.label}
                   type="button"
                   disabled={gameState === 'running'}
-                  onClick={() => setBetAmount(Math.max(1, Math.min(user?.balance ?? 0, p.val)))}
+                  onClick={() => {
+                    sound.playChip();
+                    setBetAmount(Math.max(1, Math.min(user?.balance ?? 0, p.val)));
+                  }}
                   className="py-1 rounded-lg bg-white/5 hover:bg-white/10 text-[10px] font-mono font-bold text-neutral-300 hover:text-white border border-white/5 transition cursor-pointer disabled:opacity-40"
                 >
                   {p.label}
@@ -243,18 +277,18 @@ export default function CrashGame() {
             <button
               type="button"
               onClick={() => handleCashout()}
-              className="w-full py-4 rounded-xl font-black text-base tracking-wider uppercase bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-600 hover:to-teal-500 text-black shadow-lg shadow-emerald-500/30 transform active:scale-[0.98] transition flex items-center justify-center gap-2 animate-pulse"
+              className="w-full py-4 rounded-xl font-black text-base tracking-wider uppercase bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-600 hover:to-teal-500 text-black shadow-lg shadow-emerald-500/30 transform active:scale-[0.98] transition flex items-center justify-center gap-2 animate-pulse cursor-pointer"
             >
-              CASHOUT {formatCash(betAmount * multiplier)} ({multiplier.toFixed(2)}x)
+              CASHOUT {formatCash(betAmount * multiplier)} ({multiplier.toFixed(2)}x) <span className="text-xs opacity-75 font-normal">(SPACE)</span>
             </button>
           ) : (
             <button
               type="button"
               onClick={startCrashGame}
               disabled={!user || user.balance <= 0}
-              className="w-full py-4 rounded-xl font-black text-sm tracking-wider uppercase bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-black shadow-lg shadow-orange-500/25 transform active:scale-[0.98] transition"
+              className="w-full py-4 rounded-xl font-black text-sm tracking-wider uppercase bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-black shadow-lg shadow-orange-500/25 transform active:scale-[0.98] transition flex items-center justify-center gap-2 cursor-pointer"
             >
-              BET & LAUNCH ROCKET
+              BET & LAUNCH ROCKET <span className="text-xs opacity-75 font-normal">(SPACE)</span>
             </button>
           )}
         </div>

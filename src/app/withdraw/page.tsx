@@ -13,6 +13,8 @@ import {
 } from 'lucide-react';
 import AuthModal from '@/components/AuthModal';
 import { formatCash } from '@/lib/format';
+import { sound } from '@/lib/sound';
+import confetti from 'canvas-confetti';
 
 export default function WithdrawPage() {
   const { user, withdrawals, settings, createWithdrawalRequest, updateUserIgn } = useGame();
@@ -51,8 +53,11 @@ export default function WithdrawPage() {
 
     const res = createWithdrawalRequest(amountCoins);
     if (res.success) {
+      sound.playCashout();
+      confetti({ particleCount: 80, spread: 70 });
       setStatusMsg({ type: 'success', text: res.message });
     } else {
+      sound.playBomb();
       setStatusMsg({ type: 'error', text: res.message });
     }
   };

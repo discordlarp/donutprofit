@@ -54,9 +54,17 @@ export default function WheelGame() {
       return;
     }
 
-    sound.playClick();
+    sound.playSpin();
     setIsSpinning(true);
     setResultSegment(null);
+
+    // Wheel audio ticks during rotation
+    let ticks = 0;
+    const tickInterval = setInterval(() => {
+      ticks++;
+      sound.playTick();
+      if (ticks > 16) clearInterval(tickInterval);
+    }, 180);
 
     // Cryptographically secure fair wheel spin with 84% RTP
     const chosenIdx = Math.floor(secureRandom() * SEGMENTS.length);
@@ -83,6 +91,7 @@ export default function WheelGame() {
       if (progress < 1) {
         animRef.current = requestAnimationFrame(animate);
       } else {
+        clearInterval(tickInterval);
         setIsSpinning(false);
         const segment = SEGMENTS[chosenIdx];
         setResultSegment(segment);
@@ -90,11 +99,18 @@ export default function WheelGame() {
         // Record bet
         const won = segment.mult > 0;
         if (won) {
-          sound.playWin();
+          if (segment.mult >= 3.0) {
+            sound.playJackpot();
+          } else {
+            sound.playCashout();
+          }
           recordBet('wheel', betAmount, segment.mult, true, { segment: segment.label });
-          confetti({ particleCount: 75, spread: 70 });
+          confetti({
+            particleCount: segment.mult >= 3.0 ? 110 : 75,
+            spread: 70
+          });
         } else {
-          sound.playLose();
+          sound.playBomb();
           recordBet('wheel', betAmount, 0, false, { segment: segment.label });
         }
       }
@@ -104,10 +120,18 @@ export default function WheelGame() {
   };
 
   useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.code === 'Space' && (e.target as HTMLElement)?.tagName !== 'INPUT') {
+        e.preventDefault();
+        if (!isSpinning) spinWheel();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
     return () => {
+      window.removeEventListener('keydown', handleKeyDown);
       if (animRef.current) cancelAnimationFrame(animRef.current);
     };
-  }, []);
+  }, [isSpinning, betAmount, user]);
 
   return (
     <div className="bg-[#0f1118] border border-pink-500/30 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden text-white">
@@ -191,16 +215,22 @@ export default function WheelGame() {
             <button
               type="button"
               disabled={isSpinning}
-              onClick={() => setBetAmount(prev => Math.max(1, Math.floor(prev / 2)))}
-              className="bg-[#181a24] hover:bg-[#202330] border border-white/10 px-3 rounded-lg text-xs font-bold text-neutral-300"
+              onClick={() => {
+                sound.playChip();
+                setBetAmount(prev => Math.max(1, Math.floor(prev / 2)));
+              }}
+              className="bg-[#181a24] hover:bg-[#202330] border border-white/10 px-3 rounded-lg text-xs font-bold text-neutral-300 cursor-pointer"
             >
               1/2
             </button>
             <button
               type="button"
               disabled={isSpinning}
-              onClick={() => setBetAmount(prev => prev * 2)}
-              className="bg-[#181a24] hover:bg-[#202330] border border-white/10 px-3 rounded-lg text-xs font-bold text-neutral-300"
+              onClick={() => {
+                sound.playChip();
+                setBetAmount(prev => prev * 2);
+              }}
+              className="bg-[#181a24] hover:bg-[#202330] border border-white/10 px-3 rounded-lg text-xs font-bold text-neutral-300 cursor-pointer"
             >
               2X
             </button>
@@ -212,9 +242,10 @@ export default function WheelGame() {
             type="button"
             disabled={isSpinning}
             onClick={spinWheel}
-            className="w-full bg-gradient-to-r from-pink-500 via-rose-500 to-pink-500 hover:from-pink-400 hover:to-rose-400 text-white font-black py-3.5 rounded-xl shadow-lg shadow-pink-500/25 active:scale-95 transition cursor-pointer text-sm uppercase tracking-wider disabled:opacity-50"
+            className="w-full bg-gradient-to-r from-pink-500 via-rose-500 to-pink-500 hover:from-pink-400 hover:to-rose-400 text-white font-black py-3.5 rounded-xl shadow-lg shadow-pink-500/25 active:scale-95 transition cursor-pointer text-sm uppercase tracking-wider disabled:opacity-50 flex items-center justify-center gap-2"
           >
-            {isSpinning ? 'SPINNING WHEEL...' : `SPIN WHEEL FOR ${formatCash(betAmount * 20.00)}`}
+            <span>{isSpinning ? 'SPINNING WHEEL...' : 'SPIN WHEEL'}</span>
+            <span className="text-xs opacity-75 font-normal">[Space]</span>
           </button>
         </div>
       </div>

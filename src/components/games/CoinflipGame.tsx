@@ -37,9 +37,14 @@ export default function CoinflipGame() {
       return;
     }
 
-    sound.playClick();
+    sound.playSpin();
     setIsFlipping(true);
     setLastResult(null);
+
+    // Audio tick pulses during flip
+    const tickInterval = setInterval(() => {
+      sound.playTick();
+    }, 280);
 
     // Cryptographically secure random outcome (protected against Math.random tampering)
     const winRate = 0.50;
@@ -52,14 +57,19 @@ export default function CoinflipGame() {
     setFlipRotation(prev => prev + targetDeg);
 
     setTimeout(() => {
+      clearInterval(tickInterval);
       setLastResult(outcome);
       setIsFlipping(false);
       setHistory(prev => [outcome, ...prev.slice(0, 9)]);
 
       if (isWin) {
-        sound.playWin();
+        if (betAmount >= 5000000) {
+          sound.playJackpot();
+        } else {
+          sound.playCashout();
+        }
         confetti({
-          particleCount: 80,
+          particleCount: betAmount >= 5000000 ? 120 : 80,
           spread: 70,
           origin: { y: 0.6 }
         });
@@ -70,6 +80,17 @@ export default function CoinflipGame() {
       recordBet('coinflip', betAmount, 1.70, isWin, { chosenSide, outcome });
     }, 2200);
   };
+
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.code === 'Space' && (e.target as HTMLElement)?.tagName !== 'INPUT') {
+        e.preventDefault();
+        if (!isFlipping) handleFlip();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isFlipping, betAmount, chosenSide, user]);
 
   return (
     <div className="bg-[#12141a] border border-orange-500/20 rounded-2xl p-6 shadow-2xl relative overflow-hidden">
@@ -116,8 +137,11 @@ export default function CoinflipGame() {
               <button
                 type="button"
                 disabled={isFlipping}
-                onClick={() => setChosenSide('glazed')}
-                className={`py-3.5 px-4 rounded-xl border flex items-center justify-center gap-2 font-black text-xs uppercase transition-all shadow-md ${
+                onClick={() => {
+                  sound.playChip();
+                  setChosenSide('glazed');
+                }}
+                className={`py-3.5 px-4 rounded-xl border flex items-center justify-center gap-2 font-black text-xs uppercase transition-all shadow-md cursor-pointer ${
                   chosenSide === 'glazed'
                     ? 'bg-gradient-to-r from-amber-500 to-yellow-500 border-amber-300 text-black ring-2 ring-amber-400/50 scale-[1.02]'
                     : 'bg-[#181a24] border-white/10 text-neutral-400 hover:text-white hover:bg-[#1e2230]'
@@ -130,8 +154,11 @@ export default function CoinflipGame() {
               <button
                 type="button"
                 disabled={isFlipping}
-                onClick={() => setChosenSide('chocolate')}
-                className={`py-3.5 px-4 rounded-xl border flex items-center justify-center gap-2 font-black text-xs uppercase transition-all shadow-md ${
+                onClick={() => {
+                  sound.playChip();
+                  setChosenSide('chocolate');
+                }}
+                className={`py-3.5 px-4 rounded-xl border flex items-center justify-center gap-2 font-black text-xs uppercase transition-all shadow-md cursor-pointer ${
                   chosenSide === 'chocolate'
                     ? 'bg-gradient-to-r from-neutral-800 to-neutral-700 border-neutral-400 text-white ring-2 ring-white/30 scale-[1.02]'
                     : 'bg-[#181a24] border-white/10 text-neutral-400 hover:text-white hover:bg-[#1e2230]'
@@ -161,7 +188,10 @@ export default function CoinflipGame() {
               <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
                 <button
                   type="button"
-                  onClick={() => setBetAmount(prev => Math.max(1, Math.floor(prev / 2)))}
+                  onClick={() => {
+                    sound.playChip();
+                    setBetAmount(prev => Math.max(1, Math.floor(prev / 2)));
+                  }}
                   disabled={isFlipping}
                   className="bg-white/5 hover:bg-white/10 text-neutral-300 text-xs px-2 py-1 rounded font-bold cursor-pointer"
                 >
@@ -169,7 +199,10 @@ export default function CoinflipGame() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setBetAmount(prev => Math.min(user?.balance ?? 0, prev * 2))}
+                  onClick={() => {
+                    sound.playChip();
+                    setBetAmount(prev => Math.min(user?.balance ?? 0, prev * 2));
+                  }}
                   disabled={isFlipping}
                   className="bg-white/5 hover:bg-white/10 text-neutral-300 text-xs px-2 py-1 rounded font-bold cursor-pointer"
                 >
@@ -190,7 +223,10 @@ export default function CoinflipGame() {
                   key={p.label}
                   type="button"
                   disabled={isFlipping}
-                  onClick={() => setBetAmount(Math.max(1, Math.min(user?.balance ?? 0, p.val)))}
+                  onClick={() => {
+                    sound.playChip();
+                    setBetAmount(Math.max(1, Math.min(user?.balance ?? 0, p.val)));
+                  }}
                   className="py-1 rounded-lg bg-white/5 hover:bg-white/10 text-[10px] font-mono font-bold text-neutral-300 hover:text-white border border-white/5 transition cursor-pointer disabled:opacity-40"
                 >
                   {p.label}
@@ -211,9 +247,9 @@ export default function CoinflipGame() {
             type="button"
             onClick={handleFlip}
             disabled={isFlipping || !user || user.balance <= 0}
-            className="w-full py-4 rounded-xl font-black text-sm tracking-wider uppercase bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-black shadow-lg shadow-orange-500/25 transform active:scale-[0.98] transition disabled:opacity-50"
+            className="w-full py-4 rounded-xl font-black text-sm tracking-wider uppercase bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-black shadow-lg shadow-orange-500/25 transform active:scale-[0.98] transition disabled:opacity-50 cursor-pointer"
           >
-            {isFlipping ? 'FLIPPING COIN...' : `FLIP FOR ${formatCash(betAmount * 1.70)} COINS`}
+            {isFlipping ? 'FLIPPING COIN...' : `FLIP FOR ${formatCash(betAmount * 1.70)} COINS`} <span className="text-xs opacity-75 font-normal">(SPACE)</span>
           </button>
         </div>
 

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useGame } from '@/context/GameContext';
 import { Trophy, AlertCircle, Sparkles, Shuffle, Trash2, ShieldCheck } from 'lucide-react';
 import confetti from 'canvas-confetti';
@@ -50,7 +50,7 @@ export default function KenoGame() {
 
   const autoPick = (count: number) => {
     if (isDrawing) return;
-    sound.playClick();
+    sound.playChip();
     const all = Array.from({ length: 40 }, (_, i) => i + 1);
     const shuffled = all.sort(() => secureRandom() - 0.5);
     setSelectedNumbers(shuffled.slice(0, count).sort((a, b) => a - b));
@@ -59,13 +59,14 @@ export default function KenoGame() {
 
   const clearSelection = () => {
     if (isDrawing) return;
-    sound.playClick();
+    sound.playChip();
     setSelectedNumbers([]);
     setDrawnNumbers([]);
     setResultMsg(null);
   };
 
-  const startDraw = async () => {
+  const startDraw = useCallback(async () => {
+    if (isDrawing) return;
     setErrorMsg('');
     if (!user) {
       setErrorMsg('Please log in first to play!');
@@ -84,7 +85,7 @@ export default function KenoGame() {
       return;
     }
 
-    sound.playClick();
+    sound.playSpin();
     setIsDrawing(true);
     setDrawnNumbers([]);
     setResultMsg(null);
@@ -99,11 +100,19 @@ export default function KenoGame() {
       drawn.push(chosen);
     }
 
-    // Animate ball reveal sequentially
+    let hitsSoFar = 0;
+    // Animate ball reveal sequentially with audio ticks & gem chimes on match
     for (let i = 1; i <= drawn.length; i++) {
-      await new Promise(res => setTimeout(res, 120));
+      await new Promise(res => setTimeout(res, 130));
+      const ball = drawn[i - 1];
       setDrawnNumbers(drawn.slice(0, i));
-      sound.playClick();
+
+      if (selectedNumbers.includes(ball)) {
+        hitsSoFar++;
+        sound.playGem(hitsSoFar);
+      } else {
+        sound.playTick();
+      }
     }
 
     // Calculate final results
@@ -115,13 +124,36 @@ export default function KenoGame() {
     setResultMsg({ hits: matchingHits, mult: finalMult, won });
 
     if (won) {
-      sound.playWin();
+      if (finalMult >= 5.0) {
+        sound.playJackpot();
+        confetti({ particleCount: 100, spread: 80 });
+      } else {
+        sound.playCashout();
+        confetti({ particleCount: 50, spread: 60 });
+      }
       recordBet('keno', betAmount, finalMult, true, { selected: selectedNumbers, hits: matchingHits });
-      confetti({ particleCount: 60, spread: 60 });
     } else {
-      sound.playLose();
+      sound.playBomb();
       recordBet('keno', betAmount, 0, false, { selected: selectedNumbers, hits: matchingHits });
     }
+  }, [isDrawing, user, selectedNumbers, betAmount, recordBet]);
+
+  // Keyboard shortcut listener (Space = Start Draw)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) return;
+      if (e.code === 'Space') {
+        e.preventDefault();
+        startDraw();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [startDraw]);
+
+  const setBetQuick = (val: number) => {
+    sound.playChip();
+    setBetAmount(Math.max(1, Math.floor(val)));
   };
 
   return (
@@ -135,11 +167,11 @@ export default function KenoGame() {
             </div>
             <h2 className="text-xl sm:text-2xl font-black text-white tracking-wide">DONUT KENO</h2>
             <span className="bg-cyan-500/20 text-cyan-300 text-xs font-black px-2.5 py-0.5 rounded-full border border-cyan-500/40 shadow-sm">
-              25.00X+ JACKPOT
+              420.00X MAX JACKPOT
             </span>
           </div>
           <p className="text-xs text-neutral-400 mt-1">
-            Pick 1 to 10 lucky numbers. 10 winning balls are drawn per round!
+            Pick 1 to 10 lucky numbers. 10 winning balls are drawn per round! [Space = Draw]
           </p>
         </div>
 
@@ -231,54 +263,70 @@ export default function KenoGame() {
       </div>
 
       {/* Controls & Payout Summary */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-[#0b0c10] p-4 rounded-xl border border-white/5 mb-4">
-        <div>
-          <label className="text-xs font-bold text-neutral-400 block mb-1">
-            BET AMOUNT (SELECTED: {selectedNumbers.length}/10)
-          </label>
-          <div className="flex gap-2">
-            <input
-              type="number"
-              disabled={isDrawing}
-              value={betAmount}
-              onChange={(e) => setBetAmount(Math.max(1, Math.floor(Number(e.target.value))))}
-              className="w-full bg-[#181a24] border border-white/10 rounded-lg p-2.5 text-white font-mono font-bold text-sm focus:outline-none focus:border-cyan-400"
-            />
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-[#0b0c10] p-4 rounded-xl border border-white/5 mb-4">
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+          <span className="text-xs font-bold text-neutral-400">BET:</span>
+          <input
+            type="number"
+            min={1}
+            disabled={isDrawing}
+            value={betAmount}
+            onChange={(e) => setBetAmount(Math.max(1, Math.floor(Number(e.target.value))))}
+            className="w-24 bg-[#181a24] border border-white/10 rounded-lg py-1.5 px-3 text-white font-mono font-bold text-xs outline-none focus:border-cyan-400"
+          />
+          <div className="flex items-center gap-1">
             <button
-              type="button"
               disabled={isDrawing}
-              onClick={() => setBetAmount(prev => Math.max(1, Math.floor(prev / 2)))}
-              className="bg-[#181a24] hover:bg-[#202330] border border-white/10 px-3 rounded-lg text-xs font-bold text-neutral-300"
+              onClick={() => setBetQuick(betAmount / 2)}
+              className="px-2 py-1 bg-white/5 hover:bg-white/10 border border-white/5 rounded text-[10px] font-bold text-neutral-300"
             >
-              1/2
+              ½
             </button>
             <button
-              type="button"
               disabled={isDrawing}
-              onClick={() => setBetAmount(prev => prev * 2)}
-              className="bg-[#181a24] hover:bg-[#202330] border border-white/10 px-3 rounded-lg text-xs font-bold text-neutral-300"
+              onClick={() => setBetQuick(betAmount * 2)}
+              className="px-2 py-1 bg-white/5 hover:bg-white/10 border border-white/5 rounded text-[10px] font-bold text-neutral-300"
             >
-              2X
+              2x
+            </button>
+            <button
+              disabled={isDrawing}
+              onClick={() => setBetQuick(50)}
+              className="px-2 py-1 bg-white/5 hover:bg-white/10 border border-white/5 rounded text-[10px] font-bold text-neutral-300"
+            >
+              $50
+            </button>
+            <button
+              disabled={isDrawing}
+              onClick={() => setBetQuick(250)}
+              className="px-2 py-1 bg-white/5 hover:bg-white/10 border border-white/5 rounded text-[10px] font-bold text-neutral-300"
+            >
+              $250
+            </button>
+            <button
+              disabled={isDrawing}
+              onClick={() => setBetQuick(user?.balance ?? 1000)}
+              className="px-2 py-1 bg-white/5 hover:bg-white/10 border border-white/5 rounded text-[10px] font-bold text-emerald-400"
+            >
+              MAX
             </button>
           </div>
         </div>
 
-        <div className="flex flex-col justify-end">
-          <button
-            type="button"
-            disabled={isDrawing || selectedNumbers.length === 0}
-            onClick={startDraw}
-            className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-black font-black py-3 rounded-xl shadow-lg shadow-cyan-500/20 active:scale-95 transition cursor-pointer text-sm uppercase tracking-wider disabled:opacity-50"
-          >
-            {isDrawing ? 'DRAWING NUMBERS...' : `START KENO DRAW (${formatCash(betAmount)})`}
-          </button>
-        </div>
+        <button
+          type="button"
+          disabled={isDrawing || selectedNumbers.length === 0}
+          onClick={startDraw}
+          className="w-full sm:w-auto px-8 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-black font-black rounded-xl shadow-lg shadow-cyan-500/20 active:scale-95 transition cursor-pointer text-xs uppercase tracking-wider disabled:opacity-50"
+        >
+          {isDrawing ? 'DRAWING...' : `START KENO DRAW (${formatCash(betAmount)}) [Space]`}
+        </button>
       </div>
 
       {/* Payout Table Badges */}
       <div className="flex items-center gap-1.5 overflow-x-auto pb-2 scrollbar-none mb-3">
         <span className="text-[10px] font-black uppercase text-neutral-500 shrink-0 mr-1">PAYOUTS:</span>
-        {[1, 2, 3, 4, 5, 6, 7].map((hits) => (
+        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((hits) => (
           <div key={hits} className="px-2 py-1 rounded-lg bg-[#141724] border border-white/5 text-[10px] font-mono shrink-0">
             <span className="text-neutral-400">{hits} Hits: </span>
             <span className="text-cyan-400 font-bold">{HIT_PAYOUTS[hits].toFixed(2)}x</span>
@@ -292,7 +340,7 @@ export default function KenoGame() {
           <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
           SHA-256 Provably Fair Draw
         </span>
-        <span className="font-bold text-cyan-400">Up to 500.00x+ Jackpots</span>
+        <span className="font-bold text-cyan-400">Up to 420.00x+ Jackpots</span>
       </div>
     </div>
   );

@@ -53,7 +53,7 @@ export default function ChickenGame() {
     if (!gameActive || isBusted || hasWon) return;
 
     const nextStep = currentStep + 1;
-    sound.playClick();
+    sound.playGem(currentStep);
 
     // Standard 75% step survival probability with 84% RTP payouts
     const survived = secureRandom() < 0.75;
@@ -62,7 +62,7 @@ export default function ChickenGame() {
       // Chicken gets fried / roasted!
       setIsBusted(true);
       setGameActive(false);
-      sound.playLose();
+      sound.playBomb();
       recordBet('chicken', betAmount, 0, false, { stepFailed: nextStep });
       return;
     }
@@ -74,9 +74,9 @@ export default function ChickenGame() {
       const maxMult = LANES[LANES.length - 1].mult;
       setHasWon(true);
       setGameActive(false);
-      sound.playWin();
+      sound.playJackpot();
       recordBet('chicken', betAmount, maxMult, true, { reachedStep: 6 });
-      confetti({ particleCount: 100, spread: 80 });
+      confetti({ particleCount: 110, spread: 80 });
     }
   };
 
@@ -86,10 +86,25 @@ export default function ChickenGame() {
     const mult = LANES[currentStep - 1].mult;
     setGameActive(false);
     setHasWon(true);
-    sound.playWin();
+    sound.playCashout();
     recordBet('chicken', betAmount, mult, true, { cashedStep: currentStep });
     confetti({ particleCount: 75, spread: 60 });
   };
+
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.code === 'Space' && (e.target as HTMLElement)?.tagName !== 'INPUT') {
+        e.preventDefault();
+        if (!gameActive) {
+          startGame();
+        } else {
+          stepForward();
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [gameActive, currentStep, betAmount, isBusted, hasWon, user]);
 
   const currentMult = currentStep > 0 ? LANES[currentStep - 1].mult : 1.00;
   const currentProfit = betAmount * currentMult;
@@ -204,16 +219,22 @@ export default function ChickenGame() {
             <button
               type="button"
               disabled={gameActive}
-              onClick={() => setBetAmount(prev => Math.max(1, Math.floor(prev / 2)))}
-              className="bg-[#181a24] hover:bg-[#202330] border border-white/10 px-3 rounded-lg text-xs font-bold text-neutral-300"
+              onClick={() => {
+                sound.playChip();
+                setBetAmount(prev => Math.max(1, Math.floor(prev / 2)));
+              }}
+              className="bg-[#181a24] hover:bg-[#202330] border border-white/10 px-3 rounded-lg text-xs font-bold text-neutral-300 cursor-pointer"
             >
               1/2
             </button>
             <button
               type="button"
               disabled={gameActive}
-              onClick={() => setBetAmount(prev => prev * 2)}
-              className="bg-[#181a24] hover:bg-[#202330] border border-white/10 px-3 rounded-lg text-xs font-bold text-neutral-300"
+              onClick={() => {
+                sound.playChip();
+                setBetAmount(prev => prev * 2);
+              }}
+              className="bg-[#181a24] hover:bg-[#202330] border border-white/10 px-3 rounded-lg text-xs font-bold text-neutral-300 cursor-pointer"
             >
               2X
             </button>
@@ -225,9 +246,10 @@ export default function ChickenGame() {
             <button
               type="button"
               onClick={startGame}
-              className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-black font-black py-3 rounded-xl shadow-lg shadow-amber-500/20 active:scale-95 transition cursor-pointer text-sm uppercase tracking-wider"
+              className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-black font-black py-3 rounded-xl shadow-lg shadow-amber-500/20 active:scale-95 transition cursor-pointer text-sm uppercase tracking-wider flex items-center justify-center gap-1.5"
             >
-              START CROSSING ({formatCash(betAmount)})
+              <span>START CROSSING ({formatCash(betAmount)})</span>
+              <span className="text-xs opacity-75 font-normal">(SPACE)</span>
             </button>
           ) : (
             <div className="flex gap-2">
@@ -238,6 +260,7 @@ export default function ChickenGame() {
                 className="flex-1 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-black font-black py-3 rounded-xl shadow-lg active:scale-95 transition cursor-pointer text-xs uppercase tracking-wider flex items-center justify-center gap-1.5"
               >
                 <span>STEP FORWARD</span>
+                <span className="text-[10px] opacity-75">(SPACE)</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
 
@@ -248,7 +271,7 @@ export default function ChickenGame() {
                 className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-black font-black py-3 rounded-xl shadow-lg active:scale-95 transition cursor-pointer text-xs uppercase tracking-wider flex items-center justify-center gap-1"
               >
                 <span>CASH OUT</span>
-                <span className="font-mono">({formatCash(currentProfit)})</span>
+                <span className="text-[10px] font-mono">({formatCash(currentProfit)})</span>
               </button>
             </div>
           )}

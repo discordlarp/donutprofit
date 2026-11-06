@@ -67,8 +67,16 @@ export default function RouletteGame() {
       return;
     }
 
-    sound.playClick();
+    sound.playSpin();
     setIsSpinning(true);
+
+    // Audio ticks during the wheel deceleration
+    let ticks = 0;
+    const tickTimer = setInterval(() => {
+      ticks++;
+      sound.playTick();
+      if (ticks > 18) clearInterval(tickTimer);
+    }, 200);
 
     // Secure random outcome with standard fair RNG
     const winIndex = Math.floor(secureRandom() * WHEEL_ITEMS.length);
@@ -85,6 +93,7 @@ export default function RouletteGame() {
     const multiplier = selectedBet === 'gold' ? 12.60 : 1.75;
 
     setTimeout(() => {
+      clearInterval(tickTimer);
       setIsSpinning(false);
       setLastWin(winningItem);
       setHistory(prev => [winningItem, ...prev.slice(0, 9)]);
@@ -92,10 +101,14 @@ export default function RouletteGame() {
       recordBet('roulette', betAmount, multiplier, isWin, { chosenColor: selectedBet, winningItem });
 
       if (isWin) {
-        sound.playWin();
+        if (selectedBet === 'gold') {
+          sound.playJackpot();
+        } else {
+          sound.playCashout();
+        }
         confetti({
-          particleCount: 80,
-          spread: 70,
+          particleCount: selectedBet === 'gold' ? 120 : 80,
+          spread: selectedBet === 'gold' ? 85 : 70,
           origin: { y: 0.6 }
         });
       } else {
@@ -103,6 +116,17 @@ export default function RouletteGame() {
       }
     }, 4000);
   };
+
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.code === 'Space' && (e.target as HTMLElement)?.tagName !== 'INPUT') {
+        e.preventDefault();
+        if (!isSpinning) handleSpin();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isSpinning, betAmount, selectedBet, user]);
 
   return (
     <div className="bg-[#12141a] border border-orange-500/20 rounded-2xl p-6 shadow-2xl relative overflow-hidden">
@@ -181,11 +205,14 @@ export default function RouletteGame() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <button
           type="button"
-          onClick={() => setSelectedBet('red')}
+          onClick={() => {
+            sound.playChip();
+            setSelectedBet('red');
+          }}
           disabled={isSpinning}
-          className={`p-4 rounded-xl border flex flex-col items-center justify-center transition-all ${
+          className={`p-4 rounded-xl border flex flex-col items-center justify-center transition-all cursor-pointer ${
             selectedBet === 'red'
-              ? 'bg-red-500/20 border-red-500 text-red-400 shadow-lg shadow-red-500/20'
+              ? 'bg-red-500/20 border-red-500 text-red-400 shadow-lg shadow-red-500/20 scale-[1.02]'
               : 'bg-[#151821] border-white/5 text-neutral-400 hover:border-white/20'
           }`}
         >
@@ -195,11 +222,14 @@ export default function RouletteGame() {
 
         <button
           type="button"
-          onClick={() => setSelectedBet('gold')}
+          onClick={() => {
+            sound.playChip();
+            setSelectedBet('gold');
+          }}
           disabled={isSpinning}
-          className={`p-4 rounded-xl border flex flex-col items-center justify-center transition-all ${
+          className={`p-4 rounded-xl border flex flex-col items-center justify-center transition-all cursor-pointer ${
             selectedBet === 'gold'
-              ? 'bg-amber-500/20 border-amber-500 text-amber-400 shadow-lg shadow-amber-500/20'
+              ? 'bg-amber-500/20 border-amber-500 text-amber-400 shadow-lg shadow-amber-500/20 scale-[1.02]'
               : 'bg-[#151821] border-white/5 text-neutral-400 hover:border-white/20'
           }`}
         >
@@ -209,11 +239,14 @@ export default function RouletteGame() {
 
         <button
           type="button"
-          onClick={() => setSelectedBet('black')}
+          onClick={() => {
+            sound.playChip();
+            setSelectedBet('black');
+          }}
           disabled={isSpinning}
-          className={`p-4 rounded-xl border flex flex-col items-center justify-center transition-all ${
+          className={`p-4 rounded-xl border flex flex-col items-center justify-center transition-all cursor-pointer ${
             selectedBet === 'black'
-              ? 'bg-neutral-800 border-neutral-400 text-white shadow-lg'
+              ? 'bg-neutral-800 border-neutral-400 text-white shadow-lg scale-[1.02]'
               : 'bg-[#151821] border-white/5 text-neutral-400 hover:border-white/20'
           }`}
         >
@@ -237,14 +270,20 @@ export default function RouletteGame() {
           <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
             <button
               type="button"
-              onClick={() => setBetAmount(prev => Math.max(1, Math.floor(prev / 2)))}
+              onClick={() => {
+                sound.playChip();
+                setBetAmount(prev => Math.max(1, Math.floor(prev / 2)));
+              }}
               className="bg-white/5 hover:bg-white/10 text-neutral-300 text-xs px-2 py-1 rounded font-bold cursor-pointer"
             >
               ½
             </button>
             <button
               type="button"
-              onClick={() => setBetAmount(prev => Math.min(user?.balance ?? 0, prev * 2))}
+              onClick={() => {
+                sound.playChip();
+                setBetAmount(prev => Math.min(user?.balance ?? 0, prev * 2));
+              }}
               className="bg-white/5 hover:bg-white/10 text-neutral-300 text-xs px-2 py-1 rounded font-bold cursor-pointer"
             >
               2x
@@ -258,7 +297,7 @@ export default function RouletteGame() {
           disabled={isSpinning || !user || user.balance <= 0}
           className="w-full sm:w-1/2 py-3.5 rounded-xl font-black text-sm tracking-wider uppercase bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-black shadow-lg shadow-orange-500/25 transform active:scale-[0.98] transition flex items-center justify-center gap-2 cursor-pointer"
         >
-          {isSpinning ? 'SPINNING ROULETTE...' : `SPIN FOR ${selectedBet.toUpperCase()}`}
+          {isSpinning ? 'SPINNING ROULETTE...' : `SPIN FOR ${selectedBet.toUpperCase()}`} <span className="text-xs opacity-75 font-normal">(SPACE)</span>
         </button>
       </div>
 
@@ -275,7 +314,10 @@ export default function RouletteGame() {
             key={p.label}
             type="button"
             disabled={isSpinning}
-            onClick={() => setBetAmount(Math.max(1, Math.min(user?.balance ?? 0, p.val)))}
+            onClick={() => {
+              sound.playChip();
+              setBetAmount(Math.max(1, Math.min(user?.balance ?? 0, p.val)));
+            }}
             className="py-1 rounded-lg bg-white/5 hover:bg-white/10 text-[10px] font-mono font-bold text-neutral-300 hover:text-white border border-white/5 transition cursor-pointer disabled:opacity-40"
           >
             {p.label}

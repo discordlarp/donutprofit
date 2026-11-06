@@ -1,12 +1,28 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useGame } from '@/context/GameContext';
-import { TrendingUp, TrendingDown, Coins, AlertCircle } from 'lucide-react';
+import { TrendingUp, TrendingDown, AlertCircle, Sparkles, Flame } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { secureRandom } from '@/lib/cryptoRandom';
+import { sound } from '@/lib/sound';
+import { formatCash } from '@/lib/format';
 
-const CARDS = [
+interface Card {
+  val: string;
+  num: number;
+  suit: '♠' | '♥' | '♦' | '♣';
+  color: 'red' | 'black';
+}
+
+const SUITS: { suit: Card['suit']; color: Card['color'] }[] = [
+  { suit: '♠', color: 'black' },
+  { suit: '♥', color: 'red' },
+  { suit: '♦', color: 'red' },
+  { suit: '♣', color: 'black' },
+];
+
+const CARD_RANKS = [
   { val: '2', num: 2 },
   { val: '3', num: 3 },
   { val: '4', num: 4 },
@@ -22,16 +38,23 @@ const CARDS = [
   { val: 'A', num: 14 },
 ];
 
+function getRandomCard(): Card {
+  const rank = CARD_RANKS[Math.floor(secureRandom() * CARD_RANKS.length)];
+  const suit = SUITS[Math.floor(secureRandom() * SUITS.length)];
+  return { ...rank, ...suit };
+}
+
 export default function HiloGame() {
   const { user, recordBet } = useGame();
   const [betAmount, setBetAmount] = useState<number>(50);
-  const [currentCard, setCurrentCard] = useState(CARDS[6]); // 8
-  const [nextCard, setNextCard] = useState<typeof CARDS[0] | null>(null);
+  const [currentCard, setCurrentCard] = useState<Card>({ val: '8', num: 8, suit: '♦', color: 'red' });
+  const [nextCard, setNextCard] = useState<Card | null>(null);
   const [isDealing, setIsDealing] = useState<boolean>(false);
+  const [streak, setStreak] = useState<number>(0);
   const [lastWin, setLastWin] = useState<boolean | null>(null);
   const [errorMsg, setErrorMsg] = useState<string>('');
 
-  const playGuess = (guess: 'higher' | 'lower') => {
+  const playGuess = useCallback((guess: 'higher' | 'lower') => {
     if (isDealing) return;
     setErrorMsg('');
 
@@ -49,8 +72,9 @@ export default function HiloGame() {
     }
 
     setIsDealing(true);
+    sound.playCard();
 
-    const rolled = CARDS[Math.floor(secureRandom() * CARDS.length)];
+    const rolled = getRandomCard();
     const won = guess === 'higher' ? rolled.num >= currentCard.num : rolled.num <= currentCard.num;
     const mult = 1.68;
 
@@ -60,12 +84,44 @@ export default function HiloGame() {
       setIsDealing(false);
 
       if (won) {
-        confetti({ particleCount: 70, spread: 60 });
+        const nextStreak = streak + 1;
+        setStreak(nextStreak);
+        if (nextStreak >= 3) {
+          sound.playJackpot();
+          confetti({ particleCount: 80, spread: 70 });
+        } else {
+          sound.playCashout();
+          confetti({ particleCount: 45, spread: 50 });
+        }
+      } else {
+        setStreak(0);
+        sound.playBomb();
       }
 
       recordBet('hilo', betAmount, mult, won, { current: currentCard.val, next: rolled.val, guess });
       setCurrentCard(rolled);
-    }, 800);
+    }, 700);
+  }, [isDealing, user, betAmount, currentCard, streak, recordBet]);
+
+  // Keyboard shortcut listener (ArrowUp = Higher, ArrowDown = Lower)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) return;
+      if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
+        e.preventDefault();
+        playGuess('higher');
+      } else if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
+        e.preventDefault();
+        playGuess('lower');
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [playGuess]);
+
+  const setBetQuick = (val: number) => {
+    sound.playChip();
+    setBetAmount(Math.max(1, Math.floor(val)));
   };
 
   return (
@@ -79,8 +135,15 @@ export default function HiloGame() {
             <span className="bg-green-500/20 text-green-400 text-xs font-bold px-2 py-0.5 rounded-full border border-green-500/30">
               UP TO 20.00x+
             </span>
+            {streak > 1 && (
+              <span className="bg-amber-500/20 text-amber-400 text-xs font-black px-2.5 py-0.5 rounded-full border border-amber-500/40 flex items-center gap-1 animate-pulse">
+                <Flame className="w-3.5 h-3.5" /> {streak} STREAK
+              </span>
+            )}
           </div>
-          <p className="text-xs text-neutral-400 mt-1">Guess whether the next dealt card is higher or lower.</p>
+          <p className="text-xs text-neutral-400 mt-1">
+            Guess whether the next dealt card is higher or lower. [Shortcut: ↑ Up / ↓ Down]
+          </p>
         </div>
       </div>
 
@@ -92,37 +155,83 @@ export default function HiloGame() {
       )}
 
       {/* Cards Arena */}
-      <div className="bg-[#0b0c10] border border-white/5 rounded-2xl p-8 mb-6 flex items-center justify-center gap-8 min-h-[180px]">
+      <div className="bg-[#0b0c10] border border-white/5 rounded-2xl p-8 mb-6 flex items-center justify-center gap-8 min-h-[200px] relative">
         {/* Current Card */}
-        <div className="w-24 h-36 bg-white rounded-xl flex flex-col justify-between p-3 text-neutral-900 shadow-xl border-2 border-neutral-300 transform -rotate-3">
-          <span className="font-black text-lg">{currentCard.val}</span>
-          <span className="text-3xl text-center text-red-600">♦</span>
-          <span className="font-black text-lg text-right">{currentCard.val}</span>
+        <div className="w-28 h-40 bg-white rounded-2xl flex flex-col justify-between p-3.5 text-neutral-900 shadow-2xl border-2 border-neutral-300 transform -rotate-3 transition-transform hover:scale-105">
+          <div className="flex justify-between items-start">
+            <span className={`font-black text-xl leading-none ${currentCard.color === 'red' ? 'text-red-600' : 'text-neutral-900'}`}>
+              {currentCard.val}
+            </span>
+            <span className={`text-base leading-none ${currentCard.color === 'red' ? 'text-red-600' : 'text-neutral-900'}`}>
+              {currentCard.suit}
+            </span>
+          </div>
+          <span className={`text-4xl text-center font-bold ${currentCard.color === 'red' ? 'text-red-600' : 'text-neutral-900'}`}>
+            {currentCard.suit}
+          </span>
+          <div className="flex justify-between items-end rotate-180">
+            <span className={`font-black text-xl leading-none ${currentCard.color === 'red' ? 'text-red-600' : 'text-neutral-900'}`}>
+              {currentCard.val}
+            </span>
+            <span className={`text-base leading-none ${currentCard.color === 'red' ? 'text-red-600' : 'text-neutral-900'}`}>
+              {currentCard.suit}
+            </span>
+          </div>
         </div>
 
-        <span className="text-2xl font-black text-neutral-500">VS</span>
+        <div className="flex flex-col items-center gap-1">
+          <span className="text-2xl font-black text-neutral-500">VS</span>
+          {lastWin !== null && !isDealing && (
+            <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full ${
+              lastWin ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-red-500/20 text-red-400 border border-red-500/40'
+            }`}>
+              {lastWin ? 'WON!' : 'LOST'}
+            </span>
+          )}
+        </div>
 
         {/* Next Card */}
-        <div className={`w-24 h-36 rounded-xl flex flex-col justify-between p-3 shadow-xl border-2 transition ${
-          nextCard
-            ? 'bg-white text-neutral-900 border-neutral-300 transform rotate-3'
+        <div className={`w-28 h-40 rounded-2xl flex flex-col justify-between p-3.5 shadow-2xl border-2 transition-all duration-300 ${
+          nextCard && !isDealing
+            ? 'bg-white text-neutral-900 border-neutral-300 transform rotate-3 scale-105'
+            : isDealing
+            ? 'bg-[#1a1e2d] border-emerald-400/50 animate-pulse flex items-center justify-center'
             : 'bg-[#181a24] border-white/10 text-neutral-600 flex items-center justify-center'
         }`}>
-          {nextCard ? (
+          {nextCard && !isDealing ? (
             <>
-              <span className="font-black text-lg">{nextCard.val}</span>
-              <span className="text-3xl text-center text-neutral-900">♠</span>
-              <span className="font-black text-lg text-right">{nextCard.val}</span>
+              <div className="flex justify-between items-start">
+                <span className={`font-black text-xl leading-none ${nextCard.color === 'red' ? 'text-red-600' : 'text-neutral-900'}`}>
+                  {nextCard.val}
+                </span>
+                <span className={`text-base leading-none ${nextCard.color === 'red' ? 'text-red-600' : 'text-neutral-900'}`}>
+                  {nextCard.suit}
+                </span>
+              </div>
+              <span className={`text-4xl text-center font-bold ${nextCard.color === 'red' ? 'text-red-600' : 'text-neutral-900'}`}>
+                {nextCard.suit}
+              </span>
+              <div className="flex justify-between items-end rotate-180">
+                <span className={`font-black text-xl leading-none ${nextCard.color === 'red' ? 'text-red-600' : 'text-neutral-900'}`}>
+                  {nextCard.val}
+                </span>
+                <span className={`text-base leading-none ${nextCard.color === 'red' ? 'text-red-600' : 'text-neutral-900'}`}>
+                  {nextCard.suit}
+                </span>
+              </div>
             </>
           ) : (
-            <span className="text-3xl">❓</span>
+            <div className="flex flex-col items-center justify-center gap-1">
+              <span className="text-3xl">{isDealing ? '🃏' : '❓'}</span>
+              <span className="text-[10px] font-mono text-neutral-500 font-bold">{isDealing ? 'Dealing...' : 'Hidden'}</span>
+            </div>
           )}
         </div>
       </div>
 
       {/* Controls */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-[#0b0c10] p-4 rounded-xl border border-white/5">
-        <div className="flex items-center gap-3 w-full sm:w-auto">
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
           <span className="text-xs font-bold text-neutral-400">BET:</span>
           <input
             type="number"
@@ -130,24 +239,61 @@ export default function HiloGame() {
             disabled={isDealing}
             value={betAmount}
             onChange={(e) => setBetAmount(Math.max(1, Number(e.target.value)))}
-            className="w-28 bg-[#181a24] border border-white/10 rounded-lg py-2 px-3 text-white font-mono font-bold text-xs"
+            className="w-24 bg-[#181a24] border border-white/10 rounded-lg py-1.5 px-3 text-white font-mono font-bold text-xs outline-none focus:border-green-500"
           />
+          <div className="flex items-center gap-1">
+            <button
+              disabled={isDealing}
+              onClick={() => setBetQuick(betAmount / 2)}
+              className="px-2 py-1 bg-white/5 hover:bg-white/10 border border-white/5 rounded text-[10px] font-bold text-neutral-300"
+            >
+              ½
+            </button>
+            <button
+              disabled={isDealing}
+              onClick={() => setBetQuick(betAmount * 2)}
+              className="px-2 py-1 bg-white/5 hover:bg-white/10 border border-white/5 rounded text-[10px] font-bold text-neutral-300"
+            >
+              2x
+            </button>
+            <button
+              disabled={isDealing}
+              onClick={() => setBetQuick(50)}
+              className="px-2 py-1 bg-white/5 hover:bg-white/10 border border-white/5 rounded text-[10px] font-bold text-neutral-300"
+            >
+              $50
+            </button>
+            <button
+              disabled={isDealing}
+              onClick={() => setBetQuick(250)}
+              className="px-2 py-1 bg-white/5 hover:bg-white/10 border border-white/5 rounded text-[10px] font-bold text-neutral-300"
+            >
+              $250
+            </button>
+            <button
+              disabled={isDealing}
+              onClick={() => setBetQuick(user?.balance ?? 1000)}
+              className="px-2 py-1 bg-white/5 hover:bg-white/10 border border-white/5 rounded text-[10px] font-bold text-emerald-400"
+            >
+              MAX
+            </button>
+          </div>
         </div>
 
         <div className="flex items-center gap-3 w-full sm:w-auto">
           <button
             onClick={() => playGuess('higher')}
             disabled={isDealing}
-            className="flex-1 sm:flex-none px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-black font-black text-xs uppercase tracking-wider rounded-xl shadow-lg transition flex items-center gap-1.5"
+            className="flex-1 sm:flex-none px-6 py-3 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-black font-black text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-emerald-500/20 transition flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer"
           >
-            <TrendingUp className="w-4 h-4" /> HIGHER (1.68x)
+            <TrendingUp className="w-4 h-4" /> HIGHER (1.68x) [↑]
           </button>
           <button
             onClick={() => playGuess('lower')}
             disabled={isDealing}
-            className="flex-1 sm:flex-none px-6 py-3 bg-red-500 hover:bg-red-600 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-lg transition flex items-center gap-1.5"
+            className="flex-1 sm:flex-none px-6 py-3 bg-rose-500 hover:bg-rose-600 disabled:opacity-50 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-rose-500/20 transition flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer"
           >
-            <TrendingDown className="w-4 h-4" /> LOWER (1.68x)
+            <TrendingDown className="w-4 h-4" /> LOWER (1.68x) [↓]
           </button>
         </div>
       </div>

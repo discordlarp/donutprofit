@@ -5,6 +5,7 @@ import { useGame } from '@/context/GameContext';
 import { Club, Coins, AlertCircle } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { secureRandom } from '@/lib/cryptoRandom';
+import { sound } from '@/lib/sound';
 
 interface Card {
   suit: '♠' | '♥' | '♦' | '♣';
@@ -75,6 +76,7 @@ export default function BlackjackGame() {
       return;
     }
 
+    sound.playChip();
     const p1 = drawCard();
     const d1 = drawCard();
     const p2 = drawCard();
@@ -83,6 +85,7 @@ export default function BlackjackGame() {
     const initialPlayer = [p1, p2];
     const initialDealer = [d1, d2];
 
+    sound.playCard();
     setPlayerCards(initialPlayer);
     setDealerCards(initialDealer);
     setGameState('playing');
@@ -100,6 +103,7 @@ export default function BlackjackGame() {
 
   const hit = () => {
     if (gameState !== 'playing') return;
+    sound.playCard();
     const newCard = drawCard();
     const nextPlayer = [...playerCards, newCard];
     setPlayerCards(nextPlayer);
@@ -167,25 +171,30 @@ export default function BlackjackGame() {
       won = true;
       multiplier = 1.90;
       msg = '🎉 BLACKJACK! Winner!';
-      confetti({ particleCount: 80, spread: 60 });
+      sound.playJackpot();
+      confetti({ particleCount: 90, spread: 70 });
     } else if (outcome === 'dealer_bust') {
       won = true;
       multiplier = 1.70;
       msg = '🎉 Dealer Busted! You Win!';
+      sound.playCashout();
       confetti({ particleCount: 70, spread: 60 });
     } else if (outcome === 'win') {
       won = true;
       multiplier = 1.70;
       msg = '🎉 You beat the dealer!';
+      sound.playCashout();
       confetti({ particleCount: 70, spread: 60 });
     } else if (outcome === 'push') {
       won = true;
       multiplier = 1.0; // Push returns bet
       msg = '🤝 Push (Tie). Bet returned.';
+      sound.playClick();
     } else {
       won = false;
       multiplier = 0;
       msg = outcome === 'player_bust' ? '💥 Busted! Over 21.' : '💀 Dealer had higher hand.';
+      sound.playBomb();
     }
 
     setResultMsg(msg);

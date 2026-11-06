@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useGame } from '@/context/GameContext';
-import { Layers, AlertCircle } from 'lucide-react';
+import { Layers, AlertCircle, Coins, Sparkles, Trophy } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { sound } from '@/lib/sound';
 import { formatCash } from '@/lib/format';
@@ -23,7 +23,7 @@ export default function TowersGame() {
   const [floors, setFloors] = useState<FloorState[]>([]);
   const [errorMsg, setErrorMsg] = useState<string>('');
 
-  const startTowers = () => {
+  const startTowers = useCallback(() => {
     if (gameActive) return;
     setErrorMsg('');
 
@@ -50,9 +50,9 @@ export default function TowersGame() {
     setCurrentFloor(0);
     setGameActive(true);
     sound.playClick();
-  };
+  }, [gameActive, user, betAmount]);
 
-  const pickTile = (tileIndex: number) => {
+  const pickTile = useCallback((tileIndex: number) => {
     if (!gameActive) return;
 
     const floor = floors[currentFloor];
@@ -71,27 +71,64 @@ export default function TowersGame() {
       recordBet('towers', betAmount, 0, false, { floor: currentFloor });
     } else {
       // Safe Emerald!
-      sound.playGem();
+      sound.playGem(currentFloor + 1);
       const nextFloor = currentFloor + 1;
       setCurrentFloor(nextFloor);
 
       if (nextFloor >= FLOOR_MULTIPLIERS.length) {
-        sound.playWin();
+        sound.playJackpot();
         setGameActive(false);
         const maxMult = FLOOR_MULTIPLIERS[FLOOR_MULTIPLIERS.length - 1];
         recordBet('towers', betAmount, maxMult, true, { reachedFloor: 6 });
-        confetti({ particleCount: 100, spread: 80 });
+        confetti({ particleCount: 120, spread: 90 });
       }
     }
-  };
+  }, [gameActive, floors, currentFloor, betAmount, recordBet]);
 
-  const cashOut = () => {
+  const cashOut = useCallback(() => {
     if (!gameActive || currentFloor === 0) return;
     const mult = FLOOR_MULTIPLIERS[currentFloor - 1];
-    sound.playWin();
+    if (mult >= 4.0) {
+      sound.playJackpot();
+    } else {
+      sound.playCashout();
+    }
     setGameActive(false);
     recordBet('towers', betAmount, mult, true, { reachedFloor: currentFloor });
     confetti({ particleCount: 75, spread: 60 });
+  }, [gameActive, currentFloor, betAmount, recordBet]);
+
+  // Keyboard shortcut listener (Space = Start or Cashout, 1/2/3 = pick tile)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) return;
+      if (e.code === 'Space') {
+        e.preventDefault();
+        if (!gameActive) {
+          startTowers();
+        } else if (currentFloor > 0) {
+          cashOut();
+        }
+      } else if (gameActive) {
+        if (e.key === '1' || e.key === 'a' || e.key === 'A') {
+          e.preventDefault();
+          pickTile(0);
+        } else if (e.key === '2' || e.key === 's' || e.key === 'S') {
+          e.preventDefault();
+          pickTile(1);
+        } else if (e.key === '3' || e.key === 'd' || e.key === 'D') {
+          e.preventDefault();
+          pickTile(2);
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [gameActive, currentFloor, startTowers, cashOut, pickTile]);
+
+  const setBetQuick = (val: number) => {
+    sound.playChip();
+    setBetAmount(Math.max(1, Math.floor(val)));
   };
 
   return (
@@ -105,11 +142,11 @@ export default function TowersGame() {
             </div>
             <h2 className="text-xl sm:text-2xl font-black text-white tracking-wide">DONUT TOWERS</h2>
             <span className="bg-emerald-500/20 text-[#00e701] text-xs font-black px-2.5 py-0.5 rounded-full border border-emerald-500/40 shadow-sm">
-              25.00X+ JACKPOT
+              9.57X TOP JACKPOT
             </span>
           </div>
           <p className="text-xs text-neutral-400 mt-1">
-            Pick safe emerald blocks on each level to climb the tower. Cash out anytime before hitting a TNT bomb!
+            Pick safe emerald blocks to climb the tower. [Space = Start/Cashout &bull; Keys 1, 2, 3 = Pick Block]
           </p>
         </div>
       </div>
@@ -187,7 +224,9 @@ export default function TowersGame() {
                           </svg>
                         </div>
                       ) : (
-                        <div className={`w-3.5 h-3.5 rounded-sm transition-all ${isCurrent ? 'bg-emerald-400 shadow-[0_0_8px_#34d399] animate-pulse' : 'bg-white/10'}`} />
+                        <div className={`w-3.5 h-3.5 rounded-sm transition-all ${isCurrent ? 'bg-emerald-400 shadow-[0_0_8px_#34d399] animate-pulse' : 'bg-white/10'}`}>
+                          <span className="text-[9px] font-mono text-neutral-400 font-bold hidden sm:inline">{tIdx + 1}</span>
+                        </div>
                       )}
                     </button>
                   );
@@ -200,7 +239,7 @@ export default function TowersGame() {
 
       {/* Betting & Cashout Controls */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-[#090a0f] p-4 rounded-2xl border border-white/5">
-        <div className="flex items-center gap-3 w-full sm:w-auto">
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
           <span className="text-xs font-extrabold text-neutral-400">BET:</span>
           <input
             type="number"
@@ -208,22 +247,43 @@ export default function TowersGame() {
             disabled={gameActive}
             value={betAmount}
             onChange={(e) => setBetAmount(Math.max(1, Number(e.target.value)))}
-            className="w-28 bg-[#151824] border border-white/10 rounded-xl py-2 px-3 text-white font-mono font-bold text-xs outline-none focus:border-emerald-500"
+            className="w-24 bg-[#151824] border border-white/10 rounded-xl py-1.5 px-3 text-white font-mono font-bold text-xs outline-none focus:border-emerald-500"
           />
-          <div className="flex gap-1.5">
+          <div className="flex items-center gap-1">
             <button
               disabled={gameActive}
-              onClick={() => setBetAmount(prev => Math.max(1, Math.floor(prev / 2)))}
-              className="px-2.5 py-1.5 bg-white/5 hover:bg-white/10 rounded-lg text-[10px] text-neutral-300 font-extrabold"
+              onClick={() => setBetQuick(betAmount / 2)}
+              className="px-2 py-1 bg-white/5 hover:bg-white/10 border border-white/5 rounded text-[10px] font-bold text-neutral-300"
             >
-              1/2
+              ½
             </button>
             <button
               disabled={gameActive}
-              onClick={() => setBetAmount(prev => prev * 2)}
-              className="px-2.5 py-1.5 bg-white/5 hover:bg-white/10 rounded-lg text-[10px] text-neutral-300 font-extrabold"
+              onClick={() => setBetQuick(betAmount * 2)}
+              className="px-2 py-1 bg-white/5 hover:bg-white/10 border border-white/5 rounded text-[10px] font-bold text-neutral-300"
             >
-              2X
+              2x
+            </button>
+            <button
+              disabled={gameActive}
+              onClick={() => setBetQuick(50)}
+              className="px-2 py-1 bg-white/5 hover:bg-white/10 border border-white/5 rounded text-[10px] font-bold text-neutral-300"
+            >
+              $50
+            </button>
+            <button
+              disabled={gameActive}
+              onClick={() => setBetQuick(250)}
+              className="px-2 py-1 bg-white/5 hover:bg-white/10 border border-white/5 rounded text-[10px] font-bold text-neutral-300"
+            >
+              $250
+            </button>
+            <button
+              disabled={gameActive}
+              onClick={() => setBetQuick(user?.balance ?? 1000)}
+              className="px-2 py-1 bg-white/5 hover:bg-white/10 border border-white/5 rounded text-[10px] font-bold text-emerald-400"
+            >
+              MAX
             </button>
           </div>
         </div>
@@ -232,23 +292,23 @@ export default function TowersGame() {
           {gameActive && currentFloor > 0 && (
             <button
               onClick={cashOut}
-              className="flex-1 sm:flex-none px-6 py-3.5 bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-500 text-black font-black text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-amber-500/25 transition animate-pulse"
+              className="flex-1 sm:flex-none px-6 py-3.5 bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-500 text-black font-black text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-amber-500/25 transition animate-pulse cursor-pointer"
             >
-              CASHOUT {formatCash(FLOOR_MULTIPLIERS[currentFloor - 1] * betAmount)} ({FLOOR_MULTIPLIERS[currentFloor - 1]}x)
+              CASHOUT {formatCash(FLOOR_MULTIPLIERS[currentFloor - 1] * betAmount)} ({FLOOR_MULTIPLIERS[currentFloor - 1]}x) [Space]
             </button>
           )}
 
           {!gameActive ? (
             <button
               onClick={startTowers}
-              className="flex-1 sm:flex-none px-8 py-3.5 bg-[#00e701] hover:bg-[#00c901] text-black font-black text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-emerald-500/20 transition transform active:scale-95"
+              className="flex-1 sm:flex-none px-8 py-3.5 bg-[#00e701] hover:bg-[#00c901] text-black font-black text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-emerald-500/20 transition transform active:scale-95 cursor-pointer"
             >
-              START CLIMBING
+              START CLIMBING [Space]
             </button>
           ) : (
             currentFloor === 0 && (
-              <span className="text-xs text-emerald-400 font-extrabold flex items-center gap-1.5">
-                <span>👆</span> Pick a Floor 1 block!
+              <span className="text-xs text-emerald-400 font-extrabold flex items-center gap-1.5 animate-pulse">
+                <span>👆</span> Pick a Floor 1 block [Keys 1, 2, 3]!
               </span>
             )
           )}

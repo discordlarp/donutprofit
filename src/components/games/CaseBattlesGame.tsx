@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useGame } from '@/context/GameContext';
-import { Swords, Trophy, AlertCircle, ShieldCheck, User, Bot } from 'lucide-react';
+import { Swords, Trophy, AlertCircle, ShieldCheck, User, Bot, Sparkles, Coins } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { sound } from '@/lib/sound';
 import { formatCash } from '@/lib/format';
@@ -27,14 +27,15 @@ const BATTLE_ITEMS: BattleItem[] = [
 
 export default function CaseBattlesGame() {
   const { user, recordBet } = useGame();
-  const [betAmount, setBetAmount] = useState<number>(100000);
+  const [betAmount, setBetAmount] = useState<number>(50);
   const [isBattling, setIsBattling] = useState<boolean>(false);
   const [playerItem, setPlayerItem] = useState<BattleItem | null>(null);
   const [botItem, setBotItem] = useState<BattleItem | null>(null);
   const [winner, setWinner] = useState<'player' | 'bot' | 'tie' | null>(null);
   const [errorMsg, setErrorMsg] = useState<string>('');
 
-  const startBattle = async () => {
+  const startBattle = useCallback(async () => {
+    if (isBattling) return;
     setErrorMsg('');
     if (!user) {
       setErrorMsg('Please log in first to battle!');
@@ -49,18 +50,18 @@ export default function CaseBattlesGame() {
       return;
     }
 
-    sound.playClick();
+    sound.playSpin();
     setIsBattling(true);
     setPlayerItem(null);
     setBotItem(null);
     setWinner(null);
 
     // Roll simulation with rapid ticking
-    for (let i = 0; i < 12; i++) {
-      await new Promise(r => setTimeout(r, 90));
+    for (let i = 0; i < 14; i++) {
+      await new Promise(r => setTimeout(r, 80));
       setPlayerItem(BATTLE_ITEMS[Math.floor(secureRandom() * BATTLE_ITEMS.length)]);
       setBotItem(BATTLE_ITEMS[Math.floor(secureRandom() * BATTLE_ITEMS.length)]);
-      sound.playClick();
+      sound.playTick();
     }
 
     // Weighted independent loot roll for player and bot with 85% payout rake
@@ -85,16 +86,21 @@ export default function CaseBattlesGame() {
     if (finalPlayerItem.mult > finalBotItem.mult) {
       // Player won!
       setWinner('player');
-      sound.playWin();
+      if (finalPlayerItem.mult >= 5.0) {
+        sound.playJackpot();
+        confetti({ particleCount: 110, spread: 80 });
+      } else {
+        sound.playCashout();
+        confetti({ particleCount: 60, spread: 60 });
+      }
       recordBet('casebattles', betAmount, 1.70, true, { 
         playerLoot: finalPlayerItem.name, 
         botLoot: finalBotItem.name 
       });
-      confetti({ particleCount: 80, spread: 70 });
     } else if (finalPlayerItem.mult < finalBotItem.mult) {
       // Bot won
       setWinner('bot');
-      sound.playLose();
+      sound.playBomb();
       recordBet('casebattles', betAmount, 0, false, { 
         playerLoot: finalPlayerItem.name, 
         botLoot: finalBotItem.name 
@@ -102,13 +108,31 @@ export default function CaseBattlesGame() {
     } else {
       // Tie: stake returned
       setWinner('tie');
-      sound.playClick();
+      sound.playChip();
       recordBet('casebattles', betAmount, 1.00, true, { 
         playerLoot: finalPlayerItem.name, 
         botLoot: finalBotItem.name,
         tie: true,
       });
     }
+  }, [isBattling, user, betAmount, recordBet]);
+
+  // Spacebar shortcut to battle
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) return;
+      if (e.code === 'Space') {
+        e.preventDefault();
+        startBattle();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [startBattle]);
+
+  const setBetQuick = (val: number) => {
+    sound.playChip();
+    setBetAmount(Math.max(1, Math.floor(val)));
   };
 
   return (
@@ -118,15 +142,15 @@ export default function CaseBattlesGame() {
         <div>
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center border border-amber-500/30 shadow-inner">
-              <Swords className="w-5 h-5 text-amber-400" />
+              <Swords className="w-5 h-5" />
             </div>
-            <h2 className="text-xl sm:text-2xl font-black text-white tracking-wide">1V1 CASE BATTLES</h2>
+            <h2 className="text-xl sm:text-2xl font-black text-white tracking-wide">CASE BATTLES 1V1</h2>
             <span className="bg-amber-500/20 text-amber-300 text-xs font-black px-2.5 py-0.5 rounded-full border border-amber-500/40 shadow-sm">
-              25.00X+ JACKPOT POT
+              INSTANT PVP
             </span>
           </div>
           <p className="text-xs text-neutral-400 mt-1">
-            Open mystery crates simultaneously against an opponent. Highest total loot takes the pot!
+            Open mystery crates simultaneously against rivals. Highest value unboxed loot wins the entire pot! [Space = Battle]
           </p>
         </div>
       </div>
@@ -138,65 +162,75 @@ export default function CaseBattlesGame() {
         </div>
       )}
 
-      {/* 1v1 Battle Arena Side-by-Side */}
+      {/* 1v1 Battle Arena */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        {/* Player Side */}
-        <div className={`p-5 rounded-2xl border transition-all duration-300 ${
+        {/* Player Card */}
+        <div className={`p-5 rounded-2xl border transition-all ${
           winner === 'player'
-            ? 'bg-emerald-950/30 border-emerald-500 shadow-xl shadow-emerald-500/20 scale-[1.02]'
-            : 'bg-[#090b14] border-white/5'
+            ? 'bg-emerald-950/40 border-emerald-500 ring-2 ring-emerald-500/30 shadow-lg shadow-emerald-500/20'
+            : 'bg-[#090a0f] border-white/5'
         }`}>
-          <div className="flex items-center justify-between pb-3 border-b border-white/5 mb-4">
+          <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <User className="w-4 h-4 text-cyan-400" />
-              <span className="text-xs font-bold text-white uppercase">{user?.username || 'YOU'}</span>
+              <div className="w-8 h-8 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400">
+                <User className="w-4 h-4" />
+              </div>
+              <div>
+                <span className="text-xs font-black text-white block">YOU</span>
+                <span className="text-[10px] text-neutral-400 font-mono">Challenger</span>
+              </div>
             </div>
             {winner === 'player' && (
-              <span className="bg-emerald-500/20 text-emerald-300 text-[10px] font-black uppercase px-2 py-0.5 rounded-full border border-emerald-500/40">
-                WINNER (+{formatCash(betAmount * 2.00)})
+              <span className="px-2 py-0.5 rounded-full bg-emerald-500 text-black font-black text-xs uppercase flex items-center gap-1 shadow-sm">
+                <Trophy className="w-3 h-3" /> WINNER
               </span>
             )}
           </div>
 
-          <div className="min-h-[130px] flex flex-col items-center justify-center p-4 bg-[#121524] rounded-xl border border-white/5">
+          <div className="h-32 rounded-xl bg-[#121524] border border-white/5 flex items-center justify-center p-4">
             {playerItem ? (
-              <div className="flex flex-col items-center gap-2 animate-in zoom-in-95">
-                <span className="text-4xl">{playerItem.emoji}</span>
-                <span className="text-sm font-black text-white">{playerItem.name}</span>
-                <span className="text-xs font-mono font-black text-amber-400">{playerItem.mult.toFixed(2)}x Value</span>
+              <div className="text-center animate-in zoom-in-75 duration-150">
+                <span className="text-4xl block mb-1">{playerItem.emoji}</span>
+                <span className="text-sm font-black text-white block">{playerItem.name}</span>
+                <span className="text-xs font-mono font-black text-emerald-400">{playerItem.mult.toFixed(2)}x Value</span>
               </div>
             ) : (
               <div className="text-center text-neutral-400 text-xs">
                 <span className="text-3xl block mb-1">📦</span>
-                <span>Ready to open...</span>
+                <span>Awaiting battle...</span>
               </div>
             )}
           </div>
         </div>
 
-        {/* DonutBot Opponent Side */}
-        <div className={`p-5 rounded-2xl border transition-all duration-300 ${
+        {/* Rival Bot Card */}
+        <div className={`p-5 rounded-2xl border transition-all ${
           winner === 'bot'
-            ? 'bg-red-950/30 border-red-500 shadow-xl shadow-red-500/20 scale-[1.02]'
-            : 'bg-[#090b14] border-white/5'
+            ? 'bg-rose-950/40 border-rose-500 ring-2 ring-rose-500/30 shadow-lg shadow-rose-500/20'
+            : 'bg-[#090a0f] border-white/5'
         }`}>
-          <div className="flex items-center justify-between pb-3 border-b border-white/5 mb-4">
+          <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <Bot className="w-4 h-4 text-amber-400" />
-              <span className="text-xs font-bold text-white uppercase">DONUT BOT</span>
+              <div className="w-8 h-8 rounded-full bg-rose-500/20 border border-rose-500/40 flex items-center justify-center text-rose-400">
+                <Bot className="w-4 h-4" />
+              </div>
+              <div>
+                <span className="text-xs font-black text-white block">DONUT BOT</span>
+                <span className="text-[10px] text-neutral-400 font-mono">AI Rival</span>
+              </div>
             </div>
             {winner === 'bot' && (
-              <span className="bg-red-500/20 text-red-300 text-[10px] font-black uppercase px-2 py-0.5 rounded-full border border-red-500/40">
-                BOT WON
+              <span className="px-2 py-0.5 rounded-full bg-rose-500 text-white font-black text-xs uppercase flex items-center gap-1 shadow-sm">
+                <Trophy className="w-3 h-3" /> WINNER
               </span>
             )}
           </div>
 
-          <div className="min-h-[130px] flex flex-col items-center justify-center p-4 bg-[#121524] rounded-xl border border-white/5">
+          <div className="h-32 rounded-xl bg-[#121524] border border-white/5 flex items-center justify-center p-4">
             {botItem ? (
-              <div className="flex flex-col items-center gap-2 animate-in zoom-in-95">
-                <span className="text-4xl">{botItem.emoji}</span>
-                <span className="text-sm font-black text-white">{botItem.name}</span>
+              <div className="text-center animate-in zoom-in-75 duration-150">
+                <span className="text-4xl block mb-1">{botItem.emoji}</span>
+                <span className="text-sm font-black text-white block">{botItem.name}</span>
                 <span className="text-xs font-mono font-black text-amber-400">{botItem.mult.toFixed(2)}x Value</span>
               </div>
             ) : (
@@ -210,38 +244,67 @@ export default function CaseBattlesGame() {
       </div>
 
       {/* Stake Selection & Battle Button */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-[#0b0c10] p-4 rounded-xl border border-white/5 mb-4">
-        <div>
-          <label className="text-xs font-bold text-neutral-400 block mb-1">BATTLE STAKE (CASH)</label>
-          <div className="grid grid-cols-3 gap-2">
-            {[100000, 1000000, 5000000].map((stake) => (
-              <button
-                key={stake}
-                type="button"
-                disabled={isBattling}
-                onClick={() => setBetAmount(stake)}
-                className={`py-2 rounded-xl text-xs font-black transition cursor-pointer border ${
-                  betAmount === stake
-                    ? 'bg-amber-500 text-black border-amber-300 shadow-md shadow-amber-500/30'
-                    : 'bg-[#181a24] hover:bg-[#202330] border-white/10 text-neutral-300'
-                }`}
-              >
-                {formatCash(stake)}
-              </button>
-            ))}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-[#0b0c10] p-4 rounded-xl border border-white/5 mb-4">
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+          <span className="text-xs font-bold text-neutral-400">STAKE:</span>
+          <div className="relative w-28">
+            <Coins className="w-3.5 h-3.5 text-amber-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+            <input
+              type="number"
+              min={1}
+              disabled={isBattling}
+              value={betAmount}
+              onChange={(e) => setBetAmount(Math.max(1, Number(e.target.value)))}
+              className="w-full bg-[#181a24] border border-white/10 rounded-lg py-1.5 pl-8 pr-2 text-white font-mono font-bold text-xs outline-none focus:border-amber-400 transition"
+            />
+          </div>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setBetQuick(betAmount / 2)}
+              disabled={isBattling}
+              className="px-2 py-1 bg-white/5 hover:bg-white/10 border border-white/5 rounded text-[10px] font-bold text-neutral-300"
+            >
+              ½
+            </button>
+            <button
+              onClick={() => setBetQuick(betAmount * 2)}
+              disabled={isBattling}
+              className="px-2 py-1 bg-white/5 hover:bg-white/10 border border-white/5 rounded text-[10px] font-bold text-neutral-300"
+            >
+              2x
+            </button>
+            <button
+              onClick={() => setBetQuick(50)}
+              disabled={isBattling}
+              className="px-2 py-1 bg-white/5 hover:bg-white/10 border border-white/5 rounded text-[10px] font-bold text-neutral-300"
+            >
+              $50
+            </button>
+            <button
+              onClick={() => setBetQuick(250)}
+              disabled={isBattling}
+              className="px-2 py-1 bg-white/5 hover:bg-white/10 border border-white/5 rounded text-[10px] font-bold text-neutral-300"
+            >
+              $250
+            </button>
+            <button
+              onClick={() => setBetQuick(user?.balance ?? 1000)}
+              disabled={isBattling}
+              className="px-2 py-1 bg-white/5 hover:bg-white/10 border border-white/5 rounded text-[10px] font-bold text-amber-400"
+            >
+              MAX
+            </button>
           </div>
         </div>
 
-        <div className="flex flex-col justify-end">
-          <button
-            type="button"
-            disabled={isBattling}
-            onClick={startBattle}
-            className="w-full bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500 hover:from-amber-400 hover:to-orange-400 text-black font-black py-3.5 rounded-xl shadow-lg shadow-amber-500/25 active:scale-95 transition cursor-pointer text-sm uppercase tracking-wider disabled:opacity-50"
-          >
-            {isBattling ? 'DUEL IN PROGRESS...' : `START 1V1 BATTLE (${formatCash(betAmount)})`}
-          </button>
-        </div>
+        <button
+          type="button"
+          disabled={isBattling || !user || user.balance < betAmount}
+          onClick={startBattle}
+          className="w-full sm:w-auto px-8 py-3 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500 hover:from-amber-400 hover:to-orange-400 text-black font-black rounded-xl shadow-lg shadow-amber-500/25 active:scale-95 transition cursor-pointer text-xs uppercase tracking-wider disabled:opacity-50"
+        >
+          {isBattling ? 'DUEL IN PROGRESS...' : `START 1V1 BATTLE (${formatCash(betAmount)}) [Space]`}
+        </button>
       </div>
 
       {/* Footer Info */}

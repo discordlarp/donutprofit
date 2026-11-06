@@ -40,13 +40,18 @@ export default function DiceGame() {
       return;
     }
 
-    sound.playClick();
+    sound.playSpin();
     setIsRolling(true);
+
+    const tickInterval = setInterval(() => {
+      sound.playTick();
+    }, 180);
 
     const result = Number((secureRandom() * 100).toFixed(2));
     const won = mode === 'over' ? result > targetNumber : result < targetNumber;
 
     setTimeout(() => {
+      clearInterval(tickInterval);
       setRolledNumber(result);
       setIsRolling(false);
       setLastWin(won);
@@ -54,13 +59,31 @@ export default function DiceGame() {
       recordBet('dice', betAmount, multiplier, won, { target: targetNumber, mode, rolled: result });
 
       if (won) {
-        sound.playWin();
-        confetti({ particleCount: 75, spread: 60 });
+        if (multiplier >= 5.0) {
+          sound.playJackpot();
+        } else {
+          sound.playCashout();
+        }
+        confetti({
+          particleCount: multiplier >= 5.0 ? 110 : 75,
+          spread: multiplier >= 5.0 ? 80 : 60
+        });
       } else {
         sound.playBomb();
       }
     }, 1200);
   };
+
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.code === 'Space' && (e.target as HTMLElement)?.tagName !== 'INPUT') {
+        e.preventDefault();
+        if (!isRolling) rollDice();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isRolling, betAmount, targetNumber, mode, user]);
 
   return (
     <div className="bg-[#12141a] border border-orange-500/20 rounded-2xl p-6 shadow-2xl relative overflow-hidden">
@@ -172,14 +195,20 @@ export default function DiceGame() {
           <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
             <button
               type="button"
-              onClick={() => setBetAmount(prev => Math.max(1, Math.floor(prev / 2)))}
+              onClick={() => {
+                sound.playChip();
+                setBetAmount(prev => Math.max(1, Math.floor(prev / 2)));
+              }}
               className="bg-white/5 hover:bg-white/10 text-neutral-300 text-xs px-2 py-1 rounded font-bold cursor-pointer"
             >
               ½
             </button>
             <button
               type="button"
-              onClick={() => setBetAmount(prev => Math.min(user?.balance ?? 0, prev * 2))}
+              onClick={() => {
+                sound.playChip();
+                setBetAmount(prev => Math.min(user?.balance ?? 0, prev * 2));
+              }}
               className="bg-white/5 hover:bg-white/10 text-neutral-300 text-xs px-2 py-1 rounded font-bold cursor-pointer"
             >
               2x
@@ -193,7 +222,8 @@ export default function DiceGame() {
           disabled={isRolling || !user || user.balance <= 0}
           className="w-full sm:w-1/2 py-3.5 rounded-xl font-black text-sm tracking-wider uppercase bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-black shadow-lg shadow-orange-500/25 transform active:scale-[0.98] transition flex items-center justify-center gap-2 cursor-pointer"
         >
-          {isRolling ? 'ROLLING DICE...' : `ROLL DICE (${multiplier}X)`}
+          <span>{isRolling ? 'ROLLING DICE...' : `ROLL DICE (${multiplier}X)`}</span>
+          <span className="text-xs opacity-75 font-normal">(SPACE)</span>
         </button>
       </div>
 
@@ -210,7 +240,10 @@ export default function DiceGame() {
             key={p.label}
             type="button"
             disabled={isRolling}
-            onClick={() => setBetAmount(Math.max(1, Math.min(user?.balance ?? 0, p.val)))}
+            onClick={() => {
+              sound.playChip();
+              setBetAmount(Math.max(1, Math.min(user?.balance ?? 0, p.val)));
+            }}
             className="py-1 rounded-lg bg-white/5 hover:bg-white/10 text-[10px] font-mono font-bold text-neutral-300 hover:text-white border border-white/5 transition cursor-pointer disabled:opacity-40"
           >
             {p.label}
